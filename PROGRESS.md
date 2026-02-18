@@ -1,20 +1,24 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 1 — Proof of Concept de Audio (incluyendo fix MV3)
+Sesión completada: 2 — Pipeline de Análisis con Claude
 Fecha: Febrero 2026
 
 ## Qué está funcionando
-- `extension/manifest.json` — Chrome MV3, permisos correctos (`tabCapture`, `offscreen`), apunta a background.js + popup + side-panel
-- `extension/background.js` — Reescrito para MV3: usa `getMediaStreamId` + Offscreen Document. NO usa `tabCapture.capture()` (eliminado en MV3 para Service Workers)
-- `extension/offscreen.html` + `extension/offscreen.js` — Nuevo. Offscreen Document con DOM completo que:
-  - Llama a `getUserMedia` con `chromeMediaSource: 'tab'` usando el `streamId`
-  - Crea AudioContext + ScriptProcessor → convierte Float32 a PCM16
-  - Abre WebSocket con Deepgram (nova-2, español, diarización)
-  - Reenvía transcripciones al background via `chrome.runtime.sendMessage`
-- `extension/popup/popup.html` + `popup.js` — Selector de 3 perfiles + campo API key + botón Iniciar
-- `extension/content-script.js` — Mínimo, notifica al background que Meet está activo
-- `extension/icons/` — Iconos placeholder funcionales
+- `package.json` — Next.js 14.2.35, @anthropic-ai/sdk, TypeScript
+- `tsconfig.json` — Config estándar Next.js App Router
+- `next.config.js` — Config mínima
+- `app/layout.tsx` — Layout raíz mínimo (placeholder hasta Sesión 5)
+- `app/page.tsx` — Placeholder landing (completa en Sesión 5)
+- `lib/claude.ts` — Los 3 prompts (CANDIDATO, VENDEDOR, DEFENSOR) + COMMON_SUFFIX + getSystemPrompt(profile)
+- `app/api/analyze/route.ts` — Endpoint POST: recibe `{text, profile, context, session_type}` → Claude → JSON
+- `.env.example` — Plantilla documentada de todas las variables
+- `.env.local` — Creado localmente con ANTHROPIC_API_KEY real (en .gitignore, no se sube)
+- `extension/background.js` — Añadidas funciones:
+  - `accumulateFinalTranscript()` — acumula frases finales en chrome.storage.session
+  - `callAnalyzeAPI()` — POST a /api/analyze con texto acumulado + contexto → loguea JSON
+  - Al iniciar sesión se resetean `pendingText` y `contextBuffer`
+- `extension/manifest.json` — Añadido `http://localhost:3000/*` a host_permissions
 
 ## Flujo de mensajes actual
 ```
@@ -28,58 +32,74 @@ offscreen.js
   → getUserMedia(streamId)
   → AudioContext + ScriptProcessor → PCM16
   → WebSocket Deepgram
-  → chrome.runtime.sendMessage(TRANSCRIPT)
+  → chrome.runtime.sendMessage(TRANSCRIPT { isFinal })
 background.js
-  → console.log("[Confident] [FINAL] [perfil:candidato] [hablante:0] ...")
+  → si isFinal: accumulateFinalTranscript() → chrome.storage.session.pendingText
+  → si VAD_ENDED: callAnalyzeAPI()
+    → fetch POST localhost:3000/api/analyze
+    → Claude (claude-sonnet-4-5-20250929) → JSON
+    → console.log('[Confident] Sugerencia de Claude:', ...)
 ```
 
-## Verificado en producción
-- Conexión Deepgram establecida en llamada de Google Meet real
-- Transcripciones en tiempo real visibles en consola del Service Worker
-- Formato de log: `[Confident] [FINAL] [perfil:candidato] [hablante:0] "texto"`
-
-## Próxima sesión
-Sesión: 2 — Pipeline de Análisis con Claude
-Objetivo: Conectar las transcripciones con Claude y obtener JSON de sugerencia en consola
-
-### Archivos a crear
-- `app/api/analyze/route.ts` — Endpoint Next.js: recibe texto + perfil → llama a Claude → devuelve JSON
-- `lib/claude.ts` — Wrapper Anthropic SDK con los 3 prompts por perfil (definidos en CLAUDE.md §8)
-
-### Archivos a modificar
-- `extension/background.js` — Añadir lógica que:
-  1. Acumula frases finales (is_final) hasta detectar fin de enunciado (UtteranceEnd)
-  2. Hace POST a `/api/analyze` con `{ text, profile, context (últimas 3 frases) }`
-  3. Loguea el JSON de sugerencia en consola
-
-### Contexto importante para la Sesión 2
-- El offscreen document ya reenvía al background: `{ action: 'TRANSCRIPT', transcript, isFinal, speaker, profile }`
-- El campo `is_final: true` + evento `UtteranceEnd` marca fin de frase → ese es el momento de llamar a Claude
-- Los prompts completos (CANDIDATO, VENDEDOR, DEFENSOR) están en CLAUDE.md §8, listos para copiar a `lib/claude.ts`
-- El modelo a usar: `claude-sonnet-4-6` (definido en CLAUDE.md §2)
-- El JSON de respuesta de Claude debe tener: `signal_detected`, `signal_type`, `urgency`, `what_is_being_asked`, `suggestion`, `keywords`, `speaker_detected`
-- La API de Analyze estará en Vercel — en desarrollo local usa `http://localhost:3000/api/analyze`
-- La Deepgram API key viaja en `chrome.storage.local` (ya implementado en popup.js)
-- La Anthropic API key va en `.env.local` del proyecto Next.js (NUNCA en la extensión)
-- No hay autenticación en Sesión 2 — se añade en Sesión 4
-
-### Entregable verificable de Sesión 2
-En consola del Service Worker, tras hablar en Meet, aparece:
+## Entregable verificable de Sesión 2
+Para verificar que funciona:
+1. `npm run dev` en la raíz del proyecto (servidor en localhost:3000)
+2. Recargar extensión en chrome://extensions
+3. Abrir Google Meet, iniciar sesión con un perfil
+4. Hablar — en consola del Service Worker aparece:
 ```json
 {
   "signal_detected": true,
   "signal_type": "behavioral",
   "urgency": 2,
-  "what_is_being_asked": "Te piden que describas una situación pasada con estructura.",
-  "suggestion": "Usa STAR: empieza con el contexto, la tarea que tenías, la acción que tomaste y el resultado.",
-  "keywords": ["STAR", "logro", "impacto"],
+  "what_is_being_asked": "...",
+  "suggestion": "...",
+  "keywords": [...],
   "speaker_detected": "other"
 }
 ```
 
+## Próxima sesión
+Sesión: 3 — Panel Lateral Funcional
+Objetivo: Mostrar las sugerencias de Claude en la UI real del panel lateral de Chrome
+Primer archivo a tocar: `extension/side-panel/panel.html`
+
+### Archivos a crear en Sesión 3
+- `extension/side-panel/panel.html` — UI del panel lateral
+- `extension/side-panel/panel.js` — Recibe mensajes del background y actualiza la UI
+- `extension/side-panel/panel.css` — Estilos del panel
+
+### Archivos a modificar en Sesión 3
+- `extension/background.js` — Reenviar el JSON de Claude al side panel via `chrome.runtime.sendMessage`
+
+### Diseño del panel (de CLAUDE.md §15)
+```
+┌─────────────────────────┐
+│ 🔴 Sesión activa  [■]   │
+├─────────────────────────┤
+│ SUGERENCIA              │
+│ [texto grande aquí]     │
+├─────────────────────────┤
+│ Contexto: [texto small] │
+│ Keywords: tag1 tag2     │
+├─────────────────────────┤
+│ [👍] [👎]               │
+├─────────────────────────┤
+│ ▸ Historial (colapsado) │
+└─────────────────────────┘
+```
+
+### Contexto importante para Sesión 3
+- background.js ya tiene el JSON de Claude en `callAnalyzeAPI()` — solo hay que reenviarlo al panel
+- El panel se comunica con background via `chrome.runtime.onMessage`
+- El side panel ya está configurado en manifest.json (`side_panel.default_path`)
+- El panel también debe mostrar el campo `what_is_being_asked` (nuevo en Sesión 2)
+- La urgencia (1/2/3) debe reflejarse visualmente (color del borde o indicador)
+
 ## Deuda técnica conocida
 - `ScriptProcessor` está deprecated → migrar a `AudioWorklet` antes de publicar en Chrome Web Store
 - Los iconos son placeholders — reemplazar antes de publicar
-- No hay side-panel todavía (se construye en Sesión 3)
 - No hay autenticación ni freemium (Sesión 4)
+- Next.js 14.2.35 tiene 2 vulnerabilidades DoS (no críticas para MVP local; para producción en Vercel revisar con `npm audit`)
 - El offscreen document nunca se cierra explícitamente con `chrome.offscreen.closeDocument()` al hacer STOP_SESSION — añadir en iteración futura
+- `ANALYZE_API_URL` hardcodeado a localhost — en Sesión 7 (deploy Vercel) cambiar a la URL de producción
