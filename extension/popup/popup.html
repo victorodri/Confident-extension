@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confident</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+
+    <!-- Cabecera -->
+    <header class="header">
+      <span class="logo">Confident</span>
+      <span class="tagline">Tu confidente en cada conversación</span>
+    </header>
+
+    <!-- Estado de sesión (oculto cuando no hay sesión activa) -->
+    <div id="session-status" class="session-status hidden">
+      <span class="status-dot"></span>
+      <span id="status-text">Sesión activa</span>
+    </div>
+
+    <!-- Selector de perfil -->
+    <section id="profile-section">
+      <p class="section-label">Selecciona tu perfil</p>
+      <div class="profiles">
+        <button class="profile-btn" data-profile="candidato">
+          <span class="profile-icon">🎯</span>
+          <span class="profile-name">Candidato</span>
+          <span class="profile-desc">Entrevistas de trabajo</span>
+        </button>
+        <button class="profile-btn" data-profile="vendedor">
+          <span class="profile-icon">💼</span>
+          <span class="profile-name">Vendedor</span>
+          <span class="profile-desc">Llamadas comerciales</span>
+        </button>
+        <button class="profile-btn" data-profile="defensor">
+          <span class="profile-icon">🛡️</span>
+          <span class="profile-name">Defensor</span>
+          <span class="profile-desc">Reuniones técnicas</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Clave de Deepgram (solo visible en modo dev) -->
+    <section id="api-key-section">
+      <p class="section-label">Deepgram API Key <span class="dev-badge">dev</span></p>
+      <input
+        type="password"
+        id="deepgram-key"
+        placeholder="Pega tu API key aquí"
+        autocomplete="off"
+      />
+      <p class="api-hint">
+        Obtén tu key en <a href="https://console.deepgram.com" target="_blank">console.deepgram.com</a>
+      </p>
+    </section>
+
+    <!-- Botón de acción principal -->
+    <div class="action-area">
+      <button id="start-btn" class="btn-start" disabled>
+        Iniciar sesión
+      </button>
+      <button id="stop-btn" class="btn-stop hidden">
+        Detener sesión
+      </button>
+    </div>
+
+    <!-- Mensajes de error -->
+    <p id="error-msg" class="error-msg hidden"></p>
+
+    <!-- Aviso: debe estar en Meet -->
+    <p id="not-in-meet" class="warning-msg hidden">
+      Abre Google Meet para activar Confident.
+    </p>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

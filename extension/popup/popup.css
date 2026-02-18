@@ -1,0 +1,235 @@
+/* popup.css — Confident */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f0f10;
+  color: #f1f1f1;
+  width: 280px;
+  min-height: 100px;
+}
+
+.container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Cabecera ── */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo {
+  font-size: 17px;
+  font-weight: 700;
+  color: #a78bfa; /* violet-400 */
+  letter-spacing: -0.3px;
+}
+
+.tagline {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ── Estado sesión ── */
+.session-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1c1c1e;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #34d399;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: #34d399;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Sección de perfiles ── */
+.section-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+
+.profiles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-btn {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  align-items: center;
+  background: #1c1c1e;
+  border: 1.5px solid #2d2d30;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.profile-btn:hover {
+  background: #252528;
+  border-color: #a78bfa;
+}
+
+.profile-btn.selected {
+  border-color: #a78bfa;
+  background: #1e1732;
+}
+
+.profile-icon {
+  grid-row: 1 / 3;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f1f1;
+}
+
+.profile-desc {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ── API Key ── */
+#api-key-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dev-badge {
+  display: inline-block;
+  background: #292929;
+  color: #facc15;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+
+#deepgram-key {
+  width: 100%;
+  background: #1c1c1e;
+  border: 1.5px solid #2d2d30;
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: #f1f1f1;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#deepgram-key:focus {
+  border-color: #a78bfa;
+}
+
+.api-hint {
+  font-size: 10px;
+  color: #4b5563;
+}
+
+.api-hint a {
+  color: #a78bfa;
+  text-decoration: none;
+}
+
+/* ── Botones de acción ── */
+.action-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.btn-start {
+  width: 100%;
+  padding: 10px;
+  background: #a78bfa;
+  color: #0f0f10;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn-start:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-start:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-stop {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: #f87171;
+  border: 1.5px solid #f87171;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-stop:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+/* ── Mensajes ── */
+.error-msg {
+  font-size: 11px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border-radius: 5px;
+  padding: 6px 8px;
+}
+
+.warning-msg {
+  font-size: 11px;
+  color: #facc15;
+  text-align: center;
+}
+
+/* ── Utilidades ── */
+.hidden {
+  display: none !important;
+}
