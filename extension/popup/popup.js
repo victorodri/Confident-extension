@@ -8,6 +8,7 @@
 const profileBtns = document.querySelectorAll('.profile-btn');
 const startBtn = document.getElementById('start-btn');
 const stopBtn = document.getElementById('stop-btn');
+const openPanelBtn = document.getElementById('open-panel-btn');
 const deepgramKeyInput = document.getElementById('deepgram-key');
 const errorMsg = document.getElementById('error-msg');
 const notInMeet = document.getElementById('not-in-meet');
@@ -100,6 +101,9 @@ function setupEventListeners() {
 
   // Botón DETENER
   stopBtn.addEventListener('click', handleStopClick);
+
+  // Botón ABRIR PANEL
+  openPanelBtn.addEventListener('click', openSidePanel);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -161,6 +165,8 @@ async function handleStartClick() {
 
     if (response?.ok) {
       setSessionActiveUI(true);
+      // Abrir el side panel automáticamente al iniciar — este clic ya es un user gesture
+      openSidePanel();
     } else {
       throw new Error(response?.error || 'Error desconocido en background.js');
     }
@@ -205,16 +211,30 @@ function setSessionActiveUI(active) {
   if (active) {
     showElement(sessionStatus);
     showElement(stopBtn);
+    showElement(openPanelBtn);
     hideElement(startBtn);
     statusText.textContent = `Sesión activa · ${selectedProfile || ''}`;
   } else {
     hideElement(sessionStatus);
     hideElement(stopBtn);
+    hideElement(openPanelBtn);
     showElement(startBtn);
     startBtn.disabled = false;
     startBtn.textContent = 'Iniciar sesión';
     updateStartButton();
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ABRIR SIDE PANEL
+// ─────────────────────────────────────────────────────────────
+
+function openSidePanel() {
+  if (!currentTabId) return;
+  // chrome.sidePanel.open requiere user gesture — se llama desde un click
+  chrome.sidePanel.open({ tabId: currentTabId }).catch(() => {
+    // Fallback: si falla, no hacer nada (el usuario puede abrir el panel manualmente)
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
