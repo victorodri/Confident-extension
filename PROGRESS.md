@@ -1,105 +1,93 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 2 — Pipeline de Análisis con Claude
+Sesión completada: 3 — Panel Lateral Funcional
 Fecha: Febrero 2026
 
 ## Qué está funcionando
-- `package.json` — Next.js 14.2.35, @anthropic-ai/sdk, TypeScript
+- `package.json` — Next.js 15.3.9, React 19.2.4, @anthropic-ai/sdk
 - `tsconfig.json` — Config estándar Next.js App Router
 - `next.config.js` — Config mínima
 - `app/layout.tsx` — Layout raíz mínimo (placeholder hasta Sesión 5)
 - `app/page.tsx` — Placeholder landing (completa en Sesión 5)
 - `lib/claude.ts` — Los 3 prompts (CANDIDATO, VENDEDOR, DEFENSOR) + COMMON_SUFFIX + getSystemPrompt(profile)
 - `app/api/analyze/route.ts` — Endpoint POST: recibe `{text, profile, context, session_type}` → Claude → JSON
-- `.env.example` — Plantilla documentada de todas las variables
-- `.env.local` — Creado localmente con ANTHROPIC_API_KEY real (en .gitignore, no se sube)
-- `extension/background.js` — Añadidas funciones:
-  - `accumulateFinalTranscript()` — acumula frases finales en chrome.storage.session
-  - `callAnalyzeAPI()` — POST a /api/analyze con texto acumulado + contexto → loguea JSON
-  - Al iniciar sesión se resetean `pendingText` y `contextBuffer`
-- `extension/manifest.json` — Añadido `http://localhost:3000/*` a host_permissions
+- `.env.example` — Plantilla documentada con comentarios PÚBLICA/PRIVADA para cada variable
+- `extension/background.js` — Reenvía sugerencias al panel via `NEW_SUGGESTION`, `SESSION_STARTED`, `SESSION_STOPPED`
+- `extension/offscreen.js` — Audio pipeline con Deepgram (model: nova-2-phonecall)
+- `extension/side-panel/panel.html` — UI completa del panel lateral
+- `extension/side-panel/panel.css` — Estilos oscuros con indicadores de urgencia (violeta/ámbar/rojo)
+- `extension/side-panel/panel.js` — Lógica completa: recibe sugerencias, feedback, historial
 
-## Flujo de mensajes actual
+## Flujo completo de Sesión 3
 ```
 popup.js
   → chrome.runtime.sendMessage(START_SESSION)
 background.js
-  → chrome.tabCapture.getMediaStreamId()  → streamId
-  → chrome.offscreen.createDocument()
-  → chrome.runtime.sendMessage(START_AUDIO + streamId)
-offscreen.js
-  → getUserMedia(streamId)
-  → AudioContext + ScriptProcessor → PCM16
-  → WebSocket Deepgram
+  → getTabStreamId() + createOffscreenDocument()
+  → chrome.runtime.sendMessage(SESSION_STARTED)  ← panel recibe → estado "Escuchando"
+  → chrome.runtime.sendMessage(START_AUDIO)
+offscreen.js (Deepgram nova-2-phonecall)
   → chrome.runtime.sendMessage(TRANSCRIPT { isFinal })
+  → chrome.runtime.sendMessage(VAD_ENDED)
 background.js
-  → si isFinal: accumulateFinalTranscript() → chrome.storage.session.pendingText
-  → si VAD_ENDED: callAnalyzeAPI()
-    → fetch POST localhost:3000/api/analyze
-    → Claude (claude-sonnet-4-5-20250929) → JSON
-    → console.log('[Confident] Sugerencia de Claude:', ...)
+  → callAnalyzeAPI() → fetch POST /api/analyze → Claude → JSON
+  → chrome.runtime.sendMessage(NEW_SUGGESTION)   ← panel recibe → renderiza sugerencia
+panel.js
+  → Muestra what_is_being_asked (si existe) + suggestion (grande) + keywords + urgencia (dots)
+  → Feedback 👍/👎 guardado en chrome.storage.local
+  → Historial colapsable de la sesión
+
+[Al detener:]
+popup.js → STOP_SESSION → background.js → SESSION_STOPPED → panel limpia UI
 ```
 
-## Entregable verificable de Sesión 2
+## Entregable verificable de Sesión 3
 Para verificar que funciona:
-1. `npm run dev` en la raíz del proyecto (servidor en localhost:3000)
+1. `npm run dev` en la raíz (servidor en localhost:3000)
 2. Recargar extensión en chrome://extensions
-3. Abrir Google Meet, iniciar sesión con un perfil
-4. Hablar — en consola del Service Worker aparece:
-```json
-{
-  "signal_detected": true,
-  "signal_type": "behavioral",
-  "urgency": 2,
-  "what_is_being_asked": "...",
-  "suggestion": "...",
-  "keywords": [...],
-  "speaker_detected": "other"
-}
-```
+3. Abrir Google Meet
+4. Clic en el icono de la extensión → abrir Side Panel (desde el botón de Chrome o el popup)
+5. Seleccionar perfil + pegar Deepgram API key → Iniciar sesión
+6. El panel debe mostrar "Escuchando..." con animación de puntos
+7. Hablar — en el panel aparece la sugerencia con:
+   - Banner "LO QUE TE PREGUNTAN" (si hay contexto)
+   - Sugerencia grande en "QUÉ HACER AHORA"
+   - Keywords como chips violetas
+   - Indicador de urgencia (1-3 puntos: violeta/ámbar/rojo)
+   - Botones 👍/👎
+8. Las sugerencias se acumulan en el historial colapsable
 
 ## Próxima sesión
-Sesión: 3 — Panel Lateral Funcional
-Objetivo: Mostrar las sugerencias de Claude en la UI real del panel lateral de Chrome
-Primer archivo a tocar: `extension/side-panel/panel.html`
+Sesión: 4 — Autenticación y Lógica Freemium
+Objetivo: Login con Google + contador de sesiones + paywalls
+Primer archivo a tocar: `supabase/schema.sql` (ejecutar en Supabase dashboard)
 
-### Archivos a crear en Sesión 3
-- `extension/side-panel/panel.html` — UI del panel lateral
-- `extension/side-panel/panel.js` — Recibe mensajes del background y actualiza la UI
-- `extension/side-panel/panel.css` — Estilos del panel
+### Archivos a crear en Sesión 4
+- `supabase/schema.sql` — Schema completo con RLS (copiar de CLAUDE.md §7)
+- `lib/supabase.ts` — Cliente Supabase (browser)
+- `lib/supabase-server.ts` — Cliente Supabase (server, service role)
+- `app/login/page.tsx` — Login con Google (1 clic via Supabase Auth)
+- `app/api/session/route.ts` — POST crear sesión / PATCH cerrar sesión
+- `app/api/usage/route.ts` — GET contador de sesiones
 
-### Archivos a modificar en Sesión 3
-- `extension/background.js` — Reenviar el JSON de Claude al side panel via `chrome.runtime.sendMessage`
+### Archivos a modificar en Sesión 4
+- `extension/background.js` — Gestionar JWT de Supabase y contador de sesiones
+- `extension/side-panel/panel.js` — Mostrar paywalls (sesión 6 sin cuenta, sesión 16 con cuenta)
+- `extension/popup/popup.js` — Mostrar estado de cuenta / sesiones restantes
 
-### Diseño del panel (de CLAUDE.md §15)
-```
-┌─────────────────────────┐
-│ 🔴 Sesión activa  [■]   │
-├─────────────────────────┤
-│ SUGERENCIA              │
-│ [texto grande aquí]     │
-├─────────────────────────┤
-│ Contexto: [texto small] │
-│ Keywords: tag1 tag2     │
-├─────────────────────────┤
-│ [👍] [👎]               │
-├─────────────────────────┤
-│ ▸ Historial (colapsado) │
-└─────────────────────────┘
-```
-
-### Contexto importante para Sesión 3
-- background.js ya tiene el JSON de Claude en `callAnalyzeAPI()` — solo hay que reenviarlo al panel
-- El panel se comunica con background via `chrome.runtime.onMessage`
-- El side panel ya está configurado en manifest.json (`side_panel.default_path`)
-- El panel también debe mostrar el campo `what_is_being_asked` (nuevo en Sesión 2)
-- La urgencia (1/2/3) debe reflejarse visualmente (color del borde o indicador)
+### Contexto importante para Sesión 4
+- El funnel freemium: sesiones 1-5 anónimas → sesión 6 paywall suave → sesiones 6-15 gratis → sesión 16 paywall duro
+- anonymous_id se genera en chrome.storage.local al instalar (UUID)
+- Al hacer login, migrar anonymous_id al perfil autenticado en Supabase
+- JWT de Supabase se guarda en chrome.storage.sync
+- El endpoint /api/analyze debe validar JWT + verificar límite antes de llamar a Claude
 
 ## Deuda técnica conocida
 - `ScriptProcessor` está deprecated → migrar a `AudioWorklet` antes de publicar en Chrome Web Store
 - Los iconos son placeholders — reemplazar antes de publicar
 - No hay autenticación ni freemium (Sesión 4)
-- Next.js 14.2.35 tiene 2 vulnerabilidades DoS (no críticas para MVP local; para producción en Vercel revisar con `npm audit`)
-- El offscreen document nunca se cierra explícitamente con `chrome.offscreen.closeDocument()` al hacer STOP_SESSION — añadir en iteración futura
-- `ANALYZE_API_URL` hardcodeado a localhost — en Sesión 7 (deploy Vercel) cambiar a la URL de producción
+- `ANALYZE_API_URL` hardcodeado a localhost — en Sesión 7 (deploy Vercel) cambiar a URL de producción
+- El offscreen document nunca se cierra explícitamente al hacer STOP_SESSION
+- `background.js` (222 líneas) y `offscreen.js` (219 líneas) ligeramente sobre umbral de 200 líneas —
+  decisión tomada: no dividir (son documentos MV3 con estructura inherentemente monolítica)

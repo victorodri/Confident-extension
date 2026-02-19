@@ -15,10 +15,8 @@ const OFFSCREEN_URL = chrome.runtime.getURL('offscreen.html');
 // INSTALACIÓN
 // ─────────────────────────────────────────────────────────────
 
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
-    console.log('[Confident] Extensión instalada. Listo para Meet.');
-  }
+chrome.runtime.onInstalled.addListener((_details) => {
+  // Primera instalación — sin acción adicional por ahora
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -47,21 +45,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'TRANSCRIPT') {
     const { transcript, isFinal, speaker, profile } = message;
     if (isFinal) {
-      console.log(`[Confident] [FINAL] [perfil:${profile}] [hablante:${speaker ?? 'unknown'}] "${transcript}"`);
       accumulateFinalTranscript(transcript, profile);
-    } else {
-      console.log(`[Confident] [parcial] "${transcript}"`);
     }
     return false;
   }
 
   if (message.action === 'VAD_STARTED') {
-    console.log('[Confident] Detectado inicio de voz');
     return false;
   }
 
   if (message.action === 'VAD_ENDED') {
-    console.log('[Confident] Fin de enunciado — llamando a Claude...');
     callAnalyzeAPI();
     return false;
   }
@@ -95,7 +88,6 @@ async function callAnalyzeAPI() {
   const profile = data.lastProfile ?? data.profile ?? 'candidato';
 
   if (!text.trim()) {
-    console.log('[Confident] Sin texto acumulado — no se llama a Claude.');
     return;
   }
 
@@ -103,8 +95,6 @@ async function callAnalyzeAPI() {
   await chrome.storage.session.set({ pendingText: '' });
 
   const contextText = contextBuffer.slice(-3).join('\n');
-
-  console.log(`[Confident] Enviando a /api/analyze | perfil:${profile} | texto: "${text}"`);
 
   try {
     const response = await fetch(ANALYZE_API_URL, {
@@ -124,7 +114,10 @@ async function callAnalyzeAPI() {
     }
 
     const result = await response.json();
-    console.log('[Confident] Sugerencia de Claude:', JSON.stringify(result, null, 2));
+
+    // Reenviar sugerencia al side panel
+    // El panel puede no estar abierto — ignorar el error de "no receiver"
+    chrome.runtime.sendMessage({ action: 'NEW_SUGGESTION', result }).catch(() => {});
 
     // Actualizar el buffer de contexto con la frase procesada
     const updatedContext = [...contextBuffer, text].slice(-3);
@@ -139,15 +132,11 @@ async function callAnalyzeAPI() {
 // ─────────────────────────────────────────────────────────────
 
 async function handleStartSession(tabId, profile, deepgramKey) {
-  console.log(`[Confident] Iniciando sesión | Perfil: ${profile} | Tab: ${tabId}`);
-
   // 1. Obtener streamId (funciona desde Service Worker en MV3)
   const streamId = await getTabStreamId(tabId);
-  console.log('[Confident] streamId obtenido ✓');
 
   // 2. Crear (o reutilizar) el offscreen document
   await createOffscreenDocument();
-  console.log('[Confident] Offscreen document listo ✓');
 
   // 3. Guardar estado de sesión (y resetear buffers de contexto)
   await chrome.storage.session.set({
@@ -167,7 +156,8 @@ async function handleStartSession(tabId, profile, deepgramKey) {
     deepgramKey,
   });
 
-  console.log('[Confident] Mensaje START_AUDIO enviado al offscreen document.');
+  // Notificar al side panel que la sesión ha comenzado
+  chrome.runtime.sendMessage({ action: 'SESSION_STARTED', profile }).catch(() => {});
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -202,7 +192,6 @@ async function createOffscreenDocument() {
   });
 
   if (existingContexts.length > 0) {
-    console.log('[Confident] Offscreen document ya existe, reutilizando.');
     return;
   }
 
@@ -218,8 +207,6 @@ async function createOffscreenDocument() {
 // ─────────────────────────────────────────────────────────────
 
 async function handleStopSession() {
-  console.log('[Confident] Deteniendo sesión...');
-
   // Notificar al offscreen document para que cierre el WebSocket y libere recursos
   try {
     await chrome.runtime.sendMessage({ action: 'STOP_AUDIO' });
@@ -229,5 +216,7 @@ async function handleStopSession() {
   }
 
   await chrome.storage.session.set({ sessionActive: false, deepgramConnected: false });
-  console.log('[Confident] Sesión detenida.');
+
+  // Notificar al side panel que la sesión ha terminado
+  chrome.runtime.sendMessage({ action: 'SESSION_STOPPED' }).catch(() => {});
 }

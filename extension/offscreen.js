@@ -10,7 +10,7 @@
 const DEEPGRAM_URL = 'wss://api.deepgram.com/v1/listen';
 
 const DEEPGRAM_PARAMS = new URLSearchParams({
-  model: 'nova-2',
+  model: 'nova-2-phonecall',
   language: 'es',
   punctuate: 'true',
   interim_results: 'true',
@@ -78,8 +78,6 @@ async function startAudioPipeline(streamId, profile, deepgramKey) {
     video: false,
   });
 
-  console.log('[Offscreen] Stream del tab obtenido ✓');
-
   // 2. Configurar AudioContext a 16kHz (lo que espera Deepgram con linear16)
   audioCtx = new AudioContext({ sampleRate: 16000 });
   source = audioCtx.createMediaStreamSource(activeStream);
@@ -97,7 +95,6 @@ async function startAudioPipeline(streamId, profile, deepgramKey) {
 
   socket.onopen = () => {
     wsReady = true;
-    console.log('[Offscreen] WebSocket Deepgram conectado ✓');
     chrome.storage.session.set({ deepgramConnected: true });
   };
 
@@ -140,9 +137,8 @@ async function startAudioPipeline(streamId, profile, deepgramKey) {
     console.error('[Offscreen] WebSocket error:', err);
   };
 
-  socket.onclose = (event) => {
+  socket.onclose = (_event) => {
     wsReady = false;
-    console.log(`[Offscreen] WebSocket cerrado. Código: ${event.code} | Razón: ${event.reason}`);
     chrome.storage.session.set({ deepgramConnected: false });
     cleanupAudioResources();
   };
@@ -160,8 +156,6 @@ async function startAudioPipeline(streamId, profile, deepgramKey) {
     const pcm16 = float32ToInt16(inputData);
     socket.send(pcm16.buffer);
   };
-
-  console.log('[Offscreen] Pipeline de audio activo. Escuchando para transcripción...');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -169,7 +163,6 @@ async function startAudioPipeline(streamId, profile, deepgramKey) {
 // ─────────────────────────────────────────────────────────────
 
 function stopAudioPipeline() {
-  console.log('[Offscreen] Deteniendo pipeline de audio...');
 
   if (socket && socket.readyState === WebSocket.OPEN) {
     // Enviar mensaje de cierre limpio a Deepgram antes de cerrar
@@ -207,7 +200,6 @@ function cleanupAudioResources() {
     activeStream = null;
   }
   socket = null;
-  console.log('[Offscreen] Recursos de audio liberados.');
 }
 
 // ─────────────────────────────────────────────────────────────

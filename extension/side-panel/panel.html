@@ -2,26 +2,88 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Confident</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f0f10;
-      color: #f1f1f1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .logo { font-size: 20px; font-weight: 700; color: #a78bfa; }
-    .msg  { font-size: 13px; color: #6b7280; }
-  </style>
+  <link rel="stylesheet" href="panel.css" />
 </head>
 <body>
-  <span class="logo">Confident</span>
-  <span class="msg">Panel en construcción — Sesión 3</span>
+
+  <!-- ─── HEADER ─── -->
+  <header class="header">
+    <span class="logo">Confident</span>
+    <div class="session-status">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">Sin sesión activa</span>
+    </div>
+  </header>
+
+  <!-- ─── MAIN ─── -->
+  <main class="main">
+
+    <!-- Estado vacío: no hay sesión activa -->
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <p class="empty-title">Listo para ayudarte</p>
+      <p class="empty-desc">
+        Abre Google Meet y activa Confident<br>desde el popup de la extensión
+      </p>
+    </div>
+
+    <!-- Estado escuchando: sesión activa, sin sugerencia todavía -->
+    <div id="listeningState" class="listening-state hidden">
+      <div class="listening-animation">
+        <span></span><span></span><span></span>
+      </div>
+      <p class="listening-text">Escuchando...</p>
+    </div>
+
+    <!-- Tarjeta de sugerencia -->
+    <div id="suggestionCard" class="suggestion-card hidden">
+
+      <!-- Qué te están preguntando (solo si signal_detected) -->
+      <div id="contextSection" class="context-section hidden">
+        <div class="section-label">🔍 LO QUE TE PREGUNTAN</div>
+        <p id="contextText" class="context-text"></p>
+      </div>
+
+      <!-- Sugerencia principal -->
+      <div class="suggestion-section">
+        <div class="section-label">💡 QUÉ HACER AHORA</div>
+        <p id="suggestionText" class="suggestion-text"></p>
+      </div>
+
+      <!-- Keywords -->
+      <div id="keywordsSection" class="keywords-section hidden">
+        <div id="keywordsList" class="keywords-list"></div>
+      </div>
+
+      <!-- Feedback y urgencia -->
+      <div class="feedback-row">
+        <div class="feedback-buttons">
+          <button class="feedback-btn" id="thumbsUp" title="Fue útil">👍</button>
+          <button class="feedback-btn" id="thumbsDown" title="No fue útil">👎</button>
+        </div>
+        <div class="urgency-dots" id="urgencyDots" title="Nivel de urgencia">
+          <span class="dot" id="dot1"></span>
+          <span class="dot" id="dot2"></span>
+          <span class="dot" id="dot3"></span>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ─── HISTORIAL ─── -->
+  <section class="history-section">
+    <button class="history-toggle" id="historyToggle">
+      <span id="historyArrow">▸</span>
+      <span>Historial</span>
+      <span id="historyCount" class="history-count hidden">0</span>
+    </button>
+    <ul class="history-list hidden" id="historyList"></ul>
+  </section>
+
+  <script src="panel.js"></script>
 </body>
 </html>

@@ -9,8 +9,6 @@
 
   if (!isMeetCall) return;
 
-  console.log('[Confident] Content script activo en Google Meet.');
-
   // Notificar al background que Meet está listo
   chrome.runtime.sendMessage({ action: 'MEET_READY', url: window.location.href });
 })();
