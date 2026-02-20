@@ -64,8 +64,7 @@ Fragmento actual a analizar:
       // Error de la API de Anthropic
       console.error('[/api/analyze] Error API Anthropic:', {
         status: err.status,
-        message: err.message,
-        type: err.type
+        message: err.message
       });
 
       return Response.json(
