@@ -65,6 +65,50 @@ body {
   50% { opacity: 0.3; }
 }
 
+/* ── Contador de sesiones ── */
+.session-counter {
+  background: #1c1c1e;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.session-counter.warning {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.session-counter.info {
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+#counter-text {
+  color: #e5e5e5;
+  line-height: 1.4;
+}
+
+#counter-text .highlight {
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+#counter-text .warning-highlight {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+#counter-text a {
+  color: #a78bfa;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+#counter-text a:hover {
+  text-decoration: underline;
+}
+
 /* ── Sección de perfiles ── */
 .section-label {
   font-size: 11px;

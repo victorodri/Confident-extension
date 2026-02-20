@@ -176,6 +176,16 @@ body {
   letter-spacing: 0.5px;
 }
 
+.status-msg {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.status-msg--error {
+  color: var(--red);
+}
+
 /* ─── TARJETA DE SUGERENCIA ─── */
 
 .suggestion-card {

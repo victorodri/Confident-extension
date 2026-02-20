@@ -20,6 +20,7 @@ const statusDot       = document.getElementById('statusDot');
 const statusText      = document.getElementById('statusText');
 const emptyState      = document.getElementById('emptyState');
 const listeningState  = document.getElementById('listeningState');
+const statusMsg       = document.getElementById('statusMsg');
 const suggestionCard  = document.getElementById('suggestionCard');
 const contextSection  = document.getElementById('contextSection');
 const contextText     = document.getElementById('contextText');
@@ -44,9 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Comprueba si hay sesión activa al abrir el panel
 async function restoreSessionState() {
-  const data = await chrome.storage.session.get(['sessionActive', 'profile']);
+  const data = await chrome.storage.session.get(['sessionActive', 'profile', 'lastSuggestion']);
   if (data.sessionActive) {
     setSessionActive(true, data.profile);
+    // Recuperar la última sugerencia si el panel se abrió después de que llegara
+    if (data.lastSuggestion) {
+      renderSuggestion(data.lastSuggestion);
+    }
   } else {
     setSessionInactive();
   }
@@ -69,6 +74,16 @@ chrome.runtime.onMessage.addListener((message) => {
 
   if (message.action === 'SESSION_STOPPED') {
     setSessionInactive();
+    return false;
+  }
+
+  if (message.action === 'PANEL_STATUS') {
+    showStatusMessage(message.text);
+    return false;
+  }
+
+  if (message.action === 'PANEL_ERROR') {
+    showStatusMessage(message.text, true);
     return false;
   }
 });
@@ -113,6 +128,7 @@ function renderSuggestion(result) {
   // Si no hay señal relevante, volver al estado de escucha sin tocar el historial
   if (!result.signal_detected || !result.suggestion) {
     showState('listening');
+    showStatusMessage('Sin señal por ahora');
     return;
   }
 
@@ -267,4 +283,18 @@ function profileLabel(profile) {
     defensor: 'Defensor',
   };
   return labels[profile] ?? profile ?? 'Sesión';
+}
+
+// Muestra un mensaje de estado temporal debajo de "Escuchando..."
+// isError=true lo pinta en rojo; se limpia automáticamente en 4 segundos
+function showStatusMessage(text, isError = false) {
+  if (!statusMsg) return;
+  statusMsg.textContent = text;
+  statusMsg.classList.remove('hidden', 'status-msg--error');
+  if (isError) statusMsg.classList.add('status-msg--error');
+
+  clearTimeout(showStatusMessage._timer);
+  showStatusMessage._timer = setTimeout(() => {
+    statusMsg.classList.add('hidden');
+  }, 4000);
 }

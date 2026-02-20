@@ -8,8 +8,11 @@
 // - tabCapture.getMediaStreamId REQUIERE user gesture real desde el popup
 
 const ANALYZE_API_URL = 'http://localhost:3000/api/analyze';
-
 const OFFSCREEN_URL = chrome.runtime.getURL('offscreen.html');
+
+// Coordina la carrera entre TRANSCRIPT y VAD_ENDED.
+// No es estado de sesión — es una promesa de coordinación en vuelo.
+let pendingAccumulate = null;
 
 // ─────────────────────────────────────────────────────────────
 // INSTALACIÓN
@@ -25,7 +28,7 @@ chrome.runtime.onInstalled.addListener((_details) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'START_SESSION') {
-    handleStartSession(message.tabId, message.profile, message.deepgramKey)
+    handleStartSession(message.tabId, message.profile)
       .then(() => sendResponse({ ok: true }))
       .catch((err) => {
         console.error('[Confident] Error al iniciar sesión:', err);
@@ -45,7 +48,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'TRANSCRIPT') {
     const { transcript, isFinal, speaker, profile } = message;
     if (isFinal) {
-      accumulateFinalTranscript(transcript, profile);
+      // Acumular y analizar inmediatamente cuando la transcripción es final
+      (async () => {
+        await accumulateFinalTranscript(transcript, profile);
+        await callAnalyzeAPI();
+      })();
     }
     return false;
   }
@@ -55,7 +62,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'VAD_ENDED') {
-    callAnalyzeAPI();
+    // Esperar a que el write de TRANSCRIPT haya terminado antes de leer
+    (async () => {
+      if (pendingAccumulate) await pendingAccumulate;
+      pendingAccumulate = null;
+      await callAnalyzeAPI();
+    })();
+    return false;
+  }
+
+  if (message.action === 'DEEPGRAM_ERROR') {
+    sendToPanel('PANEL_ERROR', { text: 'Error Deepgram — API key inválida' });
+    return false;
+  }
+
+  if (message.action === 'DEEPGRAM_DISCONNECTED') {
+    if (message.code === 1006) {
+      sendToPanel('PANEL_ERROR', { text: 'API key de Deepgram inválida — obtén una válida en console.deepgram.com' });
+    } else if (message.code !== 1000) { // 1000 = cierre limpio
+      sendToPanel('PANEL_ERROR', { text: `Deepgram desconectado (${message.code})` });
+    }
     return false;
   }
 });
@@ -80,7 +106,12 @@ async function accumulateFinalTranscript(transcript, profile) {
   });
 }
 
-// Envía el texto acumulado a /api/analyze y loguea la respuesta
+// Helper para enviar mensajes al panel sin romper si no está abierto
+function sendToPanel(action, payload) {
+  chrome.runtime.sendMessage({ action, ...payload }).catch(() => {});
+}
+
+// Envía el texto acumulado a /api/analyze y reenvía la sugerencia al panel
 async function callAnalyzeAPI() {
   const data = await chrome.storage.session.get(['pendingText', 'contextBuffer', 'lastProfile', 'profile']);
   const text = data.pendingText ?? '';
@@ -96,6 +127,9 @@ async function callAnalyzeAPI() {
 
   const contextText = contextBuffer.slice(-3).join('\n');
 
+  // Notificar al panel que estamos procesando
+  sendToPanel('PANEL_STATUS', { text: 'Analizando...' });
+
   try {
     const response = await fetch(ANALYZE_API_URL, {
       method: 'POST',
@@ -110,20 +144,24 @@ async function callAnalyzeAPI() {
 
     if (!response.ok) {
       console.error(`[Confident] /api/analyze respondió con status ${response.status}`);
+      sendToPanel('PANEL_ERROR', { text: `Error del servidor (${response.status})` });
       return;
     }
 
     const result = await response.json();
 
+    // Guardar la última sugerencia para recuperarla si el panel se abre tarde
+    await chrome.storage.session.set({ lastSuggestion: result });
+
     // Reenviar sugerencia al side panel
-    // El panel puede no estar abierto — ignorar el error de "no receiver"
-    chrome.runtime.sendMessage({ action: 'NEW_SUGGESTION', result }).catch(() => {});
+    sendToPanel('NEW_SUGGESTION', { result });
 
     // Actualizar el buffer de contexto con la frase procesada
     const updatedContext = [...contextBuffer, text].slice(-3);
     await chrome.storage.session.set({ contextBuffer: updatedContext });
   } catch (err) {
     console.error('[Confident] Error al llamar a /api/analyze:', err.message);
+    sendToPanel('PANEL_ERROR', { text: '¿Está ejecutándose npm run dev?' });
   }
 }
 
@@ -131,7 +169,7 @@ async function callAnalyzeAPI() {
 // INICIAR SESIÓN DE CAPTURA
 // ─────────────────────────────────────────────────────────────
 
-async function handleStartSession(tabId, profile, deepgramKey) {
+async function handleStartSession(tabId, profile) {
   // 1. Obtener streamId (funciona desde Service Worker en MV3)
   const streamId = await getTabStreamId(tabId);
 
@@ -153,7 +191,6 @@ async function handleStartSession(tabId, profile, deepgramKey) {
     action: 'START_AUDIO',
     streamId,
     profile,
-    deepgramKey,
   });
 
   // Notificar al side panel que la sesión ha comenzado

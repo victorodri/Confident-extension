@@ -21,6 +21,11 @@
       <span id="status-text">Sesión activa</span>
     </div>
 
+    <!-- Contador de sesiones gratuitas -->
+    <div id="session-counter" class="session-counter hidden">
+      <span id="counter-text"></span>
+    </div>
+
     <!-- Selector de perfil -->
     <section id="profile-section">
       <p class="section-label">Selecciona tu perfil</p>
@@ -43,7 +48,7 @@
       </div>
     </section>
 
-    <!-- Clave de Deepgram (solo visible en modo dev) -->
+    <!-- Clave de Deepgram ya no necesaria - ahora está en el backend
     <section id="api-key-section">
       <p class="section-label">Deepgram API Key <span class="dev-badge">dev</span></p>
       <input
@@ -53,12 +58,19 @@
         autocomplete="off"
       />
       <p class="api-hint">
-        Obtén tu key en <a href="https://console.deepgram.com" target="_blank">console.deepgram.com</a>
+        <strong>¿Cómo obtener tu API key?</strong><br>
+        1. Ve a <a href="https://console.deepgram.com" target="_blank">console.deepgram.com</a><br>
+        2. Regístrate gratis ($200 de crédito)<br>
+        3. Crea un proyecto y copia tu API key
       </p>
     </section>
+    -->
 
     <!-- Botón de acción principal -->
     <div class="action-area">
+      <button id="request-mic-btn" class="btn-start hidden">
+        🎤 Permitir acceso al micrófono
+      </button>
       <button id="start-btn" class="btn-start" disabled>
         Iniciar sesión
       </button>
@@ -80,6 +92,7 @@
 
   </div>
 
+  <script src="../device-fingerprint.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

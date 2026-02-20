@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Deepgram WebSocket</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    #log {
+      background: #252526;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .success { color: #4ec9b0; }
+    .error { color: #f48771; }
+    .info { color: #569cd6; }
+    input {
+      width: 500px;
+      padding: 8px;
+      margin: 10px 0;
+      background: #3c3c3c;
+      border: 1px solid #555;
+      color: #d4d4d4;
+    }
+    button {
+      padding: 10px 20px;
+      background: #0e639c;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { background: #1177bb; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test Deepgram WebSocket - STANDALONE</h1>
+  <p>Esta página prueba la conexión WebSocket con Deepgram FUERA de la extensión.</p>
+
+  <div>
+    <label>API Key de Deepgram:</label><br>
+    <input type="text" id="apiKey" placeholder="Pega tu API key aquí">
+  </div>
+
+  <button onclick="testConnection()">Probar Conexión</button>
+  <button onclick="clearLog()">Limpiar Log</button>
+
+  <div id="log"></div>
+
+  <script>
+    const logEl = document.getElementById('log');
+
+    function log(msg, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const line = document.createElement('div');
+      line.className = type;
+      line.textContent = `[${time}] ${msg}`;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function clearLog() {
+      logEl.innerHTML = '';
+    }
+
+    async function testConnection() {
+      const apiKey = document.getElementById('apiKey').value.trim();
+
+      if (!apiKey) {
+        log('❌ ERROR: Debes ingresar una API key', 'error');
+        return;
+      }
+
+      clearLog();
+      log('🔄 Iniciando prueba de conexión...', 'info');
+      log(`API Key: ${apiKey.substring(0, 8)}...`, 'info');
+
+      // Configuración MINIMAL exactamente igual que en la extensión
+      const params = new URLSearchParams({
+        encoding: 'linear16',
+        sample_rate: '16000',
+      }).toString();
+
+      log(`Parámetros: ${params}`, 'info');
+
+      const wsUrl = `wss://api.deepgram.com/v1/listen?token=${apiKey}&${params}`;
+      log(`Conectando a: wss://api.deepgram.com/v1/listen?token=***&${params}`, 'info');
+
+      try {
+        const socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          log('✅ ÉXITO: WebSocket conectado correctamente', 'success');
+          log('✅ La API key funciona y los parámetros son válidos', 'success');
+          log('➡️  El problema está en la extensión (CSP o permisos)', 'info');
+
+          // Cerrar después de 2 segundos
+          setTimeout(() => {
+            socket.close();
+            log('Conexión cerrada limpiamente', 'info');
+          }, 2000);
+        };
+
+        socket.onerror = (event) => {
+          log('❌ ERROR: WebSocket error', 'error');
+          log('No se pudo conectar - revisa detalles abajo', 'error');
+        };
+
+        socket.onclose = (event) => {
+          if (event.code === 1006) {
+            log(`❌ ERROR 1006: Conexión rechazada`, 'error');
+            log('Posibles causas:', 'error');
+            log('  1. API key inválida o expirada', 'error');
+            log('  2. API key sin permisos para streaming', 'error');
+            log('  3. Cuenta de Deepgram sin créditos', 'error');
+            log('  4. Restricciones de dominio en Deepgram', 'error');
+            log('', 'info');
+            log('🔍 Verifica en: https://console.deepgram.com/project/keys', 'info');
+            log('  - Permisos: debe tener "Member" o "Owner"', 'info');
+            log('  - Uso: revisa que tengas créditos disponibles', 'info');
+          } else if (event.code === 1000) {
+            log('✅ Conexión cerrada correctamente (código 1000)', 'success');
+          } else {
+            log(`⚠️  WebSocket cerrado - código: ${event.code} - razón: ${event.reason || '(sin razón)'}`, 'error');
+          }
+        };
+
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          log(`📨 Mensaje recibido: ${data.type || 'unknown'}`, 'success');
+        };
+
+      } catch (err) {
+        log(`❌ EXCEPCIÓN: ${err.message}`, 'error');
+      }
+    }
+
+    // Auto-focus en el input
+    document.getElementById('apiKey').focus();
+  </script>
+</body>
+</html>
