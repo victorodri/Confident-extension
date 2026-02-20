@@ -1,4 +1,5 @@
-import { anthropic, getSystemPrompt, type UserProfile } from '@/lib/claude';
+import { anthropic, getSystemPrompt, SUGGESTION_SCHEMA, type UserProfile } from '@/lib/claude';
+import Anthropic from '@anthropic-ai/sdk';
 
 export async function POST(request: Request) {
   try {
@@ -19,6 +20,12 @@ export async function POST(request: Request) {
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 350,
       system: getSystemPrompt(activeProfile),
+      output_config: {
+        format: {
+          type: 'json_schema',
+          schema: SUGGESTION_SCHEMA
+        }
+      },
       messages: [
         {
           role: 'user',
@@ -35,11 +42,39 @@ Fragmento actual a analizar:
     });
 
     const raw = message.content[0].type === 'text' ? message.content[0].text : '';
+
+    // Con structured outputs, el JSON está garantizado como válido
     const result = JSON.parse(raw);
 
     return Response.json(result);
   } catch (err) {
-    console.error('[/api/analyze] Error:', err);
+    // Logging detallado para debugging
+    console.error('[/api/analyze] Error completo:', err);
+
+    if (err instanceof SyntaxError) {
+      // Error de parsing JSON (no debería ocurrir con structured outputs)
+      console.error('[/api/analyze] JSON inválido recibido:', err.message);
+      return Response.json(
+        { error: 'Respuesta inválida de la IA' },
+        { status: 500 }
+      );
+    }
+
+    if (err instanceof Anthropic.APIError) {
+      // Error de la API de Anthropic
+      console.error('[/api/analyze] Error API Anthropic:', {
+        status: err.status,
+        message: err.message,
+        type: err.type
+      });
+
+      return Response.json(
+        { error: `Error de API: ${err.message}` },
+        { status: err.status ?? 500 }
+      );
+    }
+
+    // Otros errores
     return Response.json(
       { error: 'Error interno al procesar la solicitud' },
       { status: 500 }

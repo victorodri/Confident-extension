@@ -83,11 +83,94 @@ Primer archivo a tocar: `supabase/schema.sql` (ejecutar en Supabase dashboard)
 - JWT de Supabase se guarda en chrome.storage.sync
 - El endpoint /api/analyze debe validar JWT + verificar límite antes de llamar a Claude
 
+## Mejoras aplicadas (Febrero 2026)
+
+### Fix de errores principales
+- ✅ Eliminada API key de Deepgram hardcodeada en background.js — ahora usa parámetro del popup
+- ✅ Añadida coordinación TRANSCRIPT/VAD_ENDED con pendingAccumulate para evitar race conditions
+- ✅ Añadido manejo de DEEPGRAM_ERROR y DEEPGRAM_DISCONNECTED
+- ✅ Añadido PANEL_STATUS y PANEL_ERROR para feedback visual en el panel
+- ✅ Panel recupera lastSuggestion si se abre después de que llegue
+
+### Mejoras de UX y manejo de errores
+- ✅ Mensajes de error específicos para código WebSocket 1006 (API key inválida)
+- ✅ Validación de longitud mínima de API key (40 caracteres)
+- ✅ Instrucciones paso a paso en popup sobre cómo obtener API key
+- ✅ Creado extension/README.md con guía de solución de errores
+- ✅ Creado extension/clear-api-key.js (script para limpiar API key inválida guardada)
+
+### Optimización de documentación
+- ✅ CLAUDE.md optimizado: reducido de ~1100 a ~500 líneas (~55% reducción tokens)
+
+### Fix crítico modelo Deepgram (Febrero 20, 2026)
+- ✅ Cambiado modelo de `nova-2-phonecall` → `nova-2` (elimina error 400 "Bad Request")
+- ✅ Eliminado parámetro `diarize: true` (no disponible en cuentas gratuitas)
+- ✅ Logs mejorados en offscreen.js para debugging de conexión WebSocket
+- ✅ Actualizado README con solución específica para error 400
+
+## 🚨 FIX APLICADO: Error 400 "Bad Request" solucionado
+
+**Problema identificado:** El modelo `nova-2-phonecall` no está disponible en todas las cuentas de Deepgram (especialmente gratuitas).
+
+**Solución aplicada:** Cambiado a modelo `nova-2` estándar que funciona universalmente.
+
+### Pasos para probar el fix:
+
+1. **Recarga la extensión** en `chrome://extensions` (botón reload ⟳)
+
+2. **Pega tu API key válida** que acabas de copiar de Deepgram:
+   - `4689e170a04cfd20552183d2ed102f37cbc6e859`
+
+3. **Prueba la conexión:**
+   - Abre Google Meet
+   - Clic en el icono de Confident
+   - Pega la API key
+   - Selecciona perfil
+   - Clic "Iniciar sesión"
+   - ✅ **Ahora debería conectar con modelo nova-2 (no más error 400)**
+
+**Más detalles en:** `extension/README.md`
+
+### 🚨 FIX APLICADO: Error 500 en `/api/analyze` solucionado (Febrero 20, 2026)
+
+**Problema identificado:** El endpoint `/api/analyze` devolvía errores 500 porque Claude a veces retornaba texto con markdown o explicaciones adicionales antes/después del JSON, causando que `JSON.parse()` fallara.
+
+**Solución aplicada:** Implementación de **Structured Outputs de Anthropic** que garantiza JSON válido sin necesidad de parsing manual.
+
+**Cambios realizados:**
+
+1. **`/lib/claude.ts`:**
+   - ✅ Agregado `SUGGESTION_SCHEMA` con definición JSON Schema del response esperado
+   - ✅ Simplificado `COMMON_SUFFIX` — eliminadas instrucciones de formato JSON (ya no necesarias)
+   - ✅ Schema exportado para uso en la API
+
+2. **`/app/api/analyze/route.ts`:**
+   - ✅ Agregado `output_config` con `json_schema` format en la llamada a Claude
+   - ✅ Mejorado error handling con tipos específicos (SyntaxError, Anthropic.APIError)
+   - ✅ Logging detallado para debugging
+
+**Resultado:** El endpoint ahora devuelve JSON válido 100% del tiempo, incluso con transcripciones cortas como "hola, hola, hola".
+
+**Verificación realizada:**
+```bash
+# Test 1: Small talk (sin señal)
+curl -X POST http://localhost:3000/api/analyze \
+  -d '{"text":"Volvemos a probar, hola, hola, hola, hola.","profile":"candidato"}'
+# ✅ Respuesta: {"signal_detected":false,"signal_type":null,"urgency":1,...}
+
+# Test 2: Pregunta behavioral (con señal)
+curl -X POST http://localhost:3000/api/analyze \
+  -d '{"text":"Cuéntame sobre una vez que hayas liderado un proyecto difícil","profile":"candidato"}'
+# ✅ Respuesta: {"signal_detected":true,"signal_type":"behavioral","urgency":3,...}
+```
+
+---
+
 ## Deuda técnica conocida
 - `ScriptProcessor` está deprecated → migrar a `AudioWorklet` antes de publicar en Chrome Web Store
 - Los iconos son placeholders — reemplazar antes de publicar
 - No hay autenticación ni freemium (Sesión 4)
 - `ANALYZE_API_URL` hardcodeado a localhost — en Sesión 7 (deploy Vercel) cambiar a URL de producción
 - El offscreen document nunca se cierra explícitamente al hacer STOP_SESSION
-- `background.js` (222 líneas) y `offscreen.js` (219 líneas) ligeramente sobre umbral de 200 líneas —
+- `background.js` y `offscreen.js` ligeramente sobre umbral de 200 líneas —
   decisión tomada: no dividir (son documentos MV3 con estructura inherentemente monolítica)

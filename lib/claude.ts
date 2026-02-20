@@ -115,28 +115,14 @@ NIVELES DE URGENCIA (iguales para los tres perfiles):
 2 = Importante — señal clara, preparar respuesta en los próximos segundos
 3 = Crítico — actúa ahora, están esperando tu respuesta o es un momento clave
 
-FORMATO DE RESPUESTA — responde ÚNICAMENTE con este JSON, sin texto adicional,
-sin markdown, sin explicaciones fuera del JSON:
-{
-  "signal_detected": boolean,
-  "signal_type": string | null,
-  "urgency": 1 | 2 | 3,
-  "what_is_being_asked": "En 1 línea: qué se está pidiendo o qué está pasando realmente.",
-  "suggestion": "Qué hacer o decir ahora. Máximo 2-3 líneas. Directo y accionable.",
-  "keywords": ["término1", "término2", "término3"],
-  "speaker_detected": "user" | "other" | "unknown"
-}
-
-Si no hay señal relevante (small talk, silencio, tema irrelevante), responde:
-{
-  "signal_detected": false,
-  "signal_type": null,
-  "urgency": 1,
-  "what_is_being_asked": null,
-  "suggestion": null,
-  "keywords": [],
-  "speaker_detected": "other"
-}
+Si no hay señal relevante (small talk, silencio, tema irrelevante):
+- signal_detected: false
+- signal_type: null
+- urgency: 1
+- what_is_being_asked: null
+- suggestion: null
+- keywords: []
+- speaker_detected: "other"
 
 REGLAS ABSOLUTAS:
 - El usuario está en una llamada en vivo. Máximo 3 líneas en "suggestion"
@@ -145,6 +131,30 @@ REGLAS ABSOLUTAS:
 - Nunca inventes datos, cifras o ejemplos que el usuario no pueda verificar
 - "what_is_being_asked" siempre se rellena cuando signal_detected es true
 `;
+
+// Schema JSON para structured outputs de Anthropic
+export const SUGGESTION_SCHEMA = {
+  type: "object",
+  properties: {
+    signal_detected: { type: "boolean" },
+    signal_type: { type: ["string", "null"] },
+    urgency: { type: "integer" },
+    what_is_being_asked: { type: ["string", "null"] },
+    suggestion: { type: ["string", "null"] },
+    keywords: { type: "array", items: { type: "string" } },
+    speaker_detected: { type: "string", enum: ["user", "other", "unknown"] }
+  },
+  required: [
+    "signal_detected",
+    "signal_type",
+    "urgency",
+    "what_is_being_asked",
+    "suggestion",
+    "keywords",
+    "speaker_detected"
+  ],
+  additionalProperties: false
+} as const;
 
 export type UserProfile = 'candidato' | 'vendedor' | 'defensor';
 
