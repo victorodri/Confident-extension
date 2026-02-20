@@ -1,33 +1,54 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 3 — Panel Lateral Funcional
+Sesión completada: 4 — Autenticación y Lógica Freemium
 Fecha: Febrero 2026
 
 ## Qué está funcionando
-- `package.json` — Next.js 15.3.9, React 19.2.4, @anthropic-ai/sdk
+- `package.json` — Next.js 15.3.9, React 19.2.4, @anthropic-ai/sdk, @supabase/ssr, @supabase/supabase-js
 - `tsconfig.json` — Config estándar Next.js App Router
 - `next.config.js` — Config mínima
 - `app/layout.tsx` — Layout raíz mínimo (placeholder hasta Sesión 5)
 - `app/page.tsx` — Placeholder landing (completa en Sesión 5)
 - `lib/claude.ts` — Los 3 prompts (CANDIDATO, VENDEDOR, DEFENSOR) + COMMON_SUFFIX + getSystemPrompt(profile)
+- `lib/supabase.ts` — Cliente Supabase browser (createBrowserClient)
+- `lib/supabase-server.ts` — Cliente Supabase server con manejo de cookies
+- `lib/constants.ts` — Límites freemium (5 anónimo, 15 gratis, ∞ pro)
+- `supabase/schema.sql` — Schema con profiles, usage_sessions, RLS, trigger auto-increment
+- `app/auth/page.tsx` — Login con Google via Supabase OAuth, mensajes contextuales según reason
+- `app/auth/callback/route.ts` — OAuth callback handler
+- `app/auth/close/page.tsx` — Auto-close tab después de autenticación
 - `app/api/analyze/route.ts` — Endpoint POST: recibe `{text, profile, context, session_type}` → Claude → JSON
+- `app/api/session/route.ts` — POST crear sesión (registra en usage_sessions)
+- `app/api/usage/route.ts` — GET contador de sesiones (anónimo + autenticado) + migración automática
+- `app/api/migrate-sessions/route.ts` — POST migrar sesiones anónimas a usuario autenticado
 - `.env.example` — Plantilla documentada con comentarios PÚBLICA/PRIVADA para cada variable
 - `extension/background.js` — Reenvía sugerencias al panel via `NEW_SUGGESTION`, `SESSION_STARTED`, `SESSION_STOPPED`
-- `extension/offscreen.js` — Audio pipeline con Deepgram (model: nova-2-phonecall)
+- `extension/offscreen.js` — Audio pipeline con Deepgram (model: nova-2)
+- `extension/device-fingerprint.js` — Generación de fingerprint único del dispositivo (anti-pirateo)
+- `extension/popup/popup.js` — Selector de perfil + checkSessionGate() + registro de sesiones + contador de sesiones
+- `extension/popup/popup.html` — Elemento para mostrar contador de sesiones
+- `extension/popup/popup.css` — Estilos para contador (info/warning)
 - `extension/side-panel/panel.html` — UI completa del panel lateral
 - `extension/side-panel/panel.css` — Estilos oscuros con indicadores de urgencia (violeta/ámbar/rojo)
 - `extension/side-panel/panel.js` — Lógica completa: recibe sugerencias, feedback, historial
 
-## Flujo completo de Sesión 3
+## Flujo completo con Sesión 4 (Auth + Freemium)
 ```
 popup.js
+  → Genera anonymous_id (UUID) si no existe en storage.local
+  → checkSessionGate() → fetch GET /api/usage?anonymous_id=XXX
+    ├─ Sesión ≤5 anónimo → permitir
+    ├─ Sesión 6 anónimo → abrir /auth?reason=limit_soft → bloquear
+    ├─ Sesión ≤15 autenticado free → permitir
+    └─ Sesión 16 autenticado free → abrir /auth?reason=limit_hard → bloquear
   → chrome.runtime.sendMessage(START_SESSION)
+  → fetch POST /api/session → registrar sesión en Supabase
 background.js
   → getTabStreamId() + createOffscreenDocument()
   → chrome.runtime.sendMessage(SESSION_STARTED)  ← panel recibe → estado "Escuchando"
   → chrome.runtime.sendMessage(START_AUDIO)
-offscreen.js (Deepgram nova-2-phonecall)
+offscreen.js (Deepgram nova-2)
   → chrome.runtime.sendMessage(TRANSCRIPT { isFinal })
   → chrome.runtime.sendMessage(VAD_ENDED)
 background.js
@@ -42,46 +63,94 @@ panel.js
 popup.js → STOP_SESSION → background.js → SESSION_STOPPED → panel limpia UI
 ```
 
-## Entregable verificable de Sesión 3
+## Entregable verificable de Sesión 4
 Para verificar que funciona:
+
+### Pre-requisito: Configurar Supabase
+1. Ejecutar `supabase/schema.sql` en Supabase dashboard (SQL Editor)
+2. Configurar Google OAuth en Supabase:
+   - Dashboard → Authentication → Providers → Google
+   - Habilitar Google y agregar Client ID/Secret de Google Cloud Console
+3. Verificar que las variables de entorno están en `.env.local`:
+   - NEXT_PUBLIC_SUPABASE_URL
+   - NEXT_PUBLIC_SUPABASE_ANON_KEY
+   - SUPABASE_SERVICE_ROLE_KEY
+
+### Test Freemium Anónimo (sesiones 1-5)
 1. `npm run dev` en la raíz (servidor en localhost:3000)
 2. Recargar extensión en chrome://extensions
 3. Abrir Google Meet
-4. Clic en el icono de la extensión → abrir Side Panel (desde el botón de Chrome o el popup)
-5. Seleccionar perfil + pegar Deepgram API key → Iniciar sesión
-6. El panel debe mostrar "Escuchando..." con animación de puntos
-7. Hablar — en el panel aparece la sugerencia con:
-   - Banner "LO QUE TE PREGUNTAN" (si hay contexto)
-   - Sugerencia grande en "QUÉ HACER AHORA"
-   - Keywords como chips violetas
-   - Indicador de urgencia (1-3 puntos: violeta/ámbar/rojo)
-   - Botones 👍/👎
-8. Las sugerencias se acumulan en el historial colapsable
+4. Seleccionar perfil + pegar Deepgram API key → Iniciar sesión
+5. ✅ Debe funcionar normalmente (sesión 1-5)
+6. Iniciar sesión 5 veces (puede ser simplemente iniciar y detener)
+7. En la 6ta vez → ✅ debe abrir tab en `localhost:3000/auth?reason=limit_soft`
+
+### Test Paywall Suave (sesión 6)
+1. Hacer login con Google en `/auth?reason=limit_soft`
+2. ✅ Tab se debe cerrar automáticamente después de autenticar
+3. Verificar en Supabase → tabla `profiles` que el usuario fue creado
+4. Ahora puedes iniciar 10 sesiones más (total 15)
+
+### Test Paywall Duro (sesión 16)
+1. Hacer login si no lo has hecho
+2. Iniciar sesión 15 veces (puede ser con el perfil autenticado)
+3. En la 16ta vez → ✅ debe abrir tab en `localhost:3000/auth?reason=limit_hard`
+
+### Test Contador de Sesiones
+```bash
+# Usuario anónimo
+curl "http://localhost:3000/api/usage?anonymous_id=<uuid>"
+# ✅ Debe retornar: {"user_type":"anonymous","session_count":X,"limit":5,"remaining":Y}
+```
 
 ## Próxima sesión
-Sesión: 4 — Autenticación y Lógica Freemium
-Objetivo: Login con Google + contador de sesiones + paywalls
-Primer archivo a tocar: `supabase/schema.sql` (ejecutar en Supabase dashboard)
+Sesión: 5 — Landing Page Pública
+Objetivo: Crear landing page en Vercel con Tailwind + Posthog tracking
+Primer archivo a tocar: `app/page.tsx` (reemplazar placeholder actual)
 
-### Archivos a crear en Sesión 4
-- `supabase/schema.sql` — Schema completo con RLS (copiar de CLAUDE.md §7)
-- `lib/supabase.ts` — Cliente Supabase (browser)
-- `lib/supabase-server.ts` — Cliente Supabase (server, service role)
-- `app/login/page.tsx` — Login con Google (1 clic via Supabase Auth)
-- `app/api/session/route.ts` — POST crear sesión / PATCH cerrar sesión
-- `app/api/usage/route.ts` — GET contador de sesiones
+### Archivos a crear en Sesión 5
+- `lib/analytics.ts` — Cliente Posthog con eventos instrumentados
+- `app/pricing/page.tsx` — Página de precios (Free / Pro)
+- `components/ui/*` — Componentes shadcn/ui necesarios (Button, Card, etc.)
+- `public/logo.svg` — Logo Confident (provisional)
 
-### Archivos a modificar en Sesión 4
-- `extension/background.js` — Gestionar JWT de Supabase y contador de sesiones
-- `extension/side-panel/panel.js` — Mostrar paywalls (sesión 6 sin cuenta, sesión 16 con cuenta)
-- `extension/popup/popup.js` — Mostrar estado de cuenta / sesiones restantes
+### Archivos a modificar en Sesión 5
+- `app/page.tsx` — Landing completa (hero, cómo funciona, casos de uso, precios, footer)
+- `app/layout.tsx` — Agregar Posthog provider
+- `tailwind.config.ts` — Configurar tema Confident
 
-### Contexto importante para Sesión 4
-- El funnel freemium: sesiones 1-5 anónimas → sesión 6 paywall suave → sesiones 6-15 gratis → sesión 16 paywall duro
-- anonymous_id se genera en chrome.storage.local al instalar (UUID)
-- Al hacer login, migrar anonymous_id al perfil autenticado en Supabase
-- JWT de Supabase se guarda en chrome.storage.sync
-- El endpoint /api/analyze debe validar JWT + verificar límite antes de llamar a Claude
+### Contexto importante para Sesión 5
+- Hero: "Tu confidente en cada conversación importante" + CTA "Probar gratis — sin registro"
+- Secciones: Hero → Cómo funciona → Casos de uso → Precios → Footer
+- Footer: Privacidad | Términos | hola@tryconfident.com + "RGPD • Solo texto, no audio"
+- Instrumentar eventos Posthog: page_view, cta_clicked, plan_selected
+- El CTA principal debe llevar a instalar la extensión (aún local, deploy en Sesión 7)
+
+## 🔒 Sistema Anti-Pirateo de Sesiones (Sesión 4)
+
+### Problema solucionado
+- ❌ **Antes**: UUID aleatorio → desinstalar/reinstalar = contador reset
+- ✅ **Ahora**: Device fingerprint único → persiste incluso después de desinstalar
+
+### Implementación
+- ✅ `extension/device-fingerprint.js` — Genera hash SHA-256 único basado en:
+  - User Agent + Idioma + Timezone + Resolución de pantalla
+  - Canvas fingerprint (renderizado único por GPU)
+  - WebGL fingerprint (vendor/renderer de tarjeta gráfica)
+  - Audio context fingerprint (procesamiento de audio único)
+- ✅ `popup.js` — Usa `getDeviceFingerprint()` en lugar de `crypto.randomUUID()`
+- ✅ `/api/usage` — Migración automática de sesiones anónimas cuando usuario se registra
+- ✅ `/api/migrate-sessions` — Endpoint dedicado para migración manual si es necesario
+
+### Protección alcanzada
+| Acción | ¿Resetea contador? |
+|--------|-------------------|
+| Desinstalar/reinstalar extensión | ❌ No |
+| Borrar storage/cookies/cache | ❌ No |
+| Modo incógnito | ⚠️ Sí (limitación aceptable) |
+| Cambiar navegador/dispositivo | ✅ Sí (legítimo) |
+
+Ver `ANTI-PIRACY.md` para documentación completa.
 
 ## Mejoras aplicadas (Febrero 2026)
 
@@ -169,8 +238,11 @@ curl -X POST http://localhost:3000/api/analyze \
 ## Deuda técnica conocida
 - `ScriptProcessor` está deprecated → migrar a `AudioWorklet` antes de publicar en Chrome Web Store
 - Los iconos son placeholders — reemplazar antes de publicar
-- No hay autenticación ni freemium (Sesión 4)
 - `ANALYZE_API_URL` hardcodeado a localhost — en Sesión 7 (deploy Vercel) cambiar a URL de producción
 - El offscreen document nunca se cierra explícitamente al hacer STOP_SESSION
 - `background.js` y `offscreen.js` ligeramente sobre umbral de 200 líneas —
   decisión tomada: no dividir (son documentos MV3 con estructura inherentemente monolítica)
+- No hay landing page pública (Sesión 5)
+- No hay email de transcripción al finalizar sesión (Sesión 6)
+- No hay checkbox de consentimiento en panel lateral (Sesión 6)
+- Paywalls apuntan a /auth — falta página /pricing con Stripe (Sesión 7)
