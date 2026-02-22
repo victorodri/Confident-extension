@@ -54,3 +54,21 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+-- Trigger para incrementar contador de sesiones
+create or replace function public.increment_session_count()
+returns trigger as $$
+begin
+  -- Solo incrementar si la sesión tiene user_id (usuario autenticado)
+  if new.user_id is not null then
+    update public.profiles
+    set total_sessions = total_sessions + 1
+    where id = new.user_id;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_session_created
+  after insert on public.usage_sessions
+  for each row execute procedure public.increment_session_count();

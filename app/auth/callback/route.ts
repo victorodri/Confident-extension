@@ -10,6 +10,6 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // Redirigir y cerrar
-  return NextResponse.redirect(new URL('/auth/close', request.url));
+  // Redirigir a página de éxito
+  return NextResponse.redirect(new URL('/auth/success', request.url));
 }
