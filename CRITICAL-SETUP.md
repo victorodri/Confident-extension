@@ -104,23 +104,30 @@ curl -X POST http://localhost:3000/api/send-transcript \
 
 ---
 
-## 3️⃣ Verificar flujo de login (2 minutos)
+## 3️⃣ Configurar Google OAuth (5-7 minutos)
 
-### Cambio realizado
-Ahora después de login con Google, el usuario ve una página de éxito que muestra:
-- ✅ "Cuenta creada con éxito"
-- ✅ "Se han añadido 10 sesiones"
-- ✅ Contador actualizado
-- ✅ Botón "Cerrar" y "Ver Dashboard"
-- ✅ Auto-cierra en 5 segundos
+### Problema resuelto
+- Magic link tenía rate limit (3-4 emails/hora)
+- Ahora hay botón "Continuar con Google" (sin límites, instantáneo)
 
-### Qué verificar
+### Setup requerido
+**Seguir instrucciones completas:** `SETUP-GOOGLE-OAUTH.md`
+
+**Resumen rápido:**
+1. Google Cloud Console → Crear proyecto "Confident"
+2. Habilitar Google+ API
+3. Crear OAuth Client ID
+4. Copiar Client ID + Client Secret
+5. Supabase → Authentication → Providers → Google
+6. Pegar credenciales → Save
+
+### Verificación
 1. Ir a http://localhost:3000/auth?reason=limit_soft
-2. Hacer login con Google
-3. Deberías ver la nueva página `/auth/success`
-4. Verificar que muestre las sesiones correctas
+2. Deberías ver botón **"Continuar con Google"**
+3. Clic → ventana popup Google → autorizar
+4. ✅ Redirige a `/auth/success` con "10 sesiones añadidas"
 
-**Archivo creado:** `app/auth/success/page.tsx`
+**Ver detalles completos:** `SETUP-GOOGLE-OAUTH.md`
 
 ---
 
@@ -128,13 +135,15 @@ Ahora después de login con Google, el usuario ve una página de éxito que mues
 
 Marca cuando completes cada paso:
 
-- [ ] Trigger de Supabase ejecutado sin errores
+- [x] Trigger de Supabase ejecutado sin errores ✅
 - [ ] Cuenta de Resend creada y API key copiada
 - [ ] Tu email personal verificado en Resend
 - [ ] Variables `RESEND_API_KEY` y `RESEND_FROM_EMAIL` en `.env.local`
 - [ ] Servidor Next.js reiniciado (`npm run dev`)
 - [ ] Test de email exitoso (curl devuelve `{"success":true}`)
-- [ ] Flujo de login probado → se ve página de éxito
+- [ ] Credenciales Google OAuth creadas en Google Cloud
+- [ ] Google OAuth configurado en Supabase
+- [ ] Login con Google funciona → se ve página de éxito
 
 ---
 
@@ -168,6 +177,11 @@ Una vez hayas verificado que:
    - Verificar que `app/auth/callback/route.ts` apunta a `/auth/success`
    - Verificar que el servidor está corriendo
 
+4. **Google OAuth no funciona**
+   - Verificar que agregaste TU email como test user en Google Cloud
+   - Verificar que la redirect URI sea exacta (con `/auth/v1/callback`)
+   - Ver `SETUP-GOOGLE-OAUTH.md` sección "Troubleshooting"
+
 ---
 
-**⏱️ Tiempo total estimado: 15-20 minutos**
+**⏱️ Tiempo total estimado: 20-25 minutos**
