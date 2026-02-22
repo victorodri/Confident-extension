@@ -2,7 +2,7 @@
 
 > Tu confidente en cada conversación importante.
 
-**Confident** es una extensión de Chrome que actúa como asistente silencioso durante videollamadas en Google Meet. Escucha la conversación en tiempo real, la analiza con IA especializada por rol, y muestra en un panel lateral **qué decir ahora mismo** — como un coach experto susurrándote al oído.
+**Confident** es una extensión de Chrome que actúa como tu asistente personalizado durante videollamadas en Google Meet. Escucha la conversación en tiempo real, la analiza con IA y te muestra en un panel lateral **qué decir ahora mismo** — como un coach experto susurrándote al oído.
 
 Solo tú lo ves. Nadie más en la llamada sabe que está ahí.
 
@@ -16,12 +16,12 @@ Solo tú lo ves. Nadie más en la llamada sabe que está ahí.
 
 Cuando detecta una señal relevante en la conversación, el panel lateral muestra:
 
-1. **QUÉ SE PIDE** — Contexto de la situación (1 línea)
-2. **SUGERENCIA** — Qué decir ahora mismo (2-3 líneas, texto grande)
-3. **KEYWORDS** — Palabras clave a incluir en tu respuesta
-4. **URGENCIA** — Nivel 1 (informativo), 2 (importante) o 3 (actúa ya)
+1. El contexto de la situación (1 línea)
+2. Qué decir ahora mismo (2-3 líneas, texto grande)
+3. Palabras clave a incluir en tu respuesta
+4. **Urgencia:** — Nivel 1 (informativo), 2 (importante) o 3 (actúa ya)
 
-**Diferenciador clave:** No es un resumen genérico de reuniones. Es un coach especializado que te dice **qué hacer ahora**, no qué pasó.
+**Diferenciador clave:** No es un resumen genérico de reuniones. Es un asistente especializado que te dice **qué hacer ahora**, no qué pasó.
 
 ---
 
