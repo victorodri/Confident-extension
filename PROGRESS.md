@@ -1,7 +1,7 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 4 — Autenticación y Lógica Freemium
+Sesión completada: 6 — Email de transcripción al finalizar sesión
 Fecha: Febrero 2026
 
 ## Qué está funcionando
@@ -29,9 +29,14 @@ Fecha: Febrero 2026
 - `extension/popup/popup.js` — Selector de perfil + checkSessionGate() + registro de sesiones + contador de sesiones
 - `extension/popup/popup.html` — Elemento para mostrar contador de sesiones
 - `extension/popup/popup.css` — Estilos para contador (info/warning)
-- `extension/side-panel/panel.html` — UI completa del panel lateral
-- `extension/side-panel/panel.css` — Estilos oscuros con indicadores de urgencia (violeta/ámbar/rojo)
-- `extension/side-panel/panel.js` — Lógica completa: recibe sugerencias, feedback, historial
+- `extension/side-panel/panel.html` — UI completa del panel lateral (con estado de consentimiento)
+- `extension/side-panel/panel.css` — Estilos oscuros con indicadores de urgencia (violeta/ámbar/rojo) + estilos consentimiento
+- `extension/side-panel/panel.js` — Lógica completa: recibe sugerencias, feedback, historial, inicio desde panel
+- `extension/popup/popup.html` — Checkbox de consentimiento + campo emails (Sesión 6)
+- `extension/popup/popup.css` — Estilos para checkbox y campo emails (Sesión 6)
+- `extension/popup/popup.js` — Valida consentimiento antes de iniciar, guarda emails
+- `extension/background.js` — Acumula transcripción completa, envía email al detener sesión
+- `app/api/send-transcript/route.ts` — Endpoint POST para enviar email con Resend (Sesión 6)
 
 ## Flujo completo con Sesión 4 (Auth + Freemium)
 ```
@@ -104,27 +109,23 @@ curl "http://localhost:3000/api/usage?anonymous_id=<uuid>"
 ```
 
 ## Próxima sesión
-Sesión: 5 — Landing Page Pública
-Objetivo: Crear landing page en Vercel con Tailwind + Posthog tracking
-Primer archivo a tocar: `app/page.tsx` (reemplazar placeholder actual)
+Sesión: 7 — Paywall Duro + Pricing Page + Stripe
+Objetivo: Completar funnel freemium con página de precios y preparación de Stripe
+Primer archivo a tocar: `app/pricing/page.tsx` (verificar estado actual)
 
-### Archivos a crear en Sesión 5
-- `lib/analytics.ts` — Cliente Posthog con eventos instrumentados
-- `app/pricing/page.tsx` — Página de precios (Free / Pro)
-- `components/ui/*` — Componentes shadcn/ui necesarios (Button, Card, etc.)
-- `public/logo.svg` — Logo Confident (provisional)
+### Archivos a crear/modificar en Sesión 7
+- `app/pricing/page.tsx` — Página de precios completa con planes Free/Pro
+- Integración Stripe test mode (arquitectura lista, botones sin activar)
+- Instrumentar evento clave: `payment_cta_clicked` (métrica principal MVP)
+- Verificar que paywall hard redirige correctamente a /pricing
+- Formulario lista de espera para plan Pro (mientras no hay Stripe activo)
 
-### Archivos a modificar en Sesión 5
-- `app/page.tsx` — Landing completa (hero, cómo funciona, casos de uso, precios, footer)
-- `app/layout.tsx` — Agregar Posthog provider
-- `tailwind.config.ts` — Configurar tema Confident
-
-### Contexto importante para Sesión 5
-- Hero: "Tu confidente en cada conversación importante" + CTA "Probar gratis — sin registro"
-- Secciones: Hero → Cómo funciona → Casos de uso → Precios → Footer
-- Footer: Privacidad | Términos | hola@tryconfident.com + "RGPD • Solo texto, no audio"
-- Instrumentar eventos Posthog: page_view, cta_clicked, plan_selected
-- El CTA principal debe llevar a instalar la extensión (aún local, deploy en Sesión 7)
+### Contexto importante para Sesión 7
+- Página /pricing debe mostrar claramente los 3 niveles: Anónimo (5) / Free (15) / Pro (∞)
+- Botón "Empezar Pro" → formulario lista espera (email + nombre)
+- Evento `payment_cta_clicked` = MÉTRICA PRINCIPAL para validar willingness to pay
+- No activar Stripe real todavía — solo arquitectura y UI
+- Después de Sesión 7, solo quedará Sesión 8 (QA + Chrome Web Store)
 
 ## 🔒 Sistema Anti-Pirateo de Sesiones (Sesión 4)
 
@@ -235,6 +236,45 @@ curl -X POST http://localhost:3000/api/analyze \
 
 ---
 
+## Sesión 6 completada — Email de transcripción + Consentimiento
+
+### Funcionalidades implementadas
+✅ **Checkbox de consentimiento obligatorio** en popup (antes de iniciar sesión)
+✅ **Campo opcional de emails** en popup para transcripción
+✅ **Acumulación de transcripción completa** en background.js (`sessionTranscript`)
+✅ **Contador de sugerencias** y duración de sesión
+✅ **Endpoint `/api/send-transcript`** con Resend para enviar emails
+✅ **Email HTML profesional** con transcripción, stats, enlaces ARCO
+✅ **Envío automático** al detener sesión si hay emails configurados
+
+### Flujo completo (Sesión 6)
+```
+1. Usuario selecciona perfil en popup
+2. Aparecen checkbox de consentimiento + campo emails
+3. Usuario DEBE marcar checkbox para habilitar botón "Iniciar sesión"
+4. Usuario opcionalmente ingresa emails de participantes
+5. Clic "Iniciar sesión" → guarda consentimiento + emails en storage
+6. background.js acumula transcripción completa durante la sesión
+7. Al detener sesión → si hay emails → POST /api/send-transcript
+8. Email enviado con: transcripción, stats, enlaces a dashboard + ARCO
+```
+
+### Archivo de email
+- Template HTML responsive con gradiente violeta
+- Stats: número de sugerencias + duración en minutos
+- Transcripción formateada en bloque scrollable
+- Banner RGPD con enlace a eliminación de datos
+- Botones: "Ver en Dashboard" + "Eliminar datos (ARCO)"
+- Footer: "Solo texto, no audio • RGPD • Datos en Frankfurt (EU)"
+
+### Verificación técnica
+- Checkbox marcado → `startBtn.disabled` = false
+- Emails guardados en `chrome.storage.session.participantEmails`
+- Consentimiento confirmado en `chrome.storage.session.consentConfirmed`
+- Transcripción acumulada línea por línea en `sessionTranscript`
+- Duración calculada desde `sessionStartTime` hasta `Date.now()`
+- Resend API key en `.env.local` (RESEND_API_KEY)
+
 ## Deuda técnica conocida
 - `ScriptProcessor` está deprecated → migrar a `AudioWorklet` antes de publicar en Chrome Web Store
 - Los iconos son placeholders — reemplazar antes de publicar
@@ -242,7 +282,5 @@ curl -X POST http://localhost:3000/api/analyze \
 - El offscreen document nunca se cierra explícitamente al hacer STOP_SESSION
 - `background.js` y `offscreen.js` ligeramente sobre umbral de 200 líneas —
   decisión tomada: no dividir (son documentos MV3 con estructura inherentemente monolítica)
-- No hay landing page pública (Sesión 5)
-- No hay email de transcripción al finalizar sesión (Sesión 6)
-- No hay checkbox de consentimiento en panel lateral (Sesión 6)
 - Paywalls apuntan a /auth — falta página /pricing con Stripe (Sesión 7)
+- Panel lateral tiene estado "consent" que ya no se usa (se movió al popup por user gesture)

@@ -7,6 +7,10 @@
 
 const profileBtns = document.querySelectorAll('.profile-btn');
 const requestMicBtn = document.getElementById('request-mic-btn');
+const consentSection = document.getElementById('consent-section');
+const consentCheckbox = document.getElementById('consent-checkbox');
+const emailsSection = document.getElementById('emails-section');
+const participantEmailsInput = document.getElementById('participant-emails');
 const startBtn = document.getElementById('start-btn');
 const stopBtn = document.getElementById('stop-btn');
 const openPanelBtn = document.getElementById('open-panel-btn');
@@ -119,6 +123,9 @@ function setupEventListeners() {
       selectProfile(btn.dataset.profile);
     });
   });
+
+  // Checkbox de consentimiento (Sesión 6)
+  consentCheckbox.addEventListener('change', updateStartButton);
 
   // Botón SOLICITAR MICRÓFONO
   requestMicBtn.addEventListener('click', handleRequestMicClick);
@@ -267,6 +274,10 @@ function selectProfile(profile) {
   // Persistir selección
   chrome.storage.local.set({ savedProfile: profile });
 
+  // Mostrar secciones de consentimiento y emails (Sesión 6)
+  showElement(consentSection);
+  showElement(emailsSection);
+
   updateStartButton();
 }
 
@@ -353,6 +364,19 @@ async function handleStartClick() {
     }
 
     startBtn.textContent = 'Iniciando...';
+
+    // Guardar consentimiento y emails (Sesión 6)
+    const emailsInput = participantEmailsInput.value.trim();
+    const emails = emailsInput
+      ? emailsInput.split(',').map(e => e.trim()).filter(e => e.length > 0)
+      : [];
+
+    await chrome.storage.session.set({
+      consentConfirmed: true,
+      participantEmails: emails
+    });
+
+    console.log('[Popup] ✅ Consentimiento confirmado. Emails:', emails.length);
 
     // Enviar mensaje al background.js con el tabId y el perfil
     // IMPORTANTE: este clic ES el user gesture que Chrome requiere para tabCapture
@@ -444,6 +468,7 @@ function updateStartButton() {
   const hasProfile = !!selectedProfile;
   const inMeet = !!currentTabId;
   const hasMicPermission = micPermissionGranted;
+  const hasConsent = consentCheckbox.checked; // Sesión 6
 
   // Mostrar botón de solicitar micrófono si no hay permiso
   if (!hasMicPermission && hasProfile && inMeet) {
@@ -451,7 +476,8 @@ function updateStartButton() {
     startBtn.disabled = true;
   } else {
     hideElement(requestMicBtn);
-    startBtn.disabled = !(hasProfile && inMeet && hasMicPermission);
+    // Ahora también requiere consentimiento marcado
+    startBtn.disabled = !(hasProfile && inMeet && hasMicPermission && hasConsent);
   }
 }
 

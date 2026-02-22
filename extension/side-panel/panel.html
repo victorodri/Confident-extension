@@ -20,8 +20,41 @@
   <!-- ─── MAIN ─── -->
   <main class="main">
 
+    <!-- Estado inicial: esperando consentimiento -->
+    <div id="consentState" class="consent-state hidden">
+      <div class="consent-icon">⚠️</div>
+      <p class="consent-title">Antes de comenzar</p>
+
+      <!-- Checkbox de consentimiento OBLIGATORIO -->
+      <div class="consent-checkbox-wrapper">
+        <label class="consent-label">
+          <input type="checkbox" id="consentCheckbox" />
+          <span>He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.</span>
+        </label>
+      </div>
+
+      <!-- Campo opcional: emails de participantes -->
+      <div class="participants-section">
+        <label class="input-label">
+          Emails de participantes (opcional)
+          <span class="input-hint">Se enviará transcripción al finalizar</span>
+        </label>
+        <input
+          type="text"
+          id="participantEmails"
+          placeholder="email1@ejemplo.com, email2@ejemplo.com"
+          class="email-input"
+        />
+      </div>
+
+      <!-- Botón para confirmar y comenzar -->
+      <button id="startSessionBtn" class="btn-start-session" disabled>
+        Iniciar sesión
+      </button>
+    </div>
+
     <!-- Estado vacío: no hay sesión activa -->
-    <div id="emptyState" class="empty-state">
+    <div id="emptyState" class="empty-state hidden">
       <div class="empty-icon">🎯</div>
       <p class="empty-title">Listo para ayudarte</p>
       <p class="empty-desc">

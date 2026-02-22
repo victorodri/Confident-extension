@@ -66,6 +66,28 @@
     </section>
     -->
 
+    <!-- Checkbox de consentimiento (Sesión 6) -->
+    <section id="consent-section" class="consent-section hidden">
+      <label class="consent-label">
+        <input type="checkbox" id="consent-checkbox" />
+        <span>He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.</span>
+      </label>
+    </section>
+
+    <!-- Campo opcional: emails de participantes (Sesión 6) -->
+    <section id="emails-section" class="emails-section hidden">
+      <label class="input-label">
+        Emails de participantes (opcional)
+        <span class="input-hint">Se enviará transcripción al finalizar</span>
+      </label>
+      <input
+        type="text"
+        id="participant-emails"
+        placeholder="email1@ejemplo.com, email2@ejemplo.com"
+        class="email-input"
+      />
+    </section>
+
     <!-- Botón de acción principal -->
     <div class="action-area">
       <button id="request-mic-btn" class="btn-start hidden">

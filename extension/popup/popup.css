@@ -291,6 +291,77 @@ body {
   text-align: center;
 }
 
+/* ── Consentimiento (Sesión 6) ── */
+.consent-section {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.consent-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #9ca3af;
+}
+
+.consent-label input[type="checkbox"] {
+  margin-top: 2px;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #a78bfa;
+}
+
+/* ── Emails de participantes (Sesión 6) ── */
+.emails-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.input-hint {
+  font-size: 10px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.email-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: #1a1a1d;
+  border: 1px solid #2a2a2e;
+  border-radius: 6px;
+  color: #f1f1f1;
+  font-size: 11px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: #a78bfa;
+}
+
+.email-input::placeholder {
+  color: #6b7280;
+  opacity: 0.6;
+}
+
 /* ── Utilidades ── */
 .hidden {
   display: none !important;

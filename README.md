@@ -7,7 +7,7 @@
 Solo tú lo ves. Nadie más en la llamada sabe que está ahí.
 
 [![Estado](https://img.shields.io/badge/Estado-MVP%20en%20desarrollo-yellow)]()
-[![Sesión](https://img.shields.io/badge/Sesión-4%2F8%20completadas-blue)]()
+[![Sesión](https://img.shields.io/badge/Sesión-6%2F8%20completadas-blue)]()
 [![Licencia](https://img.shields.io/badge/Licencia-Privado-red)]()
 
 ---
@@ -49,12 +49,12 @@ Cada perfil usa un **prompt diferente de Claude** optimizado para ese contexto e
 | **2** | Pipeline de análisis — transcripción + Claude | ✅ **Completada** |
 | **3** | Panel lateral funcional con UI | ✅ **Completada** |
 | **4** | Autenticación y lógica freemium | ✅ **Completada** |
-| **5** | Landing page pública + Posthog | 🟡 **Siguiente** |
-| **6** | Email de transcripción al finalizar sesión | ⏳ Pendiente |
-| **7** | Paywall duro y página de precios + Stripe | ⏳ Pendiente |
+| **5** | Landing page pública + Posthog | ✅ **Completada** |
+| **6** | Email de transcripción al finalizar sesión | ✅ **Completada** |
+| **7** | Paywall duro y página de precios + Stripe | 🟡 **Siguiente** |
 | **8** | QA completo y publicación Chrome Web Store | ⏳ Pendiente |
 
-**Última sesión completada:** Sesión 4 (Febrero 2026)
+**Última sesión completada:** Sesión 6 (Febrero 2026)
 
 ### ✅ Funcionalidades implementadas (Sesión 1-4)
 
@@ -70,9 +70,16 @@ Cada perfil usa un **prompt diferente de Claude** optimizado para ese contexto e
 - [x] Paywall suave (sesión 6 anónima)
 - [x] Sistema anti-pirateo (device fingerprinting)
 - [x] Migración automática sesiones anónimas → autenticadas
-- [x] API Routes completas (/analyze, /session, /usage)
+- [x] API Routes completas (/analyze, /session, /usage, /send-transcript)
 - [x] Base de datos con RLS y triggers
 - [x] Contador de sesiones en popup
+- [x] Checkbox de consentimiento obligatorio en popup
+- [x] Campo opcional para emails de participantes
+- [x] Email automático con transcripción al finalizar sesión
+- [x] Template HTML responsive con stats y enlaces ARCO
+- [x] Acumulación completa de transcripción durante sesión
+- [x] Landing page pública con Posthog tracking
+- [x] Página de precios (/pricing)
 
 ---
 
@@ -383,8 +390,8 @@ Ver `extension/README.md` para más errores comunes.
 ### Fase 1: MVP (Sesiones 1-8) — **ACTUAL**
 - ✅ Extensión Chrome funcional
 - ✅ Auth + Freemium
-- 🟡 Landing + Posthog (Sesión 5)
-- 🟡 Email transcripciones (Sesión 6)
+- ✅ Landing + Posthog (Sesión 5)
+- ✅ Email transcripciones (Sesión 6)
 - 🟡 Pricing + Stripe prep (Sesión 7)
 - 🟡 Chrome Web Store (Sesión 8)
 

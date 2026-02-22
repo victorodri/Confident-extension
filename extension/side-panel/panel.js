@@ -18,6 +18,10 @@ const history = [];
 
 const statusDot       = document.getElementById('statusDot');
 const statusText      = document.getElementById('statusText');
+const consentState    = document.getElementById('consentState');
+const consentCheckbox = document.getElementById('consentCheckbox');
+const participantEmails = document.getElementById('participantEmails');
+const startSessionBtn = document.getElementById('startSessionBtn');
 const emptyState      = document.getElementById('emptyState');
 const listeningState  = document.getElementById('listeningState');
 const statusMsg       = document.getElementById('statusMsg');
@@ -45,13 +49,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Comprueba si hay sesión activa al abrir el panel
 async function restoreSessionState() {
-  const data = await chrome.storage.session.get(['sessionActive', 'profile', 'lastSuggestion']);
+  const data = await chrome.storage.session.get(['sessionActive', 'profile', 'lastSuggestion', 'awaitingConsent']);
+
   if (data.sessionActive) {
     setSessionActive(true, data.profile);
     // Recuperar la última sugerencia si el panel se abrió después de que llegara
     if (data.lastSuggestion) {
       renderSuggestion(data.lastSuggestion);
     }
+  } else if (data.awaitingConsent) {
+    // Mostrar pantalla de consentimiento si el popup lo solicitó
+    showState('consent');
   } else {
     setSessionInactive();
   }
@@ -86,6 +94,12 @@ chrome.runtime.onMessage.addListener((message) => {
     showStatusMessage(message.text, true);
     return false;
   }
+
+  if (message.action === 'REQUEST_CONSENT') {
+    // El popup solicita mostrar pantalla de consentimiento
+    showState('consent');
+    return false;
+  }
 });
 
 // ─────────────────────────────────────────────────────────────
@@ -109,12 +123,14 @@ function setSessionInactive() {
   clearFeedback();
 }
 
-// Muestra solo uno de los tres estados del panel principal
+// Muestra solo uno de los cuatro estados del panel principal
 function showState(state) {
+  consentState.classList.add('hidden');
   emptyState.classList.add('hidden');
   listeningState.classList.add('hidden');
   suggestionCard.classList.add('hidden');
 
+  if (state === 'consent')    consentState.classList.remove('hidden');
   if (state === 'empty')      emptyState.classList.remove('hidden');
   if (state === 'listening')  listeningState.classList.remove('hidden');
   if (state === 'suggestion') suggestionCard.classList.remove('hidden');
@@ -256,10 +272,56 @@ function handleFeedback(helpful) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// INICIO DE SESIÓN DESDE PANEL
+// ─────────────────────────────────────────────────────────────
+
+async function handleStartSession() {
+  if (!consentCheckbox.checked) {
+    return;
+  }
+
+  // Obtener emails de participantes (opcional)
+  const emailsInput = participantEmails.value.trim();
+  const emails = emailsInput
+    ? emailsInput.split(',').map(e => e.trim()).filter(e => e.length > 0)
+    : [];
+
+  // Guardar emails y confirmación de consentimiento en storage
+  await chrome.storage.session.set({
+    consentConfirmed: true,
+    participantEmails: emails,
+    awaitingConsent: false
+  });
+
+  // Obtener perfil seleccionado desde el popup
+  const { savedProfile } = await chrome.storage.local.get('savedProfile');
+
+  // Enviar mensaje al background para iniciar la sesión
+  chrome.runtime.sendMessage({
+    action: 'START_SESSION',
+    profile: savedProfile
+  });
+
+  // Cambiar a estado "escuchando"
+  showState('listening');
+  statusDot.classList.add('active');
+  statusText.classList.add('active');
+  statusText.textContent = profileLabel(savedProfile) + ' — Activo';
+}
+
+// ─────────────────────────────────────────────────────────────
 // EVENT LISTENERS
 // ─────────────────────────────────────────────────────────────
 
 function setupEventListeners() {
+  // Checkbox de consentimiento
+  consentCheckbox.addEventListener('change', () => {
+    startSessionBtn.disabled = !consentCheckbox.checked;
+  });
+
+  // Botón iniciar sesión desde panel
+  startSessionBtn.addEventListener('click', handleStartSession);
+
   // Feedback
   thumbsUp.addEventListener('click', () => handleFeedback(true));
   thumbsDown.addEventListener('click', () => handleFeedback(false));

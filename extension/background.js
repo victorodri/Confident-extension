@@ -93,16 +93,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Acumula la frase final en chrome.storage.session
 // (no usamos variables globales porque el SW puede morir)
 async function accumulateFinalTranscript(transcript, profile) {
-  const data = await chrome.storage.session.get(['pendingText', 'contextBuffer']);
+  const data = await chrome.storage.session.get(['pendingText', 'contextBuffer', 'sessionTranscript']);
   const pending = data.pendingText ?? '';
   const context = data.contextBuffer ?? [];
+  const sessionTranscript = data.sessionTranscript ?? '';
 
   const newPending = pending ? `${pending} ${transcript}` : transcript;
+  const newSessionTranscript = sessionTranscript ? `${sessionTranscript}\n${transcript}` : transcript;
 
   await chrome.storage.session.set({
     pendingText: newPending,
     contextBuffer: context,
     lastProfile: profile,
+    sessionTranscript: newSessionTranscript,
   });
 }
 
@@ -156,6 +159,12 @@ async function callAnalyzeAPI() {
     // Reenviar sugerencia al side panel
     sendToPanel('NEW_SUGGESTION', { result });
 
+    // Incrementar contador de sugerencias si hay señal detectada (Sesión 6)
+    if (result.signal_detected) {
+      const { suggestionsCount } = await chrome.storage.session.get('suggestionsCount');
+      await chrome.storage.session.set({ suggestionsCount: (suggestionsCount ?? 0) + 1 });
+    }
+
     // Actualizar el buffer de contexto con la frase procesada
     const updatedContext = [...contextBuffer, text].slice(-3);
     await chrome.storage.session.set({ contextBuffer: updatedContext });
@@ -180,10 +189,12 @@ async function handleStartSession(tabId, profile) {
   await chrome.storage.session.set({
     sessionActive: true,
     profile,
-    startedAt: Date.now(),
+    sessionStartTime: Date.now(), // Sesión 6
     pendingText: '',
     contextBuffer: [],
     lastProfile: profile,
+    suggestionsCount: 0, // Sesión 6
+    sessionTranscript: '', // Sesión 6
   });
 
   // 4. Enviar streamId + config al offscreen document para que inicie el pipeline
@@ -252,7 +263,57 @@ async function handleStopSession() {
     console.warn('[Confident] No se pudo notificar STOP_AUDIO al offscreen:', err.message);
   }
 
-  await chrome.storage.session.set({ sessionActive: false, deepgramConnected: false });
+  // Obtener datos de la sesión para enviar email (Sesión 6)
+  const sessionData = await chrome.storage.session.get([
+    'participantEmails',
+    'sessionTranscript',
+    'profile',
+    'sessionStartTime',
+    'suggestionsCount'
+  ]);
+
+  const emails = sessionData.participantEmails ?? [];
+  const transcript = sessionData.sessionTranscript ?? '';
+  const profile = sessionData.profile ?? 'candidato';
+  const startTime = sessionData.sessionStartTime ?? Date.now();
+  const suggestionsCount = sessionData.suggestionsCount ?? 0;
+
+  // Si hay emails y transcripción, enviar email
+  if (emails.length > 0 && transcript.length > 0) {
+    const durationMinutes = Math.round((Date.now() - startTime) / 60000);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/send-transcript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: emails,
+          profile,
+          transcriptText: transcript,
+          suggestionsCount,
+          duration: durationMinutes
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[Confident] ✅ Email enviado a', data.recipients, 'destinatarios');
+      } else {
+        console.error('[Confident] Error al enviar email:', response.status);
+      }
+    } catch (err) {
+      console.error('[Confident] Error al llamar /api/send-transcript:', err);
+      // No bloquear el cierre de sesión si falla el email
+    }
+  }
+
+  await chrome.storage.session.set({
+    sessionActive: false,
+    deepgramConnected: false,
+    sessionTranscript: '', // Limpiar transcripción
+    participantEmails: [], // Limpiar emails
+    suggestionsCount: 0
+  });
 
   // Notificar al side panel que la sesión ha terminado
   chrome.runtime.sendMessage({ action: 'SESSION_STOPPED' }).catch(() => {});
