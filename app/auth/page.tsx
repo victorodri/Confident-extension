@@ -11,10 +11,16 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const searchParams = useSearchParams();
   const reason = searchParams.get('reason');
+  const urlError = searchParams.get('error');
 
   const supabase = createClient();
 
   useEffect(() => {
+    // Mostrar error de URL si existe
+    if (urlError) {
+      setError(decodeURIComponent(urlError));
+    }
+
     // Verificar si ya está autenticado
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -22,22 +28,34 @@ export default function AuthPage() {
         window.close();
       }
     });
-  }, [supabase]);
+  }, [supabase, urlError]);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');
 
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      });
 
-    if (authError) {
-      console.error('Error con Google OAuth:', authError);
-      setError('Error al iniciar sesión con Google. Intenta de nuevo.');
+      if (authError) {
+        console.error('[Auth] Google OAuth error:', authError);
+        setError(authError.message || 'Error al iniciar sesión con Google. Intenta de nuevo.');
+        setLoading(false);
+      } else {
+        console.log('[Auth] OAuth redirect initiated:', data);
+      }
+    } catch (err) {
+      console.error('[Auth] Unexpected error:', err);
+      setError('Error inesperado. Intenta de nuevo.');
       setLoading(false);
     }
   };

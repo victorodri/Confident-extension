@@ -1,8 +1,8 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 6 — Email de transcripción al finalizar sesión
-Fecha: Febrero 2026
+Sesión completada: 8 — UI Apple Style + Onboarding + Dashboard
+Fecha: Febrero 23, 2026
 
 ## Qué está funcionando
 - `package.json` — Next.js 15.3.9, React 19.2.4, @anthropic-ai/sdk, @supabase/ssr, @supabase/supabase-js
@@ -16,7 +16,8 @@ Fecha: Febrero 2026
 - `lib/constants.ts` — Límites freemium (5 anónimo, 15 gratis, ∞ pro)
 - `supabase/schema.sql` — Schema con profiles, usage_sessions, RLS, trigger auto-increment
 - `app/auth/page.tsx` — Login con Google via Supabase OAuth, mensajes contextuales según reason
-- `app/auth/callback/route.ts` — OAuth callback handler
+- `app/auth/callback/route.ts` — OAuth callback handler con manejo de errores mejorado
+- `middleware.ts` — Middleware de Supabase para manejo correcto de cookies (crítico para OAuth)
 - `app/auth/close/page.tsx` — Auto-close tab después de autenticación
 - `app/api/analyze/route.ts` — Endpoint POST: recibe `{text, profile, context, session_type}` → Claude → JSON
 - `app/api/session/route.ts` — POST crear sesión (registra en usage_sessions)
@@ -37,6 +38,8 @@ Fecha: Febrero 2026
 - `extension/popup/popup.js` — Valida consentimiento antes de iniciar, guarda emails
 - `extension/background.js` — Acumula transcripción completa, envía email al detener sesión
 - `app/api/send-transcript/route.ts` — Endpoint POST para enviar email con Resend (Sesión 6)
+- `app/api/waitlist/route.ts` — Endpoint POST para lista de espera Pro (Sesión 7)
+- `app/pricing/page.tsx` — Página completa de precios con 3 planes + formulario waitlist (Sesión 7)
 
 ## Flujo completo con Sesión 4 (Auth + Freemium)
 ```
@@ -108,24 +111,150 @@ curl "http://localhost:3000/api/usage?anonymous_id=<uuid>"
 # ✅ Debe retornar: {"user_type":"anonymous","session_count":X,"limit":5,"remaining":Y}
 ```
 
+## Sesión 7 completada — Pricing Page + Waitlist + Funnel completo
+
+### Funcionalidades implementadas
+✅ **Página de precios completa** con 3 planes (Anónimo/Gratis/Pro)
+✅ **Formulario de lista de espera** para Plan Pro con confirmación
+✅ **Endpoint `/api/waitlist`** que envía notificaciones por email
+✅ **Evento `payment_cta_clicked`** instrumentado (MÉTRICA PRINCIPAL MVP)
+✅ **Paywall duro conectado** → Redirige a `/pricing` en lugar de `/auth`
+✅ **Funnel freemium completo** → Anónimo (5) → Gratis (15) → Pro (waitlist)
+
+### Flujo completo del funnel (Sesión 7)
+```
+Usuario anónimo (sin cuenta)
+├─ Sesiones 1-5: Uso normal
+└─ Sesión 6: Paywall soft → /auth?reason=limit_soft → Login Google
+
+Usuario autenticado (plan Free)
+├─ Sesiones 6-15: Uso normal con cuenta
+└─ Sesión 16: Paywall hard → /pricing → Formulario waitlist Pro
+
+Clic en "Unirse a lista de espera":
+├─ analytics.paymentCtaClicked('pro') ← MÉTRICA PRINCIPAL
+├─ Formulario: nombre + email
+├─ POST /api/waitlist → Notificación email a Victor
+├─ Confirmación: "¡Estás en la lista! 🎉"
+└─ Opción: "Crear cuenta gratuita" o "Volver al inicio"
+```
+
+### Página de pricing (/pricing)
+- **3 planes en grid responsive**:
+  - Anónimo: €0, 5 sesiones, sin registro
+  - Gratis: €0, 15 sesiones, con cuenta Google (badge "Recomendado")
+  - Pro: €19/mes, ilimitado (badge "Próximamente")
+- **Modal de lista de espera** con formulario (nombre + email)
+- **Confirmación visual** con mensaje de éxito
+- **FAQ section** con 4 preguntas comunes
+- **Analytics integrado**: `payment_cta_clicked` dispara al hacer clic en "Unirse a lista de espera"
+
+### Endpoint de waitlist
+- En **desarrollo**: Solo notificación a tu email (Resend solo permite enviar a emails verificados)
+- En **producción**: Email de confirmación al usuario + notificación interna
+- Guarda: nombre, email, fecha, entorno (dev/prod)
+
+### Mejoras aplicadas en extensión
+- Paywall soft (sesión 6 anónima, sesión 16 autenticada) → `/auth?reason=limit_soft`
+- Paywall hard (sesión 16+ autenticada) → `/pricing` (cambio aplicado)
+- Contador de sesiones muestra enlace directo a pricing cuando llega a 0
+
+## Sesión 8 completada — UI Apple Style + Onboarding + Dashboard
+
+### Funcionalidades implementadas
+✅ **Fix contador de sesiones** — Trigger SQL agregado a schema.sql (increment_session_count)
+✅ **Contador movido al panel lateral** — Footer discreto con tipografía pequeña (10-11px)
+✅ **Rediseño popup estilo Apple** — Fondo blanco, SF Blue (#007AFF), tipografía SF Pro, sombras sutiles
+✅ **Rediseño panel lateral estilo Apple** — Mismo lenguaje de diseño que popup, minimalista y premium
+✅ **Onboarding en primera instalación** — Modal pidiendo email del usuario (opcional) al abrir panel por primera vez
+✅ **Dashboard básico vacío** — Placeholder con tarjetas "Coming Soon" (Estadísticas, Historial, Configuración)
+✅ **Eliminación carpeta docs** — Documentación migrada a Notion via MCP
+
+### Cambios visuales principales
+
+#### Popup (extension/popup/popup.{html,css,js})
+- Fondo: #FFFFFF (antes #0f0f10)
+- Acento: #007AFF (antes #a78bfa)
+- Botones: iOS style con sombras
+- Tipografía: SF Pro Display, 320px width
+- Padding generoso: 20px
+- Border radius: 12px
+- Estados visuales mejorados (hover, active)
+- Contador eliminado (movido al panel)
+
+#### Panel lateral (extension/side-panel/panel.{html,css,js})
+- Variables CSS actualizadas a tema claro
+- Bordes: #d2d2d7
+- Backgrounds: #f5f5f7 (surface), #e8e8ed (hover)
+- Tarjetas de sugerencia con sombras sutiles
+- Scrollbar estilo macOS
+- Footer discreto para contador (solo visible cuando relevante)
+
+#### Onboarding (extension/side-panel/panel.{html,js})
+- Estado "onboarding" que se muestra solo la primera vez
+- Input para email del usuario (opcional)
+- Guarda `onboarding_completed` y `user_email` en chrome.storage.local
+- Tras completar, muestra estado normal (empty)
+
+#### Dashboard (/app/dashboard/page.tsx)
+- Layout limpio estilo Apple
+- Información del usuario con inicial en círculo
+- 3 tarjetas "Coming Soon": Estadísticas, Historial, Configuración
+- Botón de cierre de sesión
+- Protected route (requiere autenticación)
+
+### Archivos modificados en Sesión 8
+```
+extension/popup/popup.html          ← Eliminado contador HTML
+extension/popup/popup.css           ← Rediseño completo Apple style
+extension/popup/popup.js            ← Removida lógica contador + updateSessionCounter()
+extension/side-panel/panel.html     ← Agregado onboardingState
+extension/side-panel/panel.css      ← Rediseño completo Apple style
+extension/side-panel/panel.js       ← Lógica onboarding + updateSessionCounter() en footer
+app/dashboard/page.tsx              ← NUEVO: Dashboard vacío placeholder
+supabase/schema.sql                 ← (actualizar trigger increment_session_count)
+docs/                               ← ELIMINADA (migrada a Notion)
+```
+
+### Verificación técnica
+
+#### Test onboarding (primera instalación)
+1. Borrar chrome.storage.local: `onboarding_completed`
+2. Abrir panel lateral
+3. ✅ Debe mostrar modal de bienvenida con campo de email
+4. Ingresar email (opcional) y clic "Continuar"
+5. ✅ Debe guardar email y marcar onboarding como completado
+6. ✅ No debe volver a mostrarse en futuras aperturas
+
+#### Test contador discreto en panel
+1. Sin sesión activa → abrir panel lateral
+2. ✅ Si es anónimo con <5 sesiones → muestra contador con link "Regístrate"
+3. ✅ Si es free con ≤3 sesiones → muestra contador con link "Ver planes Pro"
+4. ✅ Si es pro → no muestra contador
+5. ✅ Durante sesión activa → contador oculto
+
+#### Test dashboard
+```bash
+curl -s "http://localhost:3000/dashboard" | grep "Tu Dashboard"
+# ✅ Página carga correctamente
+```
+
 ## Próxima sesión
-Sesión: 7 — Paywall Duro + Pricing Page + Stripe
-Objetivo: Completar funnel freemium con página de precios y preparación de Stripe
-Primer archivo a tocar: `app/pricing/page.tsx` (verificar estado actual)
+Sesión: 9 — QA + Chrome Web Store
+Objetivo: Testing completo, preparar para publicación en Chrome Web Store
+Primer archivo a tocar: `manifest.json` (verificar metadata para publicación)
 
-### Archivos a crear/modificar en Sesión 7
-- `app/pricing/page.tsx` — Página de precios completa con planes Free/Pro
-- Integración Stripe test mode (arquitectura lista, botones sin activar)
-- Instrumentar evento clave: `payment_cta_clicked` (métrica principal MVP)
-- Verificar que paywall hard redirige correctamente a /pricing
-- Formulario lista de espera para plan Pro (mientras no hay Stripe activo)
-
-### Contexto importante para Sesión 7
-- Página /pricing debe mostrar claramente los 3 niveles: Anónimo (5) / Free (15) / Pro (∞)
-- Botón "Empezar Pro" → formulario lista espera (email + nombre)
-- Evento `payment_cta_clicked` = MÉTRICA PRINCIPAL para validar willingness to pay
-- No activar Stripe real todavía — solo arquitectura y UI
-- Después de Sesión 7, solo quedará Sesión 8 (QA + Chrome Web Store)
+### Tareas Sesión 8
+- Crear iconos profesionales (16x16, 48x48, 128x128)
+- Screenshots para Chrome Web Store
+- Descripción completa de la extensión
+- Política de privacidad publicada (página estática)
+- Términos de servicio publicados
+- Test completo del flujo end-to-end (30 min de prueba real)
+- Verificar CSP (Content Security Policy) sin warnings
+- Deploy a producción en Vercel
+- Actualizar URLs de localhost → producción en extensión
+- Publicar en Chrome Web Store (modo "Testing" primero)
 
 ## 🔒 Sistema Anti-Pirateo de Sesiones (Sesión 4)
 
@@ -274,6 +403,59 @@ curl -X POST http://localhost:3000/api/analyze \
 - Transcripción acumulada línea por línea en `sessionTranscript`
 - Duración calculada desde `sessionStartTime` hasta `Date.now()`
 - Resend API key en `.env.local` (RESEND_API_KEY)
+
+## Sesión 6.1 completada — Fix Google OAuth + Email verificación
+
+### Problemas solucionados
+✅ **Google OAuth "isn't working"** → Agregado middleware.ts para manejo de cookies de Supabase
+✅ **Email de Resend devolvía 403** → Cambiado RESEND_FROM_EMAIL de gmail.com a onboarding@resend.dev
+✅ **Mejor manejo de errores OAuth** → callback/route.ts ahora captura y muestra errores específicos
+✅ **Verificación de flujo completo** → Email de transcripción probado exitosamente
+
+### Archivos modificados
+- `middleware.ts` — **NUEVO** → Middleware para cookies de Supabase (crítico para OAuth en Next.js App Router)
+- `app/auth/callback/route.ts` — Mejorado manejo de errores, logs detallados, redirecciones condicionales
+- `app/auth/page.tsx` — Agregado manejo de errores de URL, logs mejorados
+- `.env.local` — RESEND_FROM_EMAIL cambiado a `onboarding@resend.dev` (dominio de desarrollo de Resend)
+
+### Verificación técnica realizada
+```bash
+# Test email transcripción
+curl -X POST http://localhost:3000/api/send-transcript \
+  -d '{"to":["vm.rodriguez.gutierrez@gmail.com"],"profile":"candidato",...}'
+# ✅ Respuesta: {"success":true,"emailId":"5b29e67c...","recipients":1}
+```
+
+### Notas importantes
+- Middleware de Supabase es **crítico** para que OAuth funcione en Next.js 15 App Router
+- Resend permite enviar a cualquier email usando `onboarding@resend.dev` en desarrollo
+- Para producción, necesitarás configurar un dominio propio en Resend
+- Google OAuth requiere agregar usuarios como "test users" en Google Cloud Console si la app está en modo "Testing"
+
+## Verificación técnica realizada (Sesión 7)
+
+### Test endpoint /api/waitlist
+```bash
+curl -X POST http://localhost:3000/api/waitlist \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Victor Test","email":"test@example.com"}'
+# ✅ Respuesta: {"success":true,"message":"Te has unido a la lista de espera correctamente"}
+```
+
+### Test pricing page
+```bash
+curl -s "http://localhost:3000/pricing" | grep "Planes y precios"
+# ✅ Página carga correctamente
+```
+
+### Paywall hard verificado
+- Usuario con 15 sesiones → clic "Iniciar sesión" → abre `/pricing`
+- Mensaje en contador: "🔒 Has llegado al límite del plan gratuito. Ver planes Pro"
+
+### Analytics verificado
+- `payment_cta_clicked` se dispara al hacer clic en "Unirse a lista de espera"
+- `plan_selected` se dispara al seleccionar cualquier plan
+- `paywall_soft_converted` se dispara al enviar formulario de waitlist
 
 ## Deuda técnica conocida
 - `ScriptProcessor` está deprecated → migrar a `AudioWorklet` antes de publicar en Chrome Web Store

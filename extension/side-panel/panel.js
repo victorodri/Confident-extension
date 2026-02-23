@@ -18,6 +18,9 @@ const history = [];
 
 const statusDot       = document.getElementById('statusDot');
 const statusText      = document.getElementById('statusText');
+const onboardingState = document.getElementById('onboardingState');
+const userEmailInput  = document.getElementById('userEmailInput');
+const continueOnboardingBtn = document.getElementById('continueOnboardingBtn');
 const consentState    = document.getElementById('consentState');
 const consentCheckbox = document.getElementById('consentCheckbox');
 const participantEmails = document.getElementById('participantEmails');
@@ -37,6 +40,8 @@ const historyToggle   = document.getElementById('historyToggle');
 const historyArrow    = document.getElementById('historyArrow');
 const historyList     = document.getElementById('historyList');
 const historyCount    = document.getElementById('historyCount');
+const sessionCounterFooter = document.getElementById('sessionCounterFooter');
+const counterFooterText = document.getElementById('counterFooterText');
 
 // ─────────────────────────────────────────────────────────────
 // INICIALIZACIÓN
@@ -49,6 +54,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Comprueba si hay sesión activa al abrir el panel
 async function restoreSessionState() {
+  // Verificar si es la primera vez (onboarding)
+  const { onboarding_completed } = await chrome.storage.local.get('onboarding_completed');
+
+  if (!onboarding_completed) {
+    // Primera vez - mostrar onboarding
+    showState('onboarding');
+    // Actualizar contador footer si existe
+    await updateSessionCounter();
+    return;
+  }
+
   const data = await chrome.storage.session.get(['sessionActive', 'profile', 'lastSuggestion', 'awaitingConsent']);
 
   if (data.sessionActive) {
@@ -62,6 +78,11 @@ async function restoreSessionState() {
     showState('consent');
   } else {
     setSessionInactive();
+  }
+
+  // Actualizar contador de sesiones si no hay sesión activa
+  if (!data.sessionActive) {
+    await updateSessionCounter();
   }
 }
 
@@ -123,13 +144,15 @@ function setSessionInactive() {
   clearFeedback();
 }
 
-// Muestra solo uno de los cuatro estados del panel principal
+// Muestra solo uno de los estados del panel principal
 function showState(state) {
+  onboardingState.classList.add('hidden');
   consentState.classList.add('hidden');
   emptyState.classList.add('hidden');
   listeningState.classList.add('hidden');
   suggestionCard.classList.add('hidden');
 
+  if (state === 'onboarding') onboardingState.classList.remove('hidden');
   if (state === 'consent')    consentState.classList.remove('hidden');
   if (state === 'empty')      emptyState.classList.remove('hidden');
   if (state === 'listening')  listeningState.classList.remove('hidden');
@@ -314,6 +337,24 @@ async function handleStartSession() {
 // ─────────────────────────────────────────────────────────────
 
 function setupEventListeners() {
+  // Botón continuar onboarding (primera vez)
+  continueOnboardingBtn.addEventListener('click', async () => {
+    const userEmail = userEmailInput.value.trim();
+
+    // Guardar email del usuario (opcional) y marcar onboarding como completado
+    await chrome.storage.local.set({
+      onboarding_completed: true,
+      user_email: userEmail || null
+    });
+
+    console.log('[Panel] Onboarding completado. Email del usuario:', userEmail || 'no proporcionado');
+
+    // Mostrar estado normal (vacío)
+    showState('empty');
+    // Actualizar contador de sesiones
+    await updateSessionCounter();
+  });
+
   // Checkbox de consentimiento
   consentCheckbox.addEventListener('change', () => {
     startSessionBtn.disabled = !consentCheckbox.checked;
@@ -360,3 +401,69 @@ function showStatusMessage(text, isError = false) {
     statusMsg.classList.add('hidden');
   }, 4000);
 }
+
+// ─────────────────────────────────────────────────────────────
+// CONTADOR DE SESIONES (footer discreto)
+// ─────────────────────────────────────────────────────────────
+
+async function updateSessionCounter() {
+  try {
+    // No mostrar nada si hay sesión activa
+    const { sessionActive } = await chrome.storage.session.get('sessionActive');
+    if (sessionActive) {
+      sessionCounterFooter.classList.add('hidden');
+      return;
+    }
+
+    const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
+    if (!anonymous_id) return;
+
+    // Llamar a /api/usage
+    const response = await fetch(`http://localhost:3000/api/usage?anonymous_id=${anonymous_id}`);
+    if (!response.ok) {
+      sessionCounterFooter.classList.add('hidden');
+      return;
+    }
+
+    const data = await response.json();
+    const { user_type, remaining } = data;
+
+    let message = '';
+    let showCounter = false;
+
+    // Solo mostrar si quedan ≤3 sesiones o es anónimo con cualquier número
+    if (user_type === 'pro') {
+      // Pro ilimitado - no mostrar contador
+      showCounter = false;
+    } else if (user_type === 'anonymous') {
+      // Anónimo - siempre mostrar con link a registro
+      message = `${remaining} ${remaining === 1 ? 'sesión gratuita' : 'sesiones gratuitas'}. <a href="http://localhost:3000/auth?reason=limit_soft" target="_blank">Regístrate</a> para 10 más`;
+      showCounter = true;
+    } else if (user_type === 'free') {
+      // Free - solo mostrar si quedan ≤3
+      if (remaining <= 3 && remaining > 0) {
+        message = `${remaining} ${remaining === 1 ? 'sesión' : 'sesiones'} restantes. <a href="http://localhost:3000/pricing" target="_blank">Ver planes Pro</a>`;
+        showCounter = true;
+      } else if (remaining === 0) {
+        message = `Límite alcanzado. <a href="http://localhost:3000/pricing" target="_blank">Ver planes Pro</a>`;
+        showCounter = true;
+      }
+    }
+
+    if (showCounter && message) {
+      counterFooterText.innerHTML = message;
+      sessionCounterFooter.classList.remove('hidden');
+    } else {
+      sessionCounterFooter.classList.add('hidden');
+    }
+
+  } catch (err) {
+    console.error('[Panel] Error al actualizar contador:', err);
+    sessionCounterFooter.classList.add('hidden');
+  }
+}
+
+// Actualizar contador al cargar el panel
+document.addEventListener('DOMContentLoaded', () => {
+  updateSessionCounter();
+});

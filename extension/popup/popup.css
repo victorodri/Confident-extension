@@ -1,4 +1,4 @@
-/* popup.css — Confident */
+/* popup.css — Confident (Apple Style) */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -7,207 +7,170 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #0f0f10;
-  color: #f1f1f1;
-  width: 280px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  background: #FFFFFF;
+  color: #1d1d1f;
+  width: 320px;
   min-height: 100px;
 }
 
 .container {
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 /* ── Cabecera ── */
 .header {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  text-align: center;
+  padding-bottom: 8px;
 }
 
 .logo {
-  font-size: 17px;
-  font-weight: 700;
-  color: #a78bfa; /* violet-400 */
-  letter-spacing: -0.3px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: -0.5px;
 }
 
 .tagline {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: 13px;
+  color: #86868b;
+  font-weight: 400;
 }
 
 /* ── Estado sesión ── */
 .session-status {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: #1c1c1e;
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
-  color: #34d399;
+  justify-content: center;
+  gap: 8px;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #34c759;
+  font-weight: 500;
 }
 
 .status-dot {
-  width: 7px;
-  height: 7px;
-  background: #34d399;
+  width: 8px;
+  height: 8px;
+  background: #34c759;
   border-radius: 50%;
   animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* ── Contador de sesiones ── */
-.session-counter {
-  background: #1c1c1e;
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 12px;
-  text-align: center;
-}
-
-.session-counter.warning {
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-}
-
-.session-counter.info {
-  background: rgba(167, 139, 250, 0.1);
-  border: 1px solid rgba(167, 139, 250, 0.3);
-}
-
-#counter-text {
-  color: #e5e5e5;
-  line-height: 1.4;
-}
-
-#counter-text .highlight {
-  color: #a78bfa;
-  font-weight: 600;
-}
-
-#counter-text .warning-highlight {
-  color: #fbbf24;
-  font-weight: 600;
-}
-
-#counter-text a {
-  color: #a78bfa;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-#counter-text a:hover {
-  text-decoration: underline;
+  50% { opacity: 0.4; }
 }
 
 /* ── Sección de perfiles ── */
 .section-label {
-  font-size: 11px;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-bottom: 6px;
+  font-size: 13px;
+  color: #86868b;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 .profiles {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .profile-btn {
   display: grid;
-  grid-template-columns: 24px 1fr;
+  grid-template-columns: 28px 1fr;
   grid-template-rows: auto auto;
-  column-gap: 8px;
+  column-gap: 12px;
   align-items: center;
-  background: #1c1c1e;
-  border: 1.5px solid #2d2d30;
-  border-radius: 8px;
-  padding: 8px 10px;
+  background: #f5f5f7;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 12px 14px;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.2s ease;
 }
 
 .profile-btn:hover {
-  background: #252528;
-  border-color: #a78bfa;
+  background: #e8e8ed;
+  transform: translateY(-1px);
 }
 
 .profile-btn.selected {
-  border-color: #a78bfa;
-  background: #1e1732;
+  border-color: #007AFF;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.15);
 }
 
 .profile-icon {
   grid-row: 1 / 3;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .profile-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: #f1f1f1;
+  color: #1d1d1f;
 }
 
 .profile-desc {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #86868b;
+  font-weight: 400;
 }
 
-/* ── API Key ── */
+/* ── API Key (no usado en MVP) ── */
 #api-key-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .dev-badge {
   display: inline-block;
-  background: #292929;
-  color: #facc15;
-  font-size: 9px;
+  background: #ff9500;
+  color: #ffffff;
+  font-size: 10px;
   font-weight: 600;
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
   vertical-align: middle;
-  text-transform: uppercase;
 }
 
 #deepgram-key {
   width: 100%;
-  background: #1c1c1e;
-  border: 1.5px solid #2d2d30;
-  border-radius: 6px;
-  padding: 7px 10px;
-  color: #f1f1f1;
-  font-size: 12px;
+  background: #f5f5f7;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #1d1d1f;
+  font-size: 13px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: all 0.2s;
 }
 
 #deepgram-key:focus {
-  border-color: #a78bfa;
+  border-color: #007AFF;
+  background: #ffffff;
 }
 
 .api-hint {
-  font-size: 10px;
-  color: #4b5563;
+  font-size: 11px;
+  color: #86868b;
+  line-height: 1.4;
 }
 
 .api-hint a {
-  color: #a78bfa;
+  color: #007AFF;
   text-decoration: none;
 }
 
@@ -215,151 +178,161 @@ body {
 .action-area {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .btn-start {
   width: 100%;
-  padding: 10px;
-  background: #a78bfa;
-  color: #0f0f10;
+  padding: 13px 16px;
+  background: #007AFF;
+  color: #ffffff;
   border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
 }
 
 .btn-start:hover:not(:disabled) {
-  opacity: 0.9;
+  background: #0051D5;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
 .btn-start:disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-stop {
   width: 100%;
-  padding: 10px;
-  background: transparent;
-  color: #f87171;
-  border: 1.5px solid #f87171;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 13px 16px;
+  background: #ffffff;
+  color: #ff3b30;
+  border: 2px solid #ff3b30;
+  border-radius: 12px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s ease;
 }
 
 .btn-stop:hover {
-  background: rgba(248, 113, 113, 0.1);
+  background: #fff5f4;
+  transform: translateY(-1px);
 }
 
 .btn-panel {
   width: 100%;
-  padding: 8px;
-  background: transparent;
-  color: #a78bfa;
-  border: 1.5px solid #a78bfa;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 11px 16px;
+  background: #f5f5f7;
+  color: #007AFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s;
-  margin-top: 6px;
+  transition: all 0.2s ease;
 }
 
 .btn-panel:hover {
-  background: rgba(167, 139, 250, 0.12);
+  background: #e8e8ed;
+  transform: translateY(-1px);
 }
 
 /* ── Mensajes ── */
 .error-msg {
-  font-size: 11px;
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.1);
-  border-radius: 5px;
-  padding: 6px 8px;
+  font-size: 12px;
+  color: #ff3b30;
+  background: #fff5f4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.4;
 }
 
 .warning-msg {
-  font-size: 11px;
-  color: #facc15;
+  font-size: 12px;
+  color: #ff9500;
   text-align: center;
+  padding: 8px;
+  background: #fff9f0;
+  border-radius: 8px;
 }
 
 /* ── Consentimiento (Sesión 6) ── */
 .consent-section {
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 8px;
-  padding: 10px;
+  background: #fff9f0;
+  border: 1px solid #ffd60a;
+  border-radius: 12px;
+  padding: 12px 14px;
 }
 
 .consent-label {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  font-size: 11px;
-  line-height: 1.4;
-  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #1d1d1f;
 }
 
 .consent-label input[type="checkbox"] {
-  margin-top: 2px;
-  width: 14px;
-  height: 14px;
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
   cursor: pointer;
-  accent-color: #a78bfa;
+  accent-color: #007AFF;
 }
 
 /* ── Emails de participantes (Sesión 6) ── */
 .emails-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .input-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  color: #9ca3af;
+  color: #1d1d1f;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .input-hint {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
-  color: #6b7280;
+  color: #86868b;
 }
 
 .email-input {
   width: 100%;
-  padding: 8px 10px;
-  background: #1a1a1d;
-  border: 1px solid #2a2a2e;
-  border-radius: 6px;
-  color: #f1f1f1;
-  font-size: 11px;
+  padding: 10px 12px;
+  background: #f5f5f7;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  color: #1d1d1f;
+  font-size: 13px;
   font-family: inherit;
-  transition: border-color 0.15s;
+  transition: all 0.2s;
 }
 
 .email-input:focus {
   outline: none;
-  border-color: #a78bfa;
+  border-color: #007AFF;
+  background: #ffffff;
 }
 
 .email-input::placeholder {
-  color: #6b7280;
-  opacity: 0.6;
+  color: #86868b;
+  opacity: 1;
 }
 
 /* ── Utilidades ── */

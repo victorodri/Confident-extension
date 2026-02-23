@@ -18,8 +18,6 @@ const errorMsg = document.getElementById('error-msg');
 const notInMeet = document.getElementById('not-in-meet');
 const sessionStatus = document.getElementById('session-status');
 const statusText = document.getElementById('status-text');
-const sessionCounter = document.getElementById('session-counter');
-const counterText = document.getElementById('counter-text');
 
 let micPermissionGranted = false;
 
@@ -104,12 +102,6 @@ async function restoreState() {
   }
 
   updateStartButton();
-
-  // Actualizar contador de sesiones (siempre que no haya sesión activa)
-  const { sessionActive: isActive } = await chrome.storage.session.get('sessionActive');
-  if (!isActive) {
-    await updateSessionCounter();
-  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -187,75 +179,6 @@ async function checkSessionGate() {
     console.error('[Popup] Error en checkSessionGate:', err);
     // En caso de error, permitir sesión (modo degradado)
     return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
-  }
-}
-
-// ─────────────────────────────────────────────────────────────
-// MOSTRAR CONTADOR DE SESIONES
-// ─────────────────────────────────────────────────────────────
-
-async function updateSessionCounter() {
-  try {
-    // No mostrar nada si hay sesión activa
-    const { sessionActive } = await chrome.storage.session.get('sessionActive');
-    if (sessionActive) {
-      hideElement(sessionCounter);
-      return;
-    }
-
-    const gateCheck = await checkSessionGate();
-
-    if (!gateCheck) {
-      console.warn('[Popup] checkSessionGate retornó null/undefined');
-      hideElement(sessionCounter);
-      return;
-    }
-
-    const { type, remaining, session_count } = gateCheck;
-
-    console.log('[Popup] Contador de sesiones:', { type, remaining, session_count });
-
-    let message = '';
-    let cssClass = 'info';
-
-    if (type === 'pro') {
-      message = '✨ <span class="highlight">Sesiones ilimitadas</span>';
-      cssClass = 'info';
-    } else if (type === 'anonymous') {
-      if (remaining === 1) {
-        message = '⚠️ Te queda <span class="warning-highlight">1 sesión gratuita</span>.<br>Regístrate para conseguir 10 más';
-        cssClass = 'warning';
-      } else if (remaining === 0) {
-        message = '🔒 Has usado tus 5 sesiones gratuitas.<br><a href="http://localhost:3000/auth?reason=limit_soft" target="_blank">Regístrate gratis</a> para continuar';
-        cssClass = 'warning';
-      } else {
-        message = `Te quedan <span class="highlight">${remaining} sesiones gratuitas</span>`;
-        cssClass = 'info';
-      }
-    } else if (type === 'free') {
-      if (remaining === 1) {
-        message = '⚠️ Te queda <span class="warning-highlight">1 sesión gratuita</span>';
-        cssClass = 'warning';
-      } else if (remaining === 0) {
-        message = '🔒 Has llegado al límite del plan gratuito.<br><a href="http://localhost:3000/auth?reason=limit_hard" target="_blank">Ver planes Pro</a>';
-        cssClass = 'warning';
-      } else {
-        message = `Te quedan <span class="highlight">${remaining} sesiones gratuitas</span>`;
-        cssClass = 'info';
-      }
-    }
-
-    if (message) {
-      counterText.innerHTML = message;
-      sessionCounter.className = `session-counter ${cssClass}`;
-      showElement(sessionCounter);
-    } else {
-      hideElement(sessionCounter);
-    }
-
-  } catch (err) {
-    console.error('[Popup] Error al actualizar contador de sesiones:', err);
-    hideElement(sessionCounter);
   }
 }
 
@@ -355,8 +278,10 @@ async function handleStartClick() {
 
     if (!gateCheck.allowed) {
       // Mostrar paywall
-      const reason = gateCheck.type === 'soft' ? 'limit_soft' : 'limit_hard';
-      chrome.tabs.create({ url: `http://localhost:3000/auth?reason=${reason}` });
+      const url = gateCheck.type === 'soft'
+        ? 'http://localhost:3000/auth?reason=limit_soft'
+        : 'http://localhost:3000/pricing'; // Paywall hard → Pricing page
+      chrome.tabs.create({ url });
 
       startBtn.disabled = false;
       startBtn.textContent = 'Iniciar sesión';
@@ -416,13 +341,8 @@ async function handleStartClick() {
 
           // Mostrar brevemente el contador actualizado ANTES de activar la sesión
           if (updatedGate.remaining !== undefined) {
-            const tempMessage = `✅ Sesión iniciada. Te quedan <span class="highlight">${updatedGate.remaining} sesiones</span>`;
-            counterText.innerHTML = tempMessage;
-            sessionCounter.className = 'session-counter info';
-            showElement(sessionCounter);
-
-            // Esperar 2 segundos para que el usuario vea el mensaje
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Contador movido al panel lateral - solo loguear
+            console.log(`[Popup] Sesión iniciada. Quedan ${updatedGate.remaining} sesiones`);
           }
         }
       } catch (err) {
@@ -452,8 +372,6 @@ async function handleStopClick() {
     const response = await chrome.runtime.sendMessage({ action: 'STOP_SESSION' });
     if (response?.ok) {
       setSessionActiveUI(false);
-      // Actualizar contador después de detener
-      await updateSessionCounter();
     }
   } catch (err) {
     showError('Error al detener: ' + err.message);
@@ -491,7 +409,6 @@ function setSessionActiveUI(active) {
     showElement(stopBtn);
     showElement(openPanelBtn);
     hideElement(startBtn);
-    hideElement(sessionCounter);
     statusText.textContent = `Sesión activa · ${selectedProfile || ''}`;
   } else {
     hideElement(sessionStatus);

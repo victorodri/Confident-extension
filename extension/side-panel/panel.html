@@ -20,6 +20,34 @@
   <!-- ─── MAIN ─── -->
   <main class="main">
 
+    <!-- Onboarding: primera vez que usa la extensión -->
+    <div id="onboardingState" class="consent-state hidden">
+      <div class="consent-icon">👋</div>
+      <p class="consent-title">¡Bienvenido a Confident!</p>
+      <p class="empty-desc" style="margin-bottom: 16px;">
+        Tu confidente en conversaciones importantes
+      </p>
+
+      <!-- Email del usuario (opcional) -->
+      <div class="participants-section">
+        <label class="input-label">
+          Tu email (opcional)
+          <span class="input-hint">Para recibir transcripciones de tus sesiones</span>
+        </label>
+        <input
+          type="email"
+          id="userEmailInput"
+          placeholder="tu@email.com"
+          class="email-input"
+        />
+      </div>
+
+      <!-- Botón continuar -->
+      <button id="continueOnboardingBtn" class="btn-start-session">
+        Continuar
+      </button>
+    </div>
+
     <!-- Estado inicial: esperando consentimiento -->
     <div id="consentState" class="consent-state hidden">
       <div class="consent-icon">⚠️</div>
@@ -117,6 +145,11 @@
     </button>
     <ul class="history-list hidden" id="historyList"></ul>
   </section>
+
+  <!-- ─── CONTADOR DE SESIONES (discreto) ─── -->
+  <footer class="session-counter-footer hidden" id="sessionCounterFooter">
+    <p class="counter-text" id="counterFooterText"></p>
+  </footer>
 
   <script src="panel.js"></script>
 </body>

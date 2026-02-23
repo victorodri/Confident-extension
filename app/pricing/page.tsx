@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Footer } from '@/components/landing/footer';
@@ -7,35 +8,86 @@ import { analytics } from '@/lib/analytics';
 import Link from 'next/link';
 
 export default function PricingPage() {
+  const [showWaitlist, setShowWaitlist] = useState(false);
+  const [waitlistData, setWaitlistData] = useState({ name: '', email: '' });
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
   const handlePlanClick = (plan: 'free' | 'pro') => {
     analytics.planSelected(plan);
 
     if (plan === 'pro') {
       // MÉTRICA PRINCIPAL MVP
       analytics.paymentCtaClicked('pro');
-      alert('Plan Pro disponible en Sesión 7.\n\n¡Gracias por tu interés! Serás de los primeros en saberlo.');
+      setShowWaitlist(true);
     } else {
-      alert('Instala la extensión (disponible en Sesión 8) para empezar gratis.');
+      // Plan Free - redirigir a auth para instalar extensión
+      window.location.href = '/auth';
+    }
+  };
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      // TODO: Conectar con endpoint de Resend para guardar en lista de espera
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(waitlistData)
+      });
+
+      if (response.ok) {
+        setWaitlistSubmitted(true);
+        // Capturar conversión de paywall
+        analytics.paywallSoftConverted();
+      } else {
+        alert('Error al unirse a la lista de espera. Intenta de nuevo.');
+      }
+    } catch (err) {
+      console.error('[Waitlist] Error:', err);
+      alert('Error al enviar. Intenta de nuevo.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const plans = [
+    {
+      name: 'Anónimo',
+      price: '€0',
+      period: 'sin registro',
+      description: 'Prueba Confident sin crear cuenta',
+      features: [
+        '5 sesiones gratuitas',
+        'Sin necesidad de crear cuenta',
+        '3 perfiles disponibles',
+        'Sugerencias en tiempo real',
+        'Transcripciones básicas',
+      ],
+      cta: 'Empezar ahora',
+      highlighted: false,
+      plan: 'free' as const,
+      badge: null
+    },
     {
       name: 'Gratis',
       price: '€0',
       period: 'siempre',
       description: 'Perfecto para probar Confident',
       features: [
-        '5 sesiones sin registro',
-        '+ 10 sesiones con cuenta Google',
-        'Total: 15 sesiones',
+        '15 sesiones totales',
+        '5 anónimas + 10 con Google',
         '3 perfiles (Candidato, Vendedor, Defensor)',
         'Sugerencias en tiempo real',
         'Transcripciones por email',
+        'Historial de sesiones',
       ],
-      cta: 'Empezar gratis',
+      cta: 'Crear cuenta gratis',
       highlighted: false,
-      plan: 'free' as const
+      plan: 'free' as const,
+      badge: 'Recomendado'
     },
     {
       name: 'Pro',
@@ -50,11 +102,132 @@ export default function PricingPage() {
         'Soporte prioritario',
         'Acceso anticipado a nuevas features',
       ],
-      cta: 'Empezar Pro',
+      cta: 'Unirse a lista de espera',
       highlighted: true,
-      plan: 'pro' as const
+      plan: 'pro' as const,
+      badge: 'Próximamente'
     },
   ];
+
+  // Modal de lista de espera
+  if (showWaitlist && !waitlistSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-2xl">Plan Pro — Lista de espera</CardTitle>
+            <CardDescription>
+              Confident Pro estará disponible pronto. Déjanos tu email y serás de los primeros en saberlo.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleWaitlistSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+                  Nombre
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  required
+                  value={waitlistData.name}
+                  onChange={(e) => setWaitlistData({ ...waitlistData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Tu nombre"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={waitlistData.email}
+                  onChange={(e) => setWaitlistData({ ...waitlistData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="tu@email.com"
+                />
+              </div>
+
+              <div className="bg-purple-50 border border-purple-200 rounded-md p-3">
+                <p className="text-sm text-purple-800">
+                  <strong>€19/mes</strong> — Sesiones ilimitadas + analytics + soporte prioritario
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowWaitlist(false)}
+                  disabled={submitting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  disabled={submitting}
+                >
+                  {submitting ? 'Enviando...' : 'Unirme a la lista'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Confirmación de lista de espera
+  if (waitlistSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+        <Card className="max-w-md w-full text-center">
+          <CardHeader>
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <CardTitle className="text-2xl">¡Estás en la lista! 🎉</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Te avisaremos por email cuando Confident Pro esté disponible.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-purple-800">
+                Mientras tanto, puedes seguir usando el <strong>plan gratuito</strong> (15 sesiones).
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <Button
+                className="w-full"
+                onClick={() => window.location.href = '/auth'}
+              >
+                Crear cuenta gratuita
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.href = '/'}
+              >
+                Volver al inicio
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -73,19 +246,19 @@ export default function PricingPage() {
       {/* Main */}
       <main className="flex-1">
         <section className="py-20 px-4">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             {/* Header */}
             <div className="text-center mb-16">
               <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
                 Planes y precios
               </h1>
               <p className="text-lg text-slate-600">
-                Empieza gratis. Actualiza cuando necesites más sesiones.
+                Empieza sin registro. Crea cuenta cuando necesites más sesiones.
               </p>
             </div>
 
             {/* Plans */}
-            <div className="grid md:grid-cols-2 gap-8 mb-16">
+            <div className="grid md:grid-cols-3 gap-8 mb-16">
               {plans.map((plan) => (
                 <Card
                   key={plan.name}
@@ -95,9 +268,9 @@ export default function PricingPage() {
                       : 'border-slate-200'
                   }`}
                 >
-                  {plan.highlighted && (
+                  {plan.badge && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-full">
-                      Más popular
+                      {plan.badge}
                     </div>
                   )}
 
