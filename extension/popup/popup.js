@@ -67,12 +67,12 @@ async function restoreState() {
   // Generar device fingerprint único (persiste incluso si se desinstala la extensión)
   const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
   if (!anonymous_id) {
-    console.log('[Popup] Generando device fingerprint...');
+    LOG.log('[Popup] Generando device fingerprint...');
     const fingerprint = await getDeviceFingerprint();
     await chrome.storage.local.set({ anonymous_id: fingerprint });
-    console.log('[Popup] Device fingerprint generado:', fingerprint.substring(0, 20) + '...');
+    LOG.log('[Popup] Device fingerprint generado:', fingerprint.substring(0, 20) + '...');
   } else {
-    console.log('[Popup] Device fingerprint existente:', anonymous_id.substring(0, 20) + '...');
+    LOG.log('[Popup] Device fingerprint existente:', anonymous_id.substring(0, 20) + '...');
   }
 
   // Restaurar perfil guardado en storage.local
@@ -95,10 +95,10 @@ async function restoreState() {
     if (hasAudioInput) {
       // Si podemos ver las etiquetas, significa que ya tenemos permiso
       micPermissionGranted = true;
-      console.log('[Popup] Permiso de micrófono ya concedido');
+      LOG.log('[Popup] Permiso de micrófono ya concedido');
     }
   } catch (err) {
-    console.log('[Popup] No se pudo verificar permiso de micrófono:', err);
+    LOG.log('[Popup] No se pudo verificar permiso de micrófono:', err);
   }
 
   updateStartButton();
@@ -141,15 +141,15 @@ async function checkSessionGate() {
     const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
 
     if (!anonymous_id) {
-      console.warn('[Popup] No anonymous_id found');
+      LOG.warn('[Popup] No anonymous_id found');
       return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
     }
 
     // Llamar a /api/usage para verificar límite
-    const response = await fetch(`http://localhost:3000/api/usage?anonymous_id=${anonymous_id}`);
+    const response = await fetch(`${CONFIG.ENDPOINTS.USAGE}?anonymous_id=${anonymous_id}`);
 
     if (!response.ok) {
-      console.error('[Popup] Error en /api/usage:', response.status);
+      LOG.error('[Popup] Error en /api/usage:', response.status);
       // Si el servidor no está disponible, permitir sesión pero sin contador
       return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
     }
@@ -157,7 +157,7 @@ async function checkSessionGate() {
     const data = await response.json();
 
     if (data.error) {
-      console.error('[Popup] Error en respuesta:', data.error);
+      LOG.error('[Popup] Error en respuesta:', data.error);
       return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
     }
 
@@ -176,7 +176,7 @@ async function checkSessionGate() {
     // Pro ilimitado o dentro de límite
     return { allowed: true, type: user_type, remaining, session_count };
   } catch (err) {
-    console.error('[Popup] Error en checkSessionGate:', err);
+    LOG.error('[Popup] Error en checkSessionGate:', err);
     // En caso de error, permitir sesión (modo degradado)
     return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
   }
@@ -214,12 +214,12 @@ async function handleRequestMicClick() {
   requestMicBtn.textContent = 'Solicitando permiso...';
 
   try {
-    console.log('[Popup] Solicitando permiso de micrófono...');
+    LOG.log('[Popup] Solicitando permiso de micrófono...');
     const micStream = await navigator.mediaDevices.getUserMedia({
       audio: true
     });
 
-    console.log('[Popup] ✅ Permiso de micrófono concedido');
+    LOG.log('[Popup] ✅ Permiso de micrófono concedido');
 
     // Detener el stream inmediatamente - solo queríamos el permiso
     micStream.getTracks().forEach(track => track.stop());
@@ -239,7 +239,7 @@ async function handleRequestMicClick() {
     setTimeout(() => successMsg.remove(), 3000);
 
   } catch (err) {
-    console.error('[Popup] Error al solicitar micrófono:', err);
+    LOG.error('[Popup] Error al solicitar micrófono:', err);
     if (err.name === 'NotAllowedError') {
       showError('Permiso denegado. Ve a chrome://extensions, busca Confident, y permite el micrófono.');
     } else {
@@ -279,8 +279,8 @@ async function handleStartClick() {
     if (!gateCheck.allowed) {
       // Mostrar paywall
       const url = gateCheck.type === 'soft'
-        ? 'http://localhost:3000/auth?reason=limit_soft'
-        : 'http://localhost:3000/pricing'; // Paywall hard → Pricing page
+        ? `${CONFIG.ENDPOINTS.AUTH}?reason=limit_soft`
+        : CONFIG.ENDPOINTS.PRICING; // Paywall hard → Pricing page
       chrome.tabs.create({ url });
 
       startBtn.disabled = false;
@@ -301,7 +301,7 @@ async function handleStartClick() {
       participantEmails: emails
     });
 
-    console.log('[Popup] ✅ Consentimiento confirmado. Emails:', emails.length);
+    LOG.log('[Popup] ✅ Consentimiento confirmado. Emails:', emails.length);
 
     // Enviar mensaje al background.js con el tabId y el perfil
     // IMPORTANTE: este clic ES el user gesture que Chrome requiere para tabCapture
@@ -316,37 +316,59 @@ async function handleStartClick() {
       const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
 
       try {
-        const sessionResponse = await fetch('http://localhost:3000/api/session', {
+        // Llamar al nuevo endpoint /api/sessions (plural) que crea una sesión en la tabla sessions
+        const sessionResponse = await fetch(`${CONFIG.BASE_URL}/api/sessions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             anonymous_id,
-            profile_type: selectedProfile,
-            session_number: gateCheck.session_count + 1
+            profile: selectedProfile,
+            consent_confirmed: true
           })
         });
 
         if (!sessionResponse.ok) {
-          console.error('[Popup] Error al registrar sesión:', sessionResponse.status);
+          LOG.error('[Popup] Error al crear sesión:', sessionResponse.status);
         } else {
           const sessionData = await sessionResponse.json();
-          console.log('[Popup] ✅ Sesión registrada:', sessionData);
+          LOG.log('[Popup] ✅ Sesión creada:', sessionData);
+
+          // CRÍTICO: Guardar session_id en chrome.storage.session para usarlo al cerrar
+          if (sessionData.session_id) {
+            await chrome.storage.session.set({ sessionId: sessionData.session_id });
+            LOG.log('[Popup] session_id guardado:', sessionData.session_id);
+          }
+
+          // Llamar al endpoint viejo para actualizar el contador de uso
+          try {
+            await fetch(CONFIG.ENDPOINTS.SESSION, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                anonymous_id,
+                profile_type: selectedProfile,
+                session_number: gateCheck.session_count + 1
+              })
+            });
+          } catch (_) {
+            // Ignorar si falla — el contador es secundario
+          }
 
           // Esperar 500ms para que Supabase procese el insert + trigger
           await new Promise(resolve => setTimeout(resolve, 500));
 
           // Actualizar contador para reflejar la nueva sesión consumida
           const updatedGate = await checkSessionGate();
-          console.log('[Popup] Contador actualizado:', updatedGate);
+          LOG.log('[Popup] Contador actualizado:', updatedGate);
 
           // Mostrar brevemente el contador actualizado ANTES de activar la sesión
           if (updatedGate.remaining !== undefined) {
             // Contador movido al panel lateral - solo loguear
-            console.log(`[Popup] Sesión iniciada. Quedan ${updatedGate.remaining} sesiones`);
+            LOG.log(`[Popup] Sesión iniciada. Quedan ${updatedGate.remaining} sesiones`);
           }
         }
       } catch (err) {
-        console.error('[Popup] Error al llamar /api/session:', err);
+        LOG.error('[Popup] Error al crear sesión:', err);
         // No bloquear el inicio de sesión si falla el registro
       }
 

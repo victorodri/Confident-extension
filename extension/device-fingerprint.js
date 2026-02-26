@@ -51,7 +51,7 @@ async function getDeviceFingerprint() {
   // Generar hash SHA-256
   const hash = await hashString(fingerprintString);
 
-  console.log('[Fingerprint] Componentes detallados:', {
+  LOG.log('[Fingerprint] Componentes detallados:', {
     userAgent: navigator.userAgent.substring(0, 50) + '...',
     language: navigator.language,
     languages: navigator.languages.join(','),
@@ -66,7 +66,7 @@ async function getDeviceFingerprint() {
     finalHash: hash
   });
 
-  console.log('[Fingerprint] 🆔 Hash completo:', hash);
+  LOG.log('[Fingerprint] 🆔 Hash completo:', hash);
 
   return hash;
 }
@@ -104,7 +104,7 @@ async function generateCanvasFingerprint() {
     // Hash simple del canvas data
     return await hashString(dataUrl);
   } catch (err) {
-    console.warn('[Fingerprint] Canvas error:', err);
+    LOG.warn('[Fingerprint] Canvas error:', err);
     return 'canvas-unavailable';
   }
 }
@@ -127,7 +127,7 @@ function generateWebGLFingerprint() {
 
     return `${vendor}~~~${renderer}`;
   } catch (err) {
-    console.warn('[Fingerprint] WebGL error:', err);
+    LOG.warn('[Fingerprint] WebGL error:', err);
     return 'webgl-error';
   }
 }
@@ -156,6 +156,29 @@ async function generateAudioFingerprint() {
 
     oscillator.start(0);
 
+    let cleaned = false; // Flag para evitar doble cleanup
+
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+
+      try {
+        if (oscillator && oscillator.context.state !== 'closed') {
+          oscillator.stop();
+        }
+      } catch (e) {
+        // Ignorar error si ya está stopped
+      }
+
+      try {
+        if (context && context.state !== 'closed') {
+          context.close();
+        }
+      } catch (e) {
+        // Ignorar error si ya está closed
+      }
+    };
+
     return new Promise((resolve) => {
       scriptProcessor.addEventListener('audioprocess', function handler(event) {
         const output = event.outputBuffer.getChannelData(0);
@@ -163,22 +186,19 @@ async function generateAudioFingerprint() {
           .map(v => Math.abs(v))
           .join(',');
 
-        oscillator.stop();
         scriptProcessor.removeEventListener('audioprocess', handler);
-        context.close();
-
+        cleanup();
         resolve(fingerprint.substring(0, 100));
       });
 
       // Timeout de seguridad
       setTimeout(() => {
-        oscillator.stop();
-        context.close();
+        cleanup();
         resolve('audio-timeout');
       }, 100);
     });
   } catch (err) {
-    console.warn('[Fingerprint] Audio error:', err);
+    LOG.warn('[Fingerprint] Audio error:', err);
     return 'audio-error';
   }
 }

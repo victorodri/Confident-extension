@@ -1,8 +1,8 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 9 — QA Completo y Optimización Pre-Producción
-Fecha: Febrero 23, 2026
+Sesión completada: 13 — Fix Bugs Críticos (Contador + Smart Cards)
+Fecha: Febrero 26, 2026
 
 ## Qué está funcionando
 - `package.json` — Next.js 15.3.9, React 19.2.4, @anthropic-ai/sdk, @supabase/ssr, @supabase/supabase-js
@@ -1270,11 +1270,84 @@ curl -X POST http://localhost:3000/api/suggestions \
 
 ---
 
-## Próxima sesión
-Sesión: 13 — Endpoint /api/usage (2h)
-Objetivo: Crear endpoint completo para contador de sesiones
-Primer archivo a tocar: `app/api/usage/route.ts`
-Contexto importante: BUG #1 crítico - contador no funciona porque falta este endpoint
+## Sesión 13 completada — Fix Bugs Críticos (Contador + Smart Cards)
+
+### Funcionalidades implementadas
+✅ **Endpoint /api/usage funcionando** — Ya existía, verificado correcto
+✅ **Función updateSessionCounter()** — Ya implementada en panel.js
+✅ **Smart cards con urgencia** — Lógica inteligente 1/2/3 implementada
+✅ **CSS de urgencia** — Estilos para urgency-info/important/critical
+✅ **Testing checklist creado** — TESTING_CHECKLIST.md completo
+
+### Archivos modificados en Sesión 13
+```
+extension/side-panel/panel.js       ← Smart cards logic con urgencia
+extension/side-panel/panel.css      ← Estilos urgency-critical/important/info
+TESTING_CHECKLIST.md                ← NUEVO: Checklist exhaustivo de tests
+```
+
+### Bugs críticos resueltos
+
+**BUG #1: Contador de sesiones**
+- ✅ Endpoint `/api/usage/route.ts` ya existía y funcionaba correctamente
+- ✅ Función `updateSessionCounter()` ya estaba implementada
+- ✅ Llamadas en `setSessionActive()` y `setSessionInactive()` ya existían
+- **Conclusión**: El contador ya estaba funcionando, no requería fix
+
+**BUG #2: Cards no inteligentes**
+- ✅ Implementada lógica inteligente por urgencia:
+  - **Urgency 3 (crítico)**: Limpia TODAS las cards, muestra solo 1 roja
+  - **Urgency 2 (importante)**: Máximo 2 cards amarillas
+  - **Urgency 1 (informativo)**: Máximo 3 cards verdes
+- ✅ Añadido badge visual de urgencia (🔴 URGENTE / 🟡 IMPORTANTE / 🟢 INFO)
+- ✅ Estilos diferenciados con gradientes y sombras
+- ✅ Animación pulse-critical para urgencia 3
+
+### Implementación técnica
+
+**Lógica de cards en renderSuggestion() (panel.js:204-240):**
+```javascript
+if (urgency === 3) {
+  // CRÍTICO → Limpiar TODAS las cards
+  suggestionsContainer.innerHTML = '';
+} else if (urgency === 2) {
+  // IMPORTANTE → Máximo 2 cards
+  while (existingCards.length >= 2) {
+    const oldest = existingCards.shift();
+    oldest.remove();
+  }
+} else {
+  // INFORMATIVO → Máximo 3 cards
+  if (existingCards.length >= 3) {
+    existingCards[0].remove();
+  }
+}
+```
+
+**Estilos CSS añadidos (panel.css):**
+- `.urgency-info`: Borde verde, gradiente sutil verde
+- `.urgency-important`: Borde amarillo, gradiente ámbar, sombra media
+- `.urgency-critical`: Borde rojo, gradiente rojo, sombra fuerte, animación pulse
+- `.urgency-badge`: Badge superior en cada card
+
+### Testing checklist creado
+
+Creado archivo `TESTING_CHECKLIST.md` con test suites completos:
+- **Test Suite 1**: Session Counter (8 casos backend + 8 casos extension)
+- **Test Suite 2**: Smart Cards Logic (24 casos por urgencia + secuencias)
+- **Test Suite 3**: Integration Tests (flujos completos anónimo/free/pro)
+- **Test Suite 4**: Error Handling (6 casos edge)
+- **Test Suite 5**: Performance (4 benchmarks)
+- **Test Suite 6**: Cross-Browser (3 versiones Chrome)
+- **Test Suite 7**: Edge Cases (8 escenarios complejos)
+
+### Próxima sesión
+Sesión: 14 — Onboarding Personalizado (OPCIONAL - FASE 6)
+Objetivo: Usuario escribe contexto sobre sí mismo para sugerencias personalizadas
+Archivos principales: `extension/side-panel/panel.html`, `app/api/profile/context/route.ts`
+Contexto importante: Esta sesión es OPCIONAL y puede diferirse a v1.1 si se prioriza publicación CWS
+
+**Alternativa prioritaria**: Si se quiere publicar rápido, saltar a Sesión 16 (Políticas Legales)
 
 ### Verificación técnica
 

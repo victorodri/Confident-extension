@@ -99,42 +99,19 @@
       <p id="statusMsg" class="status-msg hidden"></p>
     </div>
 
-    <!-- Tarjeta de sugerencia -->
-    <div id="suggestionCard" class="suggestion-card hidden">
-
-      <!-- Qué te están preguntando (solo si signal_detected) -->
-      <div id="contextSection" class="context-section hidden">
-        <div class="section-label">🔍 LO QUE TE PREGUNTAN</div>
-        <p id="contextText" class="context-text"></p>
-      </div>
-
-      <!-- Sugerencia principal -->
-      <div class="suggestion-section">
-        <div class="section-label">💡 QUÉ HACER AHORA</div>
-        <p id="suggestionText" class="suggestion-text"></p>
-      </div>
-
-      <!-- Keywords -->
-      <div id="keywordsSection" class="keywords-section hidden">
-        <div id="keywordsList" class="keywords-list"></div>
-      </div>
-
-      <!-- Feedback y urgencia -->
-      <div class="feedback-row">
-        <div class="feedback-buttons">
-          <button class="feedback-btn" id="thumbsUp" title="Fue útil">👍</button>
-          <button class="feedback-btn" id="thumbsDown" title="No fue útil">👎</button>
-        </div>
-        <div class="urgency-dots" id="urgencyDots" title="Nivel de urgencia">
-          <span class="dot" id="dot1"></span>
-          <span class="dot" id="dot2"></span>
-          <span class="dot" id="dot3"></span>
-        </div>
-      </div>
-
-    </div>
+    <!-- Contenedor de tarjetas (máximo 3) -->
+    <div id="suggestionsContainer"></div>
 
   </main>
+
+  <!-- ─── BOTÓN TERMINAR SESIÓN ─── -->
+  <div class="end-session-wrapper hidden" id="endSessionWrapper">
+    <button class="btn-end-session" id="endSessionBtn">
+      <span>✓</span>
+      <span>He terminado esta reunión</span>
+    </button>
+    <p class="end-session-hint">Ver resumen y transcripción en Dashboard</p>
+  </div>
 
   <!-- ─── HISTORIAL ─── -->
   <section class="history-section">
@@ -151,6 +128,7 @@
     <p class="counter-text" id="counterFooterText"></p>
   </footer>
 
+  <script src="../config.js"></script>
   <script src="panel.js"></script>
 </body>
 </html>

@@ -12,6 +12,9 @@ let currentSuggestionId = null;
 // Historial de la sesión actual (máx. 20 entradas)
 const history = [];
 
+// Flag para saber si hay una tarjeta de sugerencia actualmente visible
+let hasActiveSuggestion = false;
+
 // ─────────────────────────────────────────────────────────────
 // REFERENCIAS A ELEMENTOS DEL DOM
 // ─────────────────────────────────────────────────────────────
@@ -28,14 +31,7 @@ const startSessionBtn = document.getElementById('startSessionBtn');
 const emptyState      = document.getElementById('emptyState');
 const listeningState  = document.getElementById('listeningState');
 const statusMsg       = document.getElementById('statusMsg');
-const suggestionCard  = document.getElementById('suggestionCard');
-const contextSection  = document.getElementById('contextSection');
-const contextText     = document.getElementById('contextText');
-const suggestionText  = document.getElementById('suggestionText');
-const keywordsSection = document.getElementById('keywordsSection');
-const keywordsList    = document.getElementById('keywordsList');
-const thumbsUp        = document.getElementById('thumbsUp');
-const thumbsDown      = document.getElementById('thumbsDown');
+const suggestionsContainer = document.getElementById('suggestionsContainer');
 const historyToggle   = document.getElementById('historyToggle');
 const historyArrow    = document.getElementById('historyArrow');
 const historyList     = document.getElementById('historyList');
@@ -133,6 +129,15 @@ function setSessionActive(active, profile) {
     statusText.classList.add('active');
     statusText.textContent = profileLabel(profile) + ' — Activo';
     showState('listening');
+
+    // Mostrar botón de terminar sesión
+    const endSessionWrapper = document.getElementById('endSessionWrapper');
+    if (endSessionWrapper) {
+      endSessionWrapper.classList.remove('hidden');
+    }
+
+    // Actualizar contador de sesiones
+    updateSessionCounter();
   }
 }
 
@@ -141,7 +146,21 @@ function setSessionInactive() {
   statusText.classList.remove('active');
   statusText.textContent = 'Sin sesión activa';
   showState('empty');
-  clearFeedback();
+
+  // Limpiar todas las cards
+  suggestionsContainer.innerHTML = '';
+
+  // Resetear flag de tarjeta activa
+  hasActiveSuggestion = false;
+
+  // Ocultar botón de terminar sesión
+  const endSessionWrapper = document.getElementById('endSessionWrapper');
+  if (endSessionWrapper) {
+    endSessionWrapper.classList.add('hidden');
+  }
+
+  // Actualizar contador de sesiones
+  updateSessionCounter();
 }
 
 // Muestra solo uno de los estados del panel principal
@@ -150,13 +169,16 @@ function showState(state) {
   consentState.classList.add('hidden');
   emptyState.classList.add('hidden');
   listeningState.classList.add('hidden');
-  suggestionCard.classList.add('hidden');
+
+  // Las cards de sugerencias se manejan aparte (pueden estar visibles con listening)
 
   if (state === 'onboarding') onboardingState.classList.remove('hidden');
   if (state === 'consent')    consentState.classList.remove('hidden');
   if (state === 'empty')      emptyState.classList.remove('hidden');
   if (state === 'listening')  listeningState.classList.remove('hidden');
-  if (state === 'suggestion') suggestionCard.classList.remove('hidden');
+  if (state === 'suggestion') {
+    // No hacer nada — las cards ya están en suggestionsContainer
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -164,49 +186,87 @@ function showState(state) {
 // ─────────────────────────────────────────────────────────────
 
 function renderSuggestion(result) {
-  // Si no hay señal relevante, volver al estado de escucha sin tocar el historial
+  // Si no hay señal relevante
   if (!result.signal_detected || !result.suggestion) {
-    showState('listening');
-    showStatusMessage('Sin señal por ahora');
+    // Solo mostrar estado "listening" si NO hay cards activas todavía
+    if (!hasActiveSuggestion) {
+      showState('listening');
+      showStatusMessage('Escuchando...');
+    }
+    // Si ya hay cards visibles, mantenerlas — no hacer nada
     return;
   }
 
-  // Generar ID único para esta sugerencia
+  // Hay una señal real → añadir/actualizar card
+  hasActiveSuggestion = true;
   currentSuggestionId = Date.now();
-  clearFeedback();
 
-  // Urgencia (1-3) → data-urgency para CSS
+  // Obtener cards actuales
+  const existingCards = Array.from(suggestionsContainer.querySelectorAll('.suggestion-card'));
+
+  // LÓGICA INTELIGENTE POR URGENCIA
   const urgency = result.urgency ?? 1;
-  suggestionCard.dataset.urgency = urgency;
 
-  // Sección "Qué te preguntan" (solo si viene rellena)
-  if (result.what_is_being_asked) {
-    // Usar textContent para prevenir XSS — nunca innerHTML con datos externos
-    contextText.textContent = result.what_is_being_asked;
-    contextSection.classList.remove('hidden');
+  if (urgency === 3) {
+    // CRÍTICO → Limpiar TODAS las cards anteriores
+    console.log('[Panel] Urgencia 3 (crítico): limpiando todas las cards');
+    suggestionsContainer.innerHTML = '';
+  } else if (urgency === 2) {
+    // IMPORTANTE → Máximo 2 cards (eliminar más antiguas si necesario)
+    console.log('[Panel] Urgencia 2 (importante): máximo 2 cards');
+    while (existingCards.length >= 2) {
+      const oldest = existingCards.shift();
+      oldest.remove();
+    }
   } else {
-    contextSection.classList.add('hidden');
+    // INFORMATIVO → Máximo 3 cards (comportamiento actual)
+    console.log('[Panel] Urgencia 1 (informativo): máximo 3 cards');
+    if (existingCards.length >= 3) {
+      existingCards[0].remove();
+    }
   }
 
-  // Sugerencia principal
-  suggestionText.textContent = result.suggestion;
+  // Crear nueva card
+  const cardId = `card-${currentSuggestionId}`;
 
-  // Keywords
-  if (result.keywords && result.keywords.length > 0) {
-    keywordsList.innerHTML = '';
-    result.keywords.forEach((kw) => {
-      const tag = document.createElement('span');
-      tag.className = 'keyword-tag';
-      tag.textContent = kw;
-      keywordsList.appendChild(tag);
-    });
-    keywordsSection.classList.remove('hidden');
-  } else {
-    keywordsSection.classList.add('hidden');
-  }
+  // Determinar clase de urgencia y badge
+  const urgencyClass = urgency === 3 ? 'urgency-critical' : urgency === 2 ? 'urgency-important' : 'urgency-info';
+  const urgencyBadge = urgency === 3 ? '🔴 URGENTE' : urgency === 2 ? '🟡 IMPORTANTE' : '🟢 INFO';
 
-  // Mostrar la tarjeta
-  showState('suggestion');
+  const card = document.createElement('div');
+  card.className = `suggestion-card ${urgencyClass}`;
+  card.dataset.urgency = urgency;
+  card.dataset.cardId = cardId;
+  card.innerHTML = `
+    <div class="urgency-badge">${urgencyBadge}</div>
+    <div class="suggestion-section">
+      <p class="suggestion-main">${escapeHtml(result.suggestion)}</p>
+      ${result.what_is_being_asked ? `<p class="suggestion-details">${escapeHtml(result.what_is_being_asked)}</p>` : ''}
+    </div>
+    <div class="feedback-row">
+      <div class="feedback-buttons">
+        <button class="feedback-btn" data-feedback="up" data-card-id="${cardId}" title="Fue útil">👍</button>
+        <button class="feedback-btn" data-feedback="down" data-card-id="${cardId}" title="No fue útil">👎</button>
+      </div>
+      <div class="urgency-dots" title="Nivel de urgencia">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+  `;
+
+  // Añadir al contenedor
+  suggestionsContainer.appendChild(card);
+
+  // Event listeners para feedback
+  const feedbackButtons = card.querySelectorAll('.feedback-btn');
+  feedbackButtons.forEach(btn => {
+    btn.addEventListener('click', handleCardFeedback);
+  });
+
+  // Ocultar estado listening si está visible
+  listeningState.classList.add('hidden');
 
   // Añadir al historial
   addToHistory({
@@ -215,6 +275,39 @@ function renderSuggestion(result) {
     suggestion: result.suggestion,
     urgency,
   });
+}
+
+// Helper para escapar HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Handler para feedback de cards individuales
+function handleCardFeedback(event) {
+  const btn = event.currentTarget;
+  const cardId = btn.dataset.cardId;
+  const feedback = btn.dataset.feedback;
+  const card = document.querySelector(`[data-card-id="${cardId}"]`);
+
+  if (!card) return;
+
+  // Limpiar feedback previo de esta card
+  const allBtns = card.querySelectorAll('.feedback-btn');
+  allBtns.forEach(b => {
+    b.classList.remove('selected-up', 'selected-down');
+  });
+
+  // Marcar el seleccionado
+  if (feedback === 'up') {
+    btn.classList.add('selected-up');
+  } else {
+    btn.classList.add('selected-down');
+  }
+
+  // TODO: Enviar feedback al backend si es necesario
+  LOG.log(`[Panel] Feedback ${feedback} para card ${cardId}`);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -264,35 +357,7 @@ function renderHistory() {
 // FEEDBACK (thumbs up / down)
 // ─────────────────────────────────────────────────────────────
 
-function clearFeedback() {
-  thumbsUp.classList.remove('selected-up');
-  thumbsDown.classList.remove('selected-down');
-}
-
-function handleFeedback(helpful) {
-  clearFeedback();
-  if (helpful) {
-    thumbsUp.classList.add('selected-up');
-  } else {
-    thumbsDown.classList.add('selected-down');
-  }
-
-  // Guardar en storage para futura integración con Supabase (Sesión 4)
-  chrome.storage.session.get(['profile']).then((data) => {
-    chrome.storage.local.get(['feedbackLog']).then((local) => {
-      const log = local.feedbackLog ?? [];
-      log.push({
-        id: currentSuggestionId,
-        helpful,
-        profile: data.profile,
-        ts: Date.now(),
-      });
-      // Limitar a 50 entradas locales
-      if (log.length > 50) log.shift();
-      chrome.storage.local.set({ feedbackLog: log });
-    });
-  });
-}
+// Funciones de feedback antiguas eliminadas — ahora se maneja en handleCardFeedback
 
 // ─────────────────────────────────────────────────────────────
 // INICIO DE SESIÓN DESDE PANEL
@@ -333,6 +398,24 @@ async function handleStartSession() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// TERMINAR SESIÓN Y VER RESULTADOS
+// ─────────────────────────────────────────────────────────────
+
+async function handleEndSession() {
+  // Enviar mensaje al background para detener la sesión
+  chrome.runtime.sendMessage({
+    action: 'STOP_SESSION'
+  });
+
+  // Abrir dashboard en nueva pestaña
+  const dashboardUrl = CONFIG.ENDPOINTS.DASHBOARD;
+  await chrome.tabs.create({ url: dashboardUrl });
+
+  // Cerrar el panel lateral
+  window.close();
+}
+
+// ─────────────────────────────────────────────────────────────
 // EVENT LISTENERS
 // ─────────────────────────────────────────────────────────────
 
@@ -363,9 +446,11 @@ function setupEventListeners() {
   // Botón iniciar sesión desde panel
   startSessionBtn.addEventListener('click', handleStartSession);
 
-  // Feedback
-  thumbsUp.addEventListener('click', () => handleFeedback(true));
-  thumbsDown.addEventListener('click', () => handleFeedback(false));
+  // Botón terminar sesión
+  const endSessionBtn = document.getElementById('endSessionBtn');
+  if (endSessionBtn) {
+    endSessionBtn.addEventListener('click', handleEndSession);
+  }
 
   // Toggle historial
   historyToggle.addEventListener('click', () => {
@@ -408,18 +493,14 @@ function showStatusMessage(text, isError = false) {
 
 async function updateSessionCounter() {
   try {
-    // No mostrar nada si hay sesión activa
-    const { sessionActive } = await chrome.storage.session.get('sessionActive');
-    if (sessionActive) {
+    const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
+    if (!anonymous_id) {
       sessionCounterFooter.classList.add('hidden');
       return;
     }
 
-    const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
-    if (!anonymous_id) return;
-
     // Llamar a /api/usage
-    const response = await fetch(`http://localhost:3000/api/usage?anonymous_id=${anonymous_id}`);
+    const response = await fetch(`${CONFIG.ENDPOINTS.USAGE}?anonymous_id=${anonymous_id}`);
     if (!response.ok) {
       sessionCounterFooter.classList.add('hidden');
       return;
@@ -428,8 +509,10 @@ async function updateSessionCounter() {
     const data = await response.json();
     const { user_type, remaining } = data;
 
-    let message = '';
     let showCounter = false;
+
+    // Limpiar contenido previo
+    counterFooterText.textContent = '';
 
     // Solo mostrar si quedan ≤3 sesiones o es anónimo con cualquier número
     if (user_type === 'pro') {
@@ -437,21 +520,53 @@ async function updateSessionCounter() {
       showCounter = false;
     } else if (user_type === 'anonymous') {
       // Anónimo - siempre mostrar con link a registro
-      message = `${remaining} ${remaining === 1 ? 'sesión gratuita' : 'sesiones gratuitas'}. <a href="http://localhost:3000/auth?reason=limit_soft" target="_blank">Regístrate</a> para 10 más`;
+      const text = `${remaining} ${remaining === 1 ? 'sesión gratuita' : 'sesiones gratuitas'}. `;
+      const textNode = document.createTextNode(text);
+
+      const link = document.createElement('a');
+      link.href = `${CONFIG.ENDPOINTS.AUTH}?reason=limit_soft`;
+      link.target = '_blank';
+      link.textContent = 'Regístrate';
+
+      const moreText = document.createTextNode(' para 10 más');
+
+      counterFooterText.appendChild(textNode);
+      counterFooterText.appendChild(link);
+      counterFooterText.appendChild(moreText);
+
       showCounter = true;
     } else if (user_type === 'free') {
       // Free - solo mostrar si quedan ≤3
       if (remaining <= 3 && remaining > 0) {
-        message = `${remaining} ${remaining === 1 ? 'sesión' : 'sesiones'} restantes. <a href="http://localhost:3000/pricing" target="_blank">Ver planes Pro</a>`;
+        const text = `${remaining} ${remaining === 1 ? 'sesión' : 'sesiones'} restantes. `;
+        const textNode = document.createTextNode(text);
+
+        const link = document.createElement('a');
+        link.href = CONFIG.ENDPOINTS.PRICING;
+        link.target = '_blank';
+        link.textContent = 'Ver planes Pro';
+
+        counterFooterText.appendChild(textNode);
+        counterFooterText.appendChild(link);
+
         showCounter = true;
       } else if (remaining === 0) {
-        message = `Límite alcanzado. <a href="http://localhost:3000/pricing" target="_blank">Ver planes Pro</a>`;
+        const text = 'Límite alcanzado. ';
+        const textNode = document.createTextNode(text);
+
+        const link = document.createElement('a');
+        link.href = CONFIG.ENDPOINTS.PRICING;
+        link.target = '_blank';
+        link.textContent = 'Ver planes Pro';
+
+        counterFooterText.appendChild(textNode);
+        counterFooterText.appendChild(link);
+
         showCounter = true;
       }
     }
 
-    if (showCounter && message) {
-      counterFooterText.innerHTML = message;
+    if (showCounter) {
       sessionCounterFooter.classList.remove('hidden');
     } else {
       sessionCounterFooter.classList.add('hidden');

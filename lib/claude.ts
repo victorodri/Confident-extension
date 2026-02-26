@@ -30,8 +30,10 @@ SEÑALES QUE DEBES DETECTAR:
   → Sugiere cómo mantener la calma y reconducir la conversación
 
 ESTILO DE SUGERENCIA:
-Como un coach de carrera senior hablándote al oído. Directo, sin adornos.
-Máximo 2-3 líneas. Si es behavioral, siempre menciona STAR.
+- "suggestion": 5-7 palabras máximo. Directo, QUÉ DECIR ahora.
+  Ejemplo: "Usa STAR: Situación-Tarea-Acción" o "Pregunta su rango salarial primero"
+- "what_is_being_asked": Contexto adicional en máximo 2 líneas cortas. Por qué es importante, qué busca el entrevistador.
+  Ejemplo: "Pregunta behavioral estándar. Buscan evidencia concreta de competencias en situación real."
 `;
 
 // ─────────────────────────────────────────────
@@ -64,8 +66,11 @@ SEÑALES QUE DEBES DETECTAR:
   → Sugiere cómo negociar sin ceder en precio, ofreciendo valor alternativo
 
 ESTILO DE SUGERENCIA:
-Como un director comercial senior hablándote al oído. Orientado a acción y cierre.
-Máximo 2-3 líneas. En señales de compra, urgencia siempre 3.
+- "suggestion": 5-7 palabras máximo. Acción directa, QUÉ DECIR ahora.
+  Ejemplo: "Pregunta: ¿cuál es el dolor real?" o "Propón piloto de 30 días"
+- "what_is_being_asked": Contexto adicional en máximo 2 líneas cortas. Por qué es crítico, qué implica.
+  Ejemplo: "Señal de compra fuerte. Están evaluando soluciones. Momento de cerrar o avanzar."
+En señales de compra, urgencia siempre 3.
 `;
 
 // ─────────────────────────────────────────────
@@ -103,9 +108,10 @@ SEÑALES QUE DEBES DETECTAR:
   → Sugiere cómo pedir aclaración sin parecer que no entiendes
 
 ESTILO DE SUGERENCIA:
-Como un asesor estratégico senior. Primero explica brevemente QUÉ se está
-preguntando realmente (1 línea), luego da la estructura de respuesta (2 líneas).
-Nunca des la respuesta completa — da el mapa para que el usuario construya la suya.
+- "suggestion": 5-7 palabras máximo. Estructura o acción directa, QUÉ DECIR ahora.
+  Ejemplo: "Divide: qué, por qué, cómo" o "Reformula: ellos quieren garantías"
+- "what_is_being_asked": Contexto adicional en máximo 2 líneas cortas. Qué buscan realmente, cómo enfocar.
+  Ejemplo: "Pregunta de alcance. Están midiendo si entiendes las implicaciones del proyecto."
 `;
 
 // Sufijo común añadido a los tres prompts
@@ -125,7 +131,8 @@ Si no hay señal relevante (small talk, silencio, tema irrelevante):
 - speaker_detected: "other"
 
 REGLAS ABSOLUTAS:
-- El usuario está en una llamada en vivo. Máximo 3 líneas en "suggestion"
+- El usuario está en una llamada en vivo. MÁXIMO 5-7 PALABRAS en "suggestion"
+- Sin explicaciones, sin contexto, sin adornos. Solo la acción directa.
 - Detecta el idioma del fragmento y responde en ese mismo idioma
 - Si hay errores de transcripción evidentes, infiere el significado por contexto
 - Nunca inventes datos, cifras o ejemplos que el usuario no pueda verificar
@@ -167,6 +174,75 @@ const PROMPTS: Record<UserProfile, string> = {
 export function getSystemPrompt(profile: UserProfile): string {
   return PROMPTS[profile] + COMMON_SUFFIX;
 }
+
+// ─────────────────────────────────────────────
+// PROMPT PARA RESUMEN DE SESIÓN
+// ─────────────────────────────────────────────
+
+const SESSION_SUMMARY_PROFILES: Record<UserProfile, string> = {
+  candidato: 'coach experto en procesos de selección y entrevistas de trabajo',
+  vendedor: 'mentor experto en ventas consultivas y cierre de negocios',
+  defensor: 'asesor estratégico experto en argumentación y defensa de posiciones',
+};
+
+export function getSessionSummaryPrompt(profile: UserProfile): string {
+  const expertRole = SESSION_SUMMARY_PROFILES[profile];
+
+  return `
+Eres un ${expertRole}. Acabas de escuchar una conversación completa de ${profile}.
+
+Analiza la transcripción y genera un resumen estructurado que ayude al usuario a mejorar.
+
+RESPONDE EN JSON con esta estructura exacta:
+
+{
+  "executive_summary": "2-3 párrafos: ¿Qué pasó en esta conversación? ¿Cuál fue el tono general? ¿Cómo lo hizo el usuario? Sé honesto y constructivo.",
+  "key_points": [
+    "Los 5-7 momentos más importantes de la conversación",
+    "Señales detectadas que fueron críticas",
+    "Decisiones tomadas o información clave revelada"
+  ],
+  "recommendations": [
+    "Qué hacer diferente la próxima vez (acción concreta)",
+    "Áreas de mejora específicas con ejemplos",
+    "Tácticas a aplicar en futuras conversaciones"
+  ],
+  "learnings": "1-2 párrafos: Insights sobre el desempeño. Patrones observados. Fortalezas a potenciar. Mantén un tono de coach: directo, útil, motivador."
+}
+
+REGLAS:
+- Detecta el idioma de la transcripción y responde en ese mismo idioma
+- Sé específico: menciona momentos concretos de la conversación
+- Sé honesto pero constructivo: señala errores como oportunidades de mejora
+- key_points: mínimo 5, máximo 7 puntos
+- recommendations: mínimo 3, máximo 5 acciones
+- NO inventes información que no esté en la transcripción
+- Si la conversación fue breve o sin señales claras, dilo honestamente
+`;
+}
+
+// Schema JSON para resumen de sesión
+export const SESSION_SUMMARY_SCHEMA = {
+  type: "object",
+  properties: {
+    executive_summary: { type: "string" },
+    key_points: {
+      type: "array",
+      items: { type: "string" },
+      minItems: 5,
+      maxItems: 7
+    },
+    recommendations: {
+      type: "array",
+      items: { type: "string" },
+      minItems: 3,
+      maxItems: 5
+    },
+    learnings: { type: "string" }
+  },
+  required: ["executive_summary", "key_points", "recommendations", "learnings"],
+  additionalProperties: false
+} as const;
 
 export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

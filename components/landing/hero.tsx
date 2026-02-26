@@ -6,8 +6,8 @@ import { analytics } from '@/lib/analytics';
 export function Hero() {
   const handleInstallClick = () => {
     analytics.ctaClicked('hero');
-    // TODO: En Sesión 8 - link a Chrome Web Store
-    alert('Extensión disponible en Sesión 8 (Chrome Web Store)');
+    // Link a auth para comenzar (instalar extensión localmente hasta publicación en Chrome Web Store)
+    window.location.href = '/auth';
   };
 
   const handleHowItWorksClick = () => {

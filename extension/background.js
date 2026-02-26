@@ -7,7 +7,10 @@
 // - Estado de sesión en chrome.storage.session
 // - tabCapture.getMediaStreamId REQUIERE user gesture real desde el popup
 
-const ANALYZE_API_URL = 'http://localhost:3000/api/analyze';
+// Importar configuración centralizada de URLs y logger
+importScripts('config.js');
+importScripts('logger.js');
+
 const OFFSCREEN_URL = chrome.runtime.getURL('offscreen.html');
 
 // Coordina la carrera entre TRANSCRIPT y VAD_ENDED.
@@ -31,7 +34,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleStartSession(message.tabId, message.profile)
       .then(() => sendResponse({ ok: true }))
       .catch((err) => {
-        console.error('[Confident] Error al iniciar sesión:', err);
+        LOG.error('[Confident] Error al iniciar sesión:', err);
         sendResponse({ ok: false, error: err.message });
       });
     return true; // mantener canal abierto para respuesta asíncrona
@@ -93,10 +96,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Acumula la frase final en chrome.storage.session
 // (no usamos variables globales porque el SW puede morir)
 async function accumulateFinalTranscript(transcript, profile) {
-  const data = await chrome.storage.session.get(['pendingText', 'contextBuffer', 'sessionTranscript']);
+  const data = await chrome.storage.session.get([
+    'pendingText',
+    'contextBuffer',
+    'sessionTranscript',
+    'sessionId',
+    'sessionStartTime'
+  ]);
   const pending = data.pendingText ?? '';
   const context = data.contextBuffer ?? [];
   const sessionTranscript = data.sessionTranscript ?? '';
+  const sessionId = data.sessionId;
+  const startTime = data.sessionStartTime ?? Date.now();
 
   const newPending = pending ? `${pending} ${transcript}` : transcript;
   const newSessionTranscript = sessionTranscript ? `${sessionTranscript}\n${transcript}` : transcript;
@@ -107,6 +118,35 @@ async function accumulateFinalTranscript(transcript, profile) {
     lastProfile: profile,
     sessionTranscript: newSessionTranscript,
   });
+
+  // Guardar transcripción en Supabase si hay sessionId (Sesión 12)
+  if (sessionId) {
+    const timestampMs = Date.now() - startTime;
+
+    try {
+      const response = await fetch(CONFIG.ENDPOINTS.TRANSCRIPTIONS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          speaker: 'unknown', // TODO: Implementar detección de speaker en futuras versiones
+          text: transcript,
+          timestamp_ms: timestampMs,
+          language: 'es' // TODO: Detectar idioma automáticamente
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        LOG.log('[Confident] ✅ Transcripción guardada:', data.transcription_id);
+      } else {
+        LOG.error('[Confident] Error al guardar transcripción:', response.status);
+      }
+    } catch (err) {
+      LOG.error('[Confident] Error al llamar /api/transcriptions:', err);
+      // No bloquear el flujo si falla el guardado
+    }
+  }
 }
 
 // Helper para enviar mensajes al panel sin romper si no está abierto
@@ -134,7 +174,7 @@ async function callAnalyzeAPI() {
   sendToPanel('PANEL_STATUS', { text: 'Analizando...' });
 
   try {
-    const response = await fetch(ANALYZE_API_URL, {
+    const response = await fetch(CONFIG.ENDPOINTS.ANALYZE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -146,7 +186,7 @@ async function callAnalyzeAPI() {
     });
 
     if (!response.ok) {
-      console.error(`[Confident] /api/analyze respondió con status ${response.status}`);
+      LOG.error(`[Confident] /api/analyze respondió con status ${response.status}`);
       sendToPanel('PANEL_ERROR', { text: `Error del servidor (${response.status})` });
       return;
     }
@@ -161,15 +201,43 @@ async function callAnalyzeAPI() {
 
     // Incrementar contador de sugerencias si hay señal detectada (Sesión 6)
     if (result.signal_detected) {
-      const { suggestionsCount } = await chrome.storage.session.get('suggestionsCount');
+      const { suggestionsCount, sessionId } = await chrome.storage.session.get(['suggestionsCount', 'sessionId']);
       await chrome.storage.session.set({ suggestionsCount: (suggestionsCount ?? 0) + 1 });
+
+      // Guardar sugerencia en Supabase si hay sessionId (Sesión 12)
+      if (sessionId) {
+        try {
+          const suggestionResponse = await fetch(CONFIG.ENDPOINTS.SUGGESTIONS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_id: sessionId,
+              signal_type: result.signal_type,
+              suggestion_text: result.suggestion || '',
+              context_text: result.what_is_being_asked || null,
+              keywords: result.keywords || [],
+              urgency_level: result.urgency || 1
+            })
+          });
+
+          if (suggestionResponse.ok) {
+            const suggestionData = await suggestionResponse.json();
+            LOG.log('[Confident] ✅ Sugerencia guardada:', suggestionData.suggestion_id);
+          } else {
+            LOG.error('[Confident] Error al guardar sugerencia:', suggestionResponse.status);
+          }
+        } catch (err) {
+          LOG.error('[Confident] Error al llamar /api/suggestions:', err);
+          // No bloquear el flujo si falla el guardado
+        }
+      }
     }
 
     // Actualizar el buffer de contexto con la frase procesada
     const updatedContext = [...contextBuffer, text].slice(-3);
     await chrome.storage.session.set({ contextBuffer: updatedContext });
   } catch (err) {
-    console.error('[Confident] Error al llamar a /api/analyze:', err.message);
+    LOG.error('[Confident] Error al llamar a /api/analyze:', err.message);
     sendToPanel('PANEL_ERROR', { text: '¿Está ejecutándose npm run dev?' });
   }
 }
@@ -260,11 +328,12 @@ async function handleStopSession() {
     await chrome.runtime.sendMessage({ action: 'STOP_AUDIO' });
   } catch (err) {
     // El offscreen document puede no estar activo si ya fue cerrado
-    console.warn('[Confident] No se pudo notificar STOP_AUDIO al offscreen:', err.message);
+    LOG.warn('[Confident] No se pudo notificar STOP_AUDIO al offscreen:', err.message);
   }
 
-  // Obtener datos de la sesión para enviar email (Sesión 6)
+  // Obtener datos de la sesión
   const sessionData = await chrome.storage.session.get([
+    'sessionId',
     'participantEmails',
     'sessionTranscript',
     'profile',
@@ -272,18 +341,64 @@ async function handleStopSession() {
     'suggestionsCount'
   ]);
 
+  const sessionId = sessionData.sessionId;
   const emails = sessionData.participantEmails ?? [];
   const transcript = sessionData.sessionTranscript ?? '';
   const profile = sessionData.profile ?? 'candidato';
   const startTime = sessionData.sessionStartTime ?? Date.now();
   const suggestionsCount = sessionData.suggestionsCount ?? 0;
 
-  // Si hay emails y transcripción, enviar email
+  // NUEVO: Intentar cerrar sesión con resumen IA
+  if (sessionId) {
+    try {
+      LOG.log('[Confident] Cerrando sesión con resumen IA...', sessionId);
+
+      const closeResponse = await fetch(CONFIG.ENDPOINTS.SESSION_CLOSE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+
+      if (closeResponse.ok) {
+        const closeData = await closeResponse.json();
+        LOG.log('[Confident] ✅ Sesión cerrada con resumen:', closeData.summary ? 'Sí' : 'No');
+        // El endpoint ya envió el email con resumen
+      } else {
+        LOG.error('[Confident] Error al cerrar sesión:', closeResponse.status);
+        // Fallback: enviar email simple si falló el cierre con resumen
+        await sendSimpleTranscriptEmail(emails, transcript, profile, suggestionsCount, startTime);
+      }
+    } catch (err) {
+      LOG.error('[Confident] Error al llamar /api/sessions/close:', err);
+      // Fallback: enviar email simple
+      await sendSimpleTranscriptEmail(emails, transcript, profile, suggestionsCount, startTime);
+    }
+  } else {
+    // No hay sessionId guardado — usar fallback
+    LOG.warn('[Confident] No se encontró sessionId — enviando email simple');
+    await sendSimpleTranscriptEmail(emails, transcript, profile, suggestionsCount, startTime);
+  }
+
+  await chrome.storage.session.set({
+    sessionActive: false,
+    deepgramConnected: false,
+    sessionTranscript: '', // Limpiar transcripción
+    participantEmails: [], // Limpiar emails
+    suggestionsCount: 0,
+    sessionId: null // Limpiar session ID
+  });
+
+  // Notificar al side panel que la sesión ha terminado
+  chrome.runtime.sendMessage({ action: 'SESSION_STOPPED' }).catch(() => {});
+}
+
+// Función auxiliar para enviar email simple (fallback)
+async function sendSimpleTranscriptEmail(emails, transcript, profile, suggestionsCount, startTime) {
   if (emails.length > 0 && transcript.length > 0) {
     const durationMinutes = Math.round((Date.now() - startTime) / 60000);
 
     try {
-      const response = await fetch('http://localhost:3000/api/send-transcript', {
+      const response = await fetch(CONFIG.ENDPOINTS.SEND_TRANSCRIPT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -297,24 +412,12 @@ async function handleStopSession() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[Confident] ✅ Email enviado a', data.recipients, 'destinatarios');
+        LOG.log('[Confident] ✅ Email simple enviado a', data.recipients, 'destinatarios');
       } else {
-        console.error('[Confident] Error al enviar email:', response.status);
+        LOG.error('[Confident] Error al enviar email simple:', response.status);
       }
     } catch (err) {
-      console.error('[Confident] Error al llamar /api/send-transcript:', err);
-      // No bloquear el cierre de sesión si falla el email
+      LOG.error('[Confident] Error al llamar /api/send-transcript:', err);
     }
   }
-
-  await chrome.storage.session.set({
-    sessionActive: false,
-    deepgramConnected: false,
-    sessionTranscript: '', // Limpiar transcripción
-    participantEmails: [], // Limpiar emails
-    suggestionsCount: 0
-  });
-
-  // Notificar al side panel que la sesión ha terminado
-  chrome.runtime.sendMessage({ action: 'SESSION_STOPPED' }).catch(() => {});
 }

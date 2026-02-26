@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     try {
       await resend.emails.send({
         from: `Confident <${fromEmail}>`,
-        to: 'vm.rodriguez.gutierrez@gmail.com', // Tu email para notificaciones
+        to: process.env.ADMIN_NOTIFICATION_EMAIL,
         subject: `🎯 Nueva persona en waitlist Pro: ${name}`,
         html: `
           <h2>Nueva persona en lista de espera</h2>

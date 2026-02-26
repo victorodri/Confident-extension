@@ -191,6 +191,14 @@ body {
   color: var(--red);
 }
 
+/* ─── CONTENEDOR DE SUGERENCIAS ─── */
+
+#suggestionsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* ─── TARJETA DE SUGERENCIA ─── */
 
 .suggestion-card {
@@ -215,35 +223,65 @@ body {
   box-shadow: 0 2px 8px rgba(255, 59, 48, 0.15);
 }
 
+/* Nuevos estilos de urgencia con clases */
+.suggestion-card.urgency-info {
+  border-left: 4px solid var(--green);
+  background: linear-gradient(to right, rgba(52, 199, 89, 0.05), transparent);
+}
+
+.suggestion-card.urgency-important {
+  border-left: 4px solid var(--amber);
+  background: linear-gradient(to right, rgba(255, 149, 0, 0.08), transparent);
+  box-shadow: 0 2px 6px rgba(255, 149, 0, 0.15);
+}
+
+.suggestion-card.urgency-critical {
+  border-left: 4px solid var(--red);
+  background: linear-gradient(to right, rgba(255, 59, 48, 0.1), transparent);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
+  animation: pulse-critical 0.5s ease-in-out;
+}
+
+/* Badge de urgencia */
+.urgency-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 4px 0 8px 20px;
+  text-transform: uppercase;
+}
+
+/* Animación para cards críticas */
+@keyframes pulse-critical {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
 /* ─── SECCIONES DE LA TARJETA ─── */
 
-.context-section,
 .suggestion-section {
-  padding: 14px 16px;
+  padding: 18px 20px;
   border-bottom: 1px solid var(--border);
 }
 
-.section-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
+.suggestion-main {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
 }
 
-.context-text {
+.suggestion-details {
   font-size: 13px;
+  font-weight: 400;
   color: var(--text-muted);
   line-height: 1.5;
-}
-
-.suggestion-text {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.6;
-  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ─── KEYWORDS ─── */
@@ -597,4 +635,51 @@ body {
 .counter-warning {
   color: var(--amber);
   font-weight: 600;
+}
+
+/* ─── BOTÓN TERMINAR SESIÓN ─── */
+.end-session-wrapper {
+  padding: 16px;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-end-session {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--accent);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-end-session:hover {
+  background: #0051D5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+}
+
+.btn-end-session:active {
+  transform: translateY(0);
+}
+
+.end-session-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
 }

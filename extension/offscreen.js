@@ -7,9 +7,8 @@
 // CONSTANTES
 // ─────────────────────────────────────────────────────────────
 
-// URL del backend (cambiar según entorno)
-const BACKEND_URL = 'http://localhost:3000'; // Desarrollo
-// const BACKEND_URL = 'https://tryconfident.vercel.app'; // Producción
+// CONFIG se carga desde config.js (incluido en offscreen.html)
+// Auto-detecta desarrollo vs producción basado en la versión del manifest
 
 // Intervalo de envío de audio (en milisegundos)
 const SEND_INTERVAL_MS = 3000; // 3 segundos
@@ -39,8 +38,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     startAudioPipeline(message.streamId, message.profile)
       .then(() => sendResponse({ ok: true }))
       .catch((err) => {
-        console.error('[Offscreen] ❌ Error al iniciar pipeline de audio:', err.name, '-', err.message);
-        console.error('[Offscreen] ❌ Stack:', err.stack);
+        LOG.error('[Offscreen] ❌ Error al iniciar pipeline de audio:', err.name, '-', err.message);
+        LOG.error('[Offscreen] ❌ Stack:', err.stack);
         sendResponse({ ok: false, error: err.message || err.name });
       });
     return true; // mantener canal abierto para respuesta asíncrona
@@ -58,14 +57,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // ─────────────────────────────────────────────────────────────
 
 async function startAudioPipeline(streamId, profile) {
-  console.log('[Offscreen] startAudioPipeline llamado');
-  console.log('[Offscreen] streamId:', streamId);
-  console.log('[Offscreen] profile:', profile);
+  LOG.log('[Offscreen] startAudioPipeline llamado');
+  LOG.log('[Offscreen] streamId:', streamId);
+  LOG.log('[Offscreen] profile:', profile);
 
   currentProfile = profile;
 
   // 1. Capturar audio del TAB (otros participantes)
-  console.log('[Offscreen] Capturando audio del tab...');
+  LOG.log('[Offscreen] Capturando audio del tab...');
 
   try {
     tabStream = await navigator.mediaDevices.getUserMedia({
@@ -77,14 +76,14 @@ async function startAudioPipeline(streamId, profile) {
       },
       video: false,
     });
-    console.log('[Offscreen] ✅ Tab stream obtenido');
+    LOG.log('[Offscreen] ✅ Tab stream obtenido');
   } catch (err) {
-    console.error('[Offscreen] ❌ Error al obtener tab stream:', err.name, '-', err.message);
+    LOG.error('[Offscreen] ❌ Error al obtener tab stream:', err.name, '-', err.message);
     throw err;
   }
 
   // 2. Capturar audio del MICRÓFONO (permiso ya concedido desde popup)
-  console.log('[Offscreen] Capturando audio del micrófono...');
+  LOG.log('[Offscreen] Capturando audio del micrófono...');
 
   try {
     micStream = await navigator.mediaDevices.getUserMedia({
@@ -94,10 +93,10 @@ async function startAudioPipeline(streamId, profile) {
         autoGainControl: true,
       }
     });
-    console.log('[Offscreen] ✅ Micrófono obtenido');
+    LOG.log('[Offscreen] ✅ Micrófono obtenido');
   } catch (err) {
-    console.warn('[Offscreen] ⚠️ No se pudo capturar micrófono:', err.message);
-    console.warn('[Offscreen] Continuando solo con audio del tab');
+    LOG.warn('[Offscreen] ⚠️ No se pudo capturar micrófono:', err.message);
+    LOG.warn('[Offscreen] Continuando solo con audio del tab');
     micStream = null;
   }
 
@@ -155,11 +154,11 @@ async function startAudioPipeline(streamId, profile) {
   };
 
   if (micSource) {
-    console.log('[Offscreen] ✅ Pipeline iniciado - mezclando tab + micrófono');
+    LOG.log('[Offscreen] ✅ Pipeline iniciado - mezclando tab + micrófono');
   } else {
-    console.log('[Offscreen] ✅ Pipeline iniciado - solo audio del tab');
+    LOG.log('[Offscreen] ✅ Pipeline iniciado - solo audio del tab');
   }
-  console.log('[Offscreen] Enviando audio cada', SEND_INTERVAL_MS / 1000, 'segundos al backend');
+  LOG.log('[Offscreen] Enviando audio cada', SEND_INTERVAL_MS / 1000, 'segundos al backend');
 }
 
 async function sendAudioToBackend() {
@@ -178,9 +177,9 @@ async function sendAudioToBackend() {
   audioChunks = [];
 
   try {
-    console.log('[Offscreen] Enviando', combined.length, 'muestras al backend (', (combined.length * 2), 'bytes )');
+    LOG.log('[Offscreen] Enviando', combined.length, 'muestras al backend (', (combined.length * 2), 'bytes )');
 
-    const response = await fetch(`${BACKEND_URL}/api/transcribe-stream`, {
+    const response = await fetch(`${CONFIG.BASE_URL}/api/transcribe-stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'audio/raw',
@@ -189,14 +188,14 @@ async function sendAudioToBackend() {
     });
 
     if (!response.ok) {
-      console.error('[Offscreen] Backend error:', response.status);
+      LOG.error('[Offscreen] Backend error:', response.status);
       return;
     }
 
     const data = await response.json();
 
     if (data.transcript && data.transcript.trim()) {
-      console.log('[Offscreen] Transcripción recibida:', data.transcript);
+      LOG.log('[Offscreen] Transcripción recibida:', data.transcript);
 
       chrome.runtime.sendMessage({
         action: 'TRANSCRIPT',
@@ -208,7 +207,7 @@ async function sendAudioToBackend() {
     }
 
   } catch (err) {
-    console.error('[Offscreen] Error enviando audio:', err);
+    LOG.error('[Offscreen] Error enviando audio:', err);
   }
 }
 
@@ -230,65 +229,38 @@ function stopAudioPipeline() {
 // ─────────────────────────────────────────────────────────────
 
 function cleanupAudioResources() {
-  console.log('[Offscreen] Liberando recursos de audio...');
+  LOG.log('[Offscreen] Liberando recursos de audio...');
 
   audioChunks = [];
 
-  try {
-    if (processor) {
-      processor.disconnect();
-      processor = null;
-    }
-  } catch (e) {
-    console.warn('[Offscreen] Error al desconectar processor:', e.message);
-  }
+  // Recursos a limpiar: [nombre, variable, método]
+  const resources = [
+    ['processor', processor, 'disconnect'],
+    ['tabSource', tabSource, 'disconnect'],
+    ['micSource', micSource, 'disconnect'],
+    ['audioCtx', audioCtx, 'close'],
+    ['tabStream', tabStream, (s) => s?.getTracks().forEach(t => t.stop())],
+    ['micStream', micStream, (s) => s?.getTracks().forEach(t => t.stop())]
+  ];
 
-  try {
-    if (tabSource) {
-      tabSource.disconnect();
-      tabSource = null;
+  resources.forEach(([name, resource, method]) => {
+    try {
+      if (resource) {
+        if (typeof method === 'string') {
+          resource[method]?.();
+        } else {
+          method(resource);
+        }
+      }
+    } catch (e) {
+      LOG.warn(`[Offscreen] Error limpiando ${name}:`, e.message);
     }
-  } catch (e) {
-    console.warn('[Offscreen] Error al desconectar tabSource:', e.message);
-  }
+  });
 
-  try {
-    if (micSource) {
-      micSource.disconnect();
-      micSource = null;
-    }
-  } catch (e) {
-    console.warn('[Offscreen] Error al desconectar micSource:', e.message);
-  }
+  // Reset variables
+  processor = tabSource = micSource = audioCtx = tabStream = micStream = null;
 
-  try {
-    if (audioCtx) {
-      audioCtx.close();
-      audioCtx = null;
-    }
-  } catch (e) {
-    console.warn('[Offscreen] Error al cerrar audioCtx:', e.message);
-  }
-
-  try {
-    if (tabStream) {
-      tabStream.getTracks().forEach((track) => track.stop());
-      tabStream = null;
-    }
-  } catch (e) {
-    console.warn('[Offscreen] Error al detener tabStream:', e.message);
-  }
-
-  try {
-    if (micStream) {
-      micStream.getTracks().forEach((track) => track.stop());
-      micStream = null;
-    }
-  } catch (e) {
-    console.warn('[Offscreen] Error al detener micStream:', e.message);
-  }
-
-  console.log('[Offscreen] ✅ Recursos de audio liberados');
+  LOG.log('[Offscreen] ✅ Recursos de audio liberados');
 }
 
 // ─────────────────────────────────────────────────────────────

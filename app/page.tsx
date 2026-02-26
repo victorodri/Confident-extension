@@ -56,9 +56,9 @@ export default function HomePage() {
               size="lg"
               variant="secondary"
               className="text-lg px-8 py-6 h-auto"
-              onClick={() => alert('Extensión disponible en Sesión 8 (Chrome Web Store)')}
+              onClick={() => window.location.href = '/auth'}
             >
-              Instalar extensión →
+              Comenzar ahora →
             </Button>
           </div>
         </section>

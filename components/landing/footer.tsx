@@ -37,14 +37,9 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <a
-                  href="https://chrome.google.com/webstore"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
-                >
-                  Descargar (Sesión 8)
-                </a>
+                <Link href="/auth" className="hover:text-white transition-colors">
+                  Comenzar
+                </Link>
               </li>
             </ul>
           </div>
