@@ -51,6 +51,9 @@ const CONFIG = {
     get USAGE() {
       return `${CONFIG.BASE_URL}/api/usage`;
     },
+    get PROFILE_CONTEXT() {
+      return `${CONFIG.BASE_URL}/api/profile/context`;
+    },
     get AUTH() {
       return `${CONFIG.BASE_URL}/auth`;
     },

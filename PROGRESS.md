@@ -1341,13 +1341,200 @@ Creado archivo `TESTING_CHECKLIST.md` con test suites completos:
 - **Test Suite 6**: Cross-Browser (3 versiones Chrome)
 - **Test Suite 7**: Edge Cases (8 escenarios complejos)
 
-### Próxima sesión
-Sesión: 14 — Onboarding Personalizado (OPCIONAL - FASE 6)
-Objetivo: Usuario escribe contexto sobre sí mismo para sugerencias personalizadas
-Archivos principales: `extension/side-panel/panel.html`, `app/api/profile/context/route.ts`
-Contexto importante: Esta sesión es OPCIONAL y puede diferirse a v1.1 si se prioriza publicación CWS
+## Sesión 14 completada — Onboarding Personalizado con Diseño Apple/Wispr Flow
 
-**Alternativa prioritaria**: Si se quiere publicar rápido, saltar a Sesión 16 (Políticas Legales)
+### Funcionalidades implementadas
+✅ **Modal de onboarding premium** — Diseño Apple-style con gradientes y animaciones
+✅ **3 campos de personalización** — Descripción, Preocupaciones, Objetivos
+✅ **Endpoint POST /api/profile/context** — Guarda contexto en Supabase
+✅ **Endpoint GET /api/profile/context** — Recupera contexto guardado
+✅ **Migración SQL** — Columna `user_context` añadida a `profiles`
+✅ **Botones Skip y Submit** — Onboarding opcional o completo
+
+### Archivos creados en Sesión 14
+```
+app/api/profile/context/route.ts              ← NUEVO: POST/GET contexto usuario
+supabase/migrations/20260227_add_user_context.sql ← NUEVO: Migración SQL
+```
+
+### Archivos modificados en Sesión 14
+```
+extension/side-panel/panel.html        ← Modal onboarding premium
+extension/side-panel/panel.css         ← Estilos Apple/Wispr Flow
+extension/side-panel/panel.js          ← Lógica formulario + skip
+extension/config.js                    ← Endpoint PROFILE_CONTEXT añadido
+```
+
+### Diseño visual premium
+
+**Inspiración**: Apple, Wispr Flow, TRIBBU
+
+**Características**:
+- **Backdrop con blur** (12px blur + rgba negro 40%)
+- **Modal centrado** con gradiente sutil (blanco → #fafafa)
+- **Header con gradiente** azul (#007AFF → #5856D6)
+- **Animaciones suaves**: fadeIn + slideUp + bounce
+- **Textareas premium**: border focus con box-shadow azul
+- **Botones con estados**: hover con transform + sombras
+- **Scrollbar minimalista**: 6px width, color sutil
+- **Tipografía SF Pro**: -apple-system, BlinkmacSystemFont
+- **Responsive**: mobile-first con breakpoint 480px
+
+### Flujo completo onboarding
+
+```
+1. Usuario abre panel por primera vez
+   → chrome.storage.local.get('onboarding_completed')
+   → Si false → showState('onboarding')
+
+2. Modal aparece con animación fadeIn + slideUp
+   → Backdrop con blur
+   → Header con gradiente azul
+   → 3 textareas para personalización
+
+3. Usuario completa formulario (opcional):
+   - "¿Quién eres?" (descripción)
+   - "¿Qué te preocupa?" (concerns)
+   - "¿Qué quieres mejorar?" (goals)
+
+4. Usuario hace clic en botón:
+
+   OPCIÓN A: "Guardar y comenzar"
+   → Submit formulario (e.preventDefault())
+   → Crear objeto userContext {description, concerns, goals, timestamp}
+   → Guardar en chrome.storage.local.user_context
+   → POST /api/profile/context {anonymous_id, context}
+   → Marcar onboarding_completed = true
+   → showState('empty')
+
+   OPCIÓN B: "Omitir por ahora"
+   → Marcar onboarding_completed = true
+   → user_context = null
+   → showState('empty')
+   → No llamar backend
+
+5. Panel muestra estado vacío (ready)
+   → Contador de sesiones visible
+   → Usuario puede iniciar sesión normalmente
+```
+
+### Endpoint backend
+
+**POST /api/profile/context:**
+- Recibe: `{anonymous_id, context}`
+- Valida que ambos campos existan
+- Si usuario autenticado → UPDATE profiles WHERE id = user.id
+- Si usuario anónimo → UPSERT profiles WHERE anonymous_id = X
+- Retorna: `{success: true, user_type: 'authenticated' | 'anonymous'}`
+
+**GET /api/profile/context:**
+- Recibe: `?anonymous_id=XXX`
+- Si usuario autenticado → SELECT user_context FROM profiles WHERE id = user.id
+- Si usuario anónimo → SELECT user_context FROM profiles WHERE anonymous_id = X
+- Retorna: `{context: {...} | null, user_type: '...'}`
+
+### Schema Supabase
+
+**Columna añadida a `profiles`:**
+```sql
+user_context JSONB
+```
+
+**Estructura del JSON:**
+```json
+{
+  "description": "Soy ingeniero de software...",
+  "concerns": "Me pongo nervioso...",
+  "goals": "Responder con más estructura...",
+  "timestamp": "2026-02-27T10:30:00.000Z"
+}
+```
+
+**Índice GIN para búsquedas:**
+```sql
+CREATE INDEX idx_profiles_user_context
+ON profiles USING GIN (user_context);
+```
+
+### Verificación técnica
+
+#### Test modal onboarding (visual)
+1. Borrar `onboarding_completed` de chrome.storage.local
+2. Abrir panel lateral
+3. ✅ Modal aparece con animación suave
+4. ✅ Backdrop con blur visible
+5. ✅ Header con gradiente azul
+6. ✅ 3 textareas con placeholders claros
+7. ✅ Focus states funcionan (border azul + sombra)
+8. ✅ Botones con hover effects (transform + sombra)
+
+#### Test funcionalidad
+```bash
+# 1. Crear perfil anónimo
+curl -X POST http://localhost:3000/api/profile/context \
+  -H "Content-Type: application/json" \
+  -d '{
+    "anonymous_id": "test-user-123",
+    "context": {
+      "description": "Ingeniero de software senior",
+      "concerns": "Nervios en entrevistas",
+      "goals": "Usar frameworks STAR",
+      "timestamp": "2026-02-27T10:00:00Z"
+    }
+  }'
+# ✅ Debe retornar: {"success":true,"user_type":"anonymous"}
+
+# 2. Recuperar contexto
+curl "http://localhost:3000/api/profile/context?anonymous_id=test-user-123"
+# ✅ Debe retornar: {"context":{...},"user_type":"anonymous"}
+```
+
+#### Test flujo completo extensión
+1. Recargar extensión: `chrome://extensions` → reload ⟳
+2. Borrar chrome.storage.local: DevTools → Application → Storage → Clear
+3. Abrir panel lateral en Google Meet
+4. ✅ Modal de onboarding aparece
+5. Completar los 3 campos con texto real
+6. Clic "Guardar y comenzar"
+7. ✅ Modal se cierra con animación
+8. ✅ Panel muestra estado "empty"
+9. Verificar en DevTools Console:
+   - ✅ "[Panel] Onboarding completado con contexto: {...}"
+   - ✅ "[Panel] Contexto guardado en servidor"
+10. Verificar en Supabase → tabla profiles:
+    - ✅ Nueva fila con anonymous_id
+    - ✅ Columna user_context con JSON completo
+
+#### Test skip onboarding
+1. Repetir pasos 1-4 del test anterior
+2. Clic "Omitir por ahora"
+3. ✅ Modal se cierra inmediatamente
+4. ✅ Panel muestra estado "empty"
+5. Verificar chrome.storage.local:
+   - ✅ onboarding_completed = true
+   - ✅ user_context = null
+6. ✅ NO se llama al backend (verificar Network tab)
+
+### Migración Supabase requerida
+
+**IMPORTANTE**: Antes de usar esta funcionalidad, ejecutar:
+
+1. Abrir Supabase Dashboard → SQL Editor
+2. Ejecutar `supabase/migrations/20260227_add_user_context.sql`
+3. Verificar que columna `user_context` existe:
+   ```sql
+   SELECT column_name, data_type
+   FROM information_schema.columns
+   WHERE table_name = 'profiles' AND column_name = 'user_context';
+   ```
+
+### Próxima sesión
+Sesión: 15 — IA Contextual con Historial (3h)
+Objetivo: Claude usa contexto de usuario + sesiones previas para sugerencias personalizadas
+Archivos principales: `app/api/analyze/route.ts`, `app/dashboard/page.tsx`
+Contexto importante: Esta sesión mejora la calidad de las sugerencias basándose en el perfil del usuario
+
+**Alternativa**: Si se quiere publicar rápido, saltar a Sesión 16 (Políticas Legales)
 
 ### Verificación técnica
 

@@ -20,32 +20,77 @@
   <!-- ─── MAIN ─── -->
   <main class="main">
 
-    <!-- Onboarding: primera vez que usa la extensión -->
-    <div id="onboardingState" class="consent-state hidden">
-      <div class="consent-icon">👋</div>
-      <p class="consent-title">¡Bienvenido a Confident!</p>
-      <p class="empty-desc" style="margin-bottom: 16px;">
-        Tu confidente en conversaciones importantes
-      </p>
+    <!-- Onboarding Modal: personalización primera vez -->
+    <div id="onboardingModal" class="onboarding-modal hidden">
+      <div class="onboarding-backdrop"></div>
+      <div class="onboarding-content">
+        <!-- Header -->
+        <div class="onboarding-header">
+          <div class="onboarding-icon">✨</div>
+          <h2 class="onboarding-title">Personaliza tu experiencia</h2>
+          <p class="onboarding-subtitle">Ayúdanos a conocerte para darte mejores sugerencias</p>
+        </div>
 
-      <!-- Email del usuario (opcional) -->
-      <div class="participants-section">
-        <label class="input-label">
-          Tu email (opcional)
-          <span class="input-hint">Para recibir transcripciones de tus sesiones</span>
-        </label>
-        <input
-          type="email"
-          id="userEmailInput"
-          placeholder="tu@email.com"
-          class="email-input"
-        />
+        <!-- Form -->
+        <form id="onboardingForm" class="onboarding-form">
+          <!-- Campo 1: Quién eres -->
+          <div class="onboarding-field">
+            <label class="onboarding-label">
+              <span class="label-text">¿Quién eres?</span>
+              <span class="label-hint">Tu rol, experiencia, industria...</span>
+            </label>
+            <textarea
+              id="userDescription"
+              class="onboarding-textarea"
+              rows="3"
+              placeholder="Ej: Soy ingeniero de software con 5 años de experiencia en startups. Me especializo en backend y liderazgo técnico..."
+            ></textarea>
+          </div>
+
+          <!-- Campo 2: Qué te preocupa -->
+          <div class="onboarding-field">
+            <label class="onboarding-label">
+              <span class="label-text">¿Qué te preocupa en conversaciones?</span>
+              <span class="label-hint">Nervios, palabras adecuadas, claridad...</span>
+            </label>
+            <textarea
+              id="userConcerns"
+              class="onboarding-textarea"
+              rows="3"
+              placeholder="Ej: Me pongo nervioso, pierdo el hilo de mis ideas, me cuesta sonar seguro..."
+            ></textarea>
+          </div>
+
+          <!-- Campo 3: Qué quieres mejorar -->
+          <div class="onboarding-field">
+            <label class="onboarding-label">
+              <span class="label-text">¿Qué quieres mejorar?</span>
+              <span class="label-hint">Objetivos, habilidades, resultados...</span>
+            </label>
+            <textarea
+              id="userGoals"
+              class="onboarding-textarea"
+              rows="3"
+              placeholder="Ej: Responder con más estructura, manejar objeciones con calma, ser más persuasivo..."
+            ></textarea>
+          </div>
+
+          <!-- Botones -->
+          <div class="onboarding-actions">
+            <button type="button" id="skipOnboarding" class="btn-skip">
+              Omitir por ahora
+            </button>
+            <button type="submit" id="submitOnboarding" class="btn-submit">
+              Guardar y comenzar
+            </button>
+          </div>
+        </form>
+
+        <!-- Footer -->
+        <p class="onboarding-footer">
+          🔒 Esta información es privada y solo se usa para personalizar tus sugerencias
+        </p>
       </div>
-
-      <!-- Botón continuar -->
-      <button id="continueOnboardingBtn" class="btn-start-session">
-        Continuar
-      </button>
     </div>
 
     <!-- Estado inicial: esperando consentimiento -->
