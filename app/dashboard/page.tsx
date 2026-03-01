@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 interface Session {
@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [remainingSessions, setRemainingSessions] = useState<number | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export default function DashboardPage() {
     }
 
     // Obtener sesiones
+    let loadedSessions: Session[] = [];
     try {
       const response = await fetch('/api/sessions', {
         headers: {
@@ -90,7 +92,8 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setSessions(data.sessions || []);
+        loadedSessions = data.sessions || [];
+        setSessions(loadedSessions);
       }
     } catch (error) {
       console.error('Error loading sessions:', error);
@@ -114,6 +117,19 @@ export default function DashboardPage() {
     }
 
     setLoading(false);
+
+    // Auto-seleccionar sesión si viene en la URL
+    const sessionIdFromUrl = searchParams.get('session');
+    if (sessionIdFromUrl) {
+      // Verificar que la sesión existe en la lista cargada
+      const sessionExists = loadedSessions.find(s => s.id === sessionIdFromUrl);
+      if (sessionExists) {
+        // Esperar un momento para que el UI se renderice
+        setTimeout(() => {
+          loadSessionDetails(sessionIdFromUrl);
+        }, 300);
+      }
+    }
   };
 
   const loadSessionDetails = async (sessionId: string) => {
@@ -177,11 +193,14 @@ export default function DashboardPage() {
   };
 
   if (loading) {
+    const sessionFromUrl = searchParams.get('session');
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <p className="mt-4 text-gray-600">
+            {sessionFromUrl ? 'Cargando resumen de tu sesión...' : 'Cargando...'}
+          </p>
         </div>
       </div>
     );
@@ -196,6 +215,12 @@ export default function DashboardPage() {
             Confident
           </Link>
           <div className="flex items-center gap-4">
+            <Link
+              href="/profile"
+              className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Mi Perfil
+            </Link>
             <Link
               href="/pricing"
               className="text-sm text-slate-600 hover:text-slate-900 transition-colors"

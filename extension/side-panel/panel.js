@@ -21,12 +21,8 @@ let hasActiveSuggestion = false;
 
 const statusDot       = document.getElementById('statusDot');
 const statusText      = document.getElementById('statusText');
-const onboardingModal = document.getElementById('onboardingModal');
-const onboardingForm  = document.getElementById('onboardingForm');
-const skipOnboarding  = document.getElementById('skipOnboarding');
-const userDescription = document.getElementById('userDescription');
-const userConcerns    = document.getElementById('userConcerns');
-const userGoals       = document.getElementById('userGoals');
+// ELIMINADO: onboardingModal, onboardingForm, skipOnboarding, userDescription, userConcerns, userGoals
+// Onboarding movido a /profile en dashboard
 const consentState    = document.getElementById('consentState');
 const consentCheckbox = document.getElementById('consentCheckbox');
 const participantEmails = document.getElementById('participantEmails');
@@ -53,16 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Comprueba si hay sesión activa al abrir el panel
 async function restoreSessionState() {
-  // Verificar si es la primera vez (onboarding)
-  const { onboarding_completed } = await chrome.storage.local.get('onboarding_completed');
-
-  if (!onboarding_completed) {
-    // Primera vez - mostrar onboarding
-    showState('onboarding');
-    // Actualizar contador footer si existe
-    await updateSessionCounter();
-    return;
-  }
+  // ELIMINADO: Onboarding movido al dashboard
+  // Mostrar valor primero (sugerencias), personalización después
 
   const data = await chrome.storage.session.get(['sessionActive', 'profile', 'lastSuggestion', 'awaitingConsent']);
 
@@ -168,14 +156,13 @@ function setSessionInactive() {
 
 // Muestra solo uno de los estados del panel principal
 function showState(state) {
-  onboardingModal.classList.add('hidden');
+  // ELIMINADO: onboardingModal (movido a /profile en dashboard)
   consentState.classList.add('hidden');
   emptyState.classList.add('hidden');
   listeningState.classList.add('hidden');
 
   // Las cards de sugerencias se manejan aparte (pueden estar visibles con listening)
 
-  if (state === 'onboarding') onboardingModal.classList.remove('hidden');
   if (state === 'consent')    consentState.classList.remove('hidden');
   if (state === 'empty')      emptyState.classList.remove('hidden');
   if (state === 'listening')  listeningState.classList.remove('hidden');
@@ -405,13 +392,20 @@ async function handleStartSession() {
 // ─────────────────────────────────────────────────────────────
 
 async function handleEndSession() {
+  // Obtener sessionId del storage
+  const { sessionId } = await chrome.storage.session.get('sessionId');
+
   // Enviar mensaje al background para detener la sesión
   chrome.runtime.sendMessage({
     action: 'STOP_SESSION'
   });
 
-  // Abrir dashboard en nueva pestaña
-  const dashboardUrl = CONFIG.ENDPOINTS.DASHBOARD;
+  // Abrir dashboard con session_id en URL para auto-selección
+  let dashboardUrl = CONFIG.ENDPOINTS.DASHBOARD;
+  if (sessionId) {
+    dashboardUrl += `?session=${sessionId}`;
+  }
+
   await chrome.tabs.create({ url: dashboardUrl });
 
   // Cerrar el panel lateral
@@ -423,73 +417,7 @@ async function handleEndSession() {
 // ─────────────────────────────────────────────────────────────
 
 function setupEventListeners() {
-  // Formulario onboarding (primera vez)
-  onboardingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const description = userDescription.value.trim();
-    const concerns = userConcerns.value.trim();
-    const goals = userGoals.value.trim();
-
-    // Crear objeto de contexto
-    const userContext = {
-      description: description || null,
-      concerns: concerns || null,
-      goals: goals || null,
-      timestamp: new Date().toISOString()
-    };
-
-    // Guardar localmente
-    await chrome.storage.local.set({
-      onboarding_completed: true,
-      user_context: userContext
-    });
-
-    console.log('[Panel] Onboarding completado con contexto:', userContext);
-
-    // Enviar a backend (si hay contenido)
-    if (description || concerns || goals) {
-      try {
-        const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
-
-        if (anonymous_id && CONFIG.ENDPOINTS.PROFILE_CONTEXT) {
-          await fetch(CONFIG.ENDPOINTS.PROFILE_CONTEXT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              anonymous_id,
-              context: userContext
-            })
-          });
-          console.log('[Panel] Contexto guardado en servidor');
-        }
-      } catch (err) {
-        console.error('[Panel] Error al guardar contexto en servidor:', err);
-        // No bloquear el flujo si falla
-      }
-    }
-
-    // Mostrar estado normal (vacío)
-    showState('empty');
-    // Actualizar contador de sesiones
-    await updateSessionCounter();
-  });
-
-  // Botón skip onboarding
-  skipOnboarding.addEventListener('click', async () => {
-    // Solo marcar como completado, sin guardar contexto
-    await chrome.storage.local.set({
-      onboarding_completed: true,
-      user_context: null
-    });
-
-    console.log('[Panel] Onboarding omitido');
-
-    // Mostrar estado normal (vacío)
-    showState('empty');
-    // Actualizar contador de sesiones
-    await updateSessionCounter();
-  });
+  // ELIMINADO: Event listeners de onboarding movidos al dashboard
 
   // Checkbox de consentimiento
   consentCheckbox.addEventListener('change', () => {

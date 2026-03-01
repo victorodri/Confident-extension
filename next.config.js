@@ -5,6 +5,23 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*' // En desarrollo permitir todo, en producción cambiar a chrome-extension://EXTENSION_ID
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PATCH, DELETE, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization'
+          }
+        ]
+      },
+      {
         source: '/:path*',
         headers: [
           {

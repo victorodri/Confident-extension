@@ -317,6 +317,7 @@ async function handleStartClick() {
 
       try {
         // Llamar al nuevo endpoint /api/sessions (plural) que crea una sesión en la tabla sessions
+        LOG.log('[Popup] Creando sesión en:', `${CONFIG.BASE_URL}/api/sessions`);
         const sessionResponse = await fetch(`${CONFIG.BASE_URL}/api/sessions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -327,45 +328,49 @@ async function handleStartClick() {
           })
         });
 
+        LOG.log('[Popup] Respuesta de /api/sessions:', sessionResponse.status, sessionResponse.statusText);
+
         if (!sessionResponse.ok) {
-          LOG.error('[Popup] Error al crear sesión:', sessionResponse.status);
-        } else {
-          const sessionData = await sessionResponse.json();
-          LOG.log('[Popup] ✅ Sesión creada:', sessionData);
+          const errorText = await sessionResponse.text();
+          LOG.error('[Popup] ❌ Error al crear sesión:', sessionResponse.status, errorText);
+          throw new Error(`Error al crear sesión: ${sessionResponse.status} ${errorText.substring(0, 100)}`);
+        }
 
-          // CRÍTICO: Guardar session_id en chrome.storage.session para usarlo al cerrar
-          if (sessionData.session_id) {
-            await chrome.storage.session.set({ sessionId: sessionData.session_id });
-            LOG.log('[Popup] session_id guardado:', sessionData.session_id);
-          }
+        const sessionData = await sessionResponse.json();
+        LOG.log('[Popup] ✅ Sesión creada:', sessionData);
 
-          // Llamar al endpoint viejo para actualizar el contador de uso
-          try {
-            await fetch(CONFIG.ENDPOINTS.SESSION, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                anonymous_id,
-                profile_type: selectedProfile,
-                session_number: gateCheck.session_count + 1
-              })
-            });
-          } catch (_) {
-            // Ignorar si falla — el contador es secundario
-          }
+        // CRÍTICO: Guardar session_id en chrome.storage.session para usarlo al cerrar
+        if (sessionData.session_id) {
+          await chrome.storage.session.set({ sessionId: sessionData.session_id });
+          LOG.log('[Popup] session_id guardado:', sessionData.session_id);
+        }
 
-          // Esperar 500ms para que Supabase procese el insert + trigger
-          await new Promise(resolve => setTimeout(resolve, 500));
+        // Llamar al endpoint viejo para actualizar el contador de uso
+        try {
+          await fetch(CONFIG.ENDPOINTS.SESSION, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              anonymous_id,
+              profile_type: selectedProfile,
+              session_number: gateCheck.session_count + 1
+            })
+          });
+        } catch (_) {
+          // Ignorar si falla — el contador es secundario
+        }
 
-          // Actualizar contador para reflejar la nueva sesión consumida
-          const updatedGate = await checkSessionGate();
-          LOG.log('[Popup] Contador actualizado:', updatedGate);
+        // Esperar 500ms para que Supabase procese el insert + trigger
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-          // Mostrar brevemente el contador actualizado ANTES de activar la sesión
-          if (updatedGate.remaining !== undefined) {
-            // Contador movido al panel lateral - solo loguear
-            LOG.log(`[Popup] Sesión iniciada. Quedan ${updatedGate.remaining} sesiones`);
-          }
+        // Actualizar contador para reflejar la nueva sesión consumida
+        const updatedGate = await checkSessionGate();
+        LOG.log('[Popup] Contador actualizado:', updatedGate);
+
+        // Mostrar brevemente el contador actualizado ANTES de activar la sesión
+        if (updatedGate.remaining !== undefined) {
+          // Contador movido al panel lateral - solo loguear
+          LOG.log(`[Popup] Sesión iniciada. Quedan ${updatedGate.remaining} sesiones`);
         }
       } catch (err) {
         LOG.error('[Popup] Error al crear sesión:', err);
