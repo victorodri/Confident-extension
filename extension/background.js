@@ -170,6 +170,9 @@ async function callAnalyzeAPI() {
 
   const contextText = contextBuffer.slice(-3).join('\n');
 
+  // Obtener anonymous_id para contexto personalizado del usuario
+  const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
+
   // Notificar al panel que estamos procesando
   sendToPanel('PANEL_STATUS', { text: 'Analizando...' });
 
@@ -182,6 +185,7 @@ async function callAnalyzeAPI() {
         profile,
         context: contextText,
         session_type: 'general',
+        anonymous_id,
       }),
     });
 

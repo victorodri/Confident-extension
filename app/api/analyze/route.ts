@@ -1,10 +1,11 @@
-import { anthropic, getSystemPrompt, SUGGESTION_SCHEMA, type UserProfile } from '@/lib/claude';
+import { anthropic, getSystemPrompt, SUGGESTION_SCHEMA, type UserProfile, type UserContext } from '@/lib/claude';
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text, profile, context, session_type } = body;
+    const { text, profile, context, session_type, anonymous_id } = body;
 
     // Validar campos obligatorios
     if (!text || typeof text !== 'string') {
@@ -16,10 +17,49 @@ export async function POST(request: Request) {
         ? profile
         : 'candidato';
 
+    // Obtener contexto personalizado del usuario (si existe)
+    let userContext: UserContext | null = null;
+
+    if (anonymous_id) {
+      try {
+        const supabase = await createClient();
+
+        // Intentar obtener usuario autenticado primero
+        const { data: { user } } = await supabase.auth.getUser();
+
+        let profile_data;
+        if (user) {
+          // Usuario autenticado
+          const { data } = await supabase
+            .from('profiles')
+            .select('user_context')
+            .eq('id', user.id)
+            .single();
+          profile_data = data;
+        } else {
+          // Usuario anónimo
+          const { data } = await supabase
+            .from('profiles')
+            .select('user_context')
+            .eq('anonymous_id', anonymous_id)
+            .single();
+          profile_data = data;
+        }
+
+        if (profile_data?.user_context) {
+          userContext = profile_data.user_context;
+          console.log('[/api/analyze] User context loaded:', userContext);
+        }
+      } catch (err) {
+        // Si falla obtener el contexto, continuar sin él
+        console.log('[/api/analyze] Could not load user context:', err);
+      }
+    }
+
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 350,
-      system: getSystemPrompt(activeProfile),
+      system: getSystemPrompt(activeProfile, userContext),
       output_config: {
         format: {
           type: 'json_schema',

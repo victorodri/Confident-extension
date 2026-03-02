@@ -165,14 +165,41 @@ export const SUGGESTION_SCHEMA = {
 
 export type UserProfile = 'candidato' | 'vendedor' | 'defensor';
 
+export interface UserContext {
+  description?: string | null;
+  concerns?: string | null;
+  goals?: string | null;
+  timestamp?: string;
+}
+
 const PROMPTS: Record<UserProfile, string> = {
   candidato: PROMPT_CANDIDATO,
   vendedor: PROMPT_VENDEDOR,
   defensor: PROMPT_DEFENSOR,
 };
 
-export function getSystemPrompt(profile: UserProfile): string {
-  return PROMPTS[profile] + COMMON_SUFFIX;
+export function getSystemPrompt(profile: UserProfile, userContext?: UserContext | null): string {
+  const basePrompt = PROMPTS[profile];
+
+  // Si hay contexto personalizado del usuario, añadirlo antes del COMMON_SUFFIX
+  if (userContext && (userContext.description || userContext.concerns || userContext.goals)) {
+    const contextSection = `
+
+──────────────────────────────────────────────
+CONTEXTO PERSONALIZADO DEL USUARIO
+──────────────────────────────────────────────
+
+${userContext.description ? `Quién es el usuario:\n${userContext.description}\n\n` : ''}${userContext.concerns ? `Qué le preocupa en conversaciones:\n${userContext.concerns}\n\n` : ''}${userContext.goals ? `Qué quiere mejorar:\n${userContext.goals}\n\n` : ''}
+Usa este contexto para personalizar tus sugerencias. Enfócate en sus preocupaciones específicas
+y ayúdale a alcanzar sus objetivos concretos. Adapta el lenguaje y las recomendaciones a su
+nivel de experiencia y situación particular.
+
+`;
+    return basePrompt + contextSection + COMMON_SUFFIX;
+  }
+
+  // Sin contexto personalizado, usar prompt estándar
+  return basePrompt + COMMON_SUFFIX;
 }
 
 // ─────────────────────────────────────────────

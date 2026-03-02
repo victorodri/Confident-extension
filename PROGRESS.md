@@ -1,8 +1,8 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 15 — Fix Errores Extensión + Supabase + UX Mejoras
-Fecha: Marzo 1, 2026
+Sesión completada: 18 — Assets Profesionales (Especificaciones de Diseño)
+Fecha: Marzo 2, 2026
 
 ## Qué está funcionando
 - Servidor Next.js corriendo en `http://localhost:3000` ✅
@@ -10,6 +10,8 @@ Fecha: Marzo 1, 2026
 - Migración SQL creada para fix de Supabase ✅
 - Funciones `handle_new_user` e `increment_session_count` con search_path seguro ✅
 - Políticas RLS optimizadas para evitar re-evaluaciones ✅
+- Páginas legales /privacy y /terms creadas y compliant con Chrome Web Store ✅
+- Footer con links legales en landing y dashboard ✅
 
 ## Errores resueltos en Sesión 15
 
@@ -160,11 +162,98 @@ El contador ya estaba implementado correctamente desde Sesión 14. Los errores "
 - **Fix futuro**: Migrar a AudioWorkletNode (Sesión futura)
 - **Prioridad**: Baja (funciona hasta Chrome 2027+)
 
+## 🎯 Archivos modificados en Sesión 17
+
+```
+lib/claude.ts                                           ← UserContext interface + getSystemPrompt() con contexto
+app/api/analyze/route.ts                                ← Obtiene user_context de Supabase + lo pasa a Claude
+extension/background.js                                 ← Envía anonymous_id al endpoint /api/analyze
+PROGRESS.md                                             ← Actualizado estado
+```
+
+## 🎯 Archivos creados en Sesión 18
+
+```
+ICON_DESIGN_SPECS.md                                    ← NUEVO: Especificaciones completas de diseño de iconos
+CHROME_WEB_STORE_ASSETS/README.md                       ← NUEVO: Guía de assets y checklist pre-publicación
+CHROME_WEB_STORE_ASSETS/                                ← NUEVO: Carpeta para promotional tile y screenshots
+```
+
+## ✨ Nueva funcionalidad en Sesión 17: IA Contextual
+
+**Funcionalidad**: Claude ahora personaliza sus sugerencias basándose en el contexto del usuario (descripción, preocupaciones, objetivos) guardado en `/profile`.
+
+**Flujo completo**:
+1. Usuario completa su perfil en `/profile` (o modal de onboarding legacy)
+2. Contexto se guarda en Supabase → `profiles.user_context` (JSONB)
+3. Durante sesión activa, `background.js` envía `anonymous_id` en cada llamada a `/api/analyze`
+4. Backend obtiene `user_context` de Supabase (soporte auth + anónimo)
+5. `getSystemPrompt()` inyecta contexto personalizado en prompt de Claude:
+   ```
+   CONTEXTO PERSONALIZADO DEL USUARIO
+
+   Quién es el usuario:
+   [descripción del usuario]
+
+   Qué le preocupa en conversaciones:
+   [preocupaciones del usuario]
+
+   Qué quiere mejorar:
+   [objetivos del usuario]
+
+   Usa este contexto para personalizar tus sugerencias...
+   ```
+6. Claude genera sugerencias adaptadas al nivel de experiencia, preocupaciones y objetivos específicos del usuario
+
+**Ejemplo práctico**:
+- Usuario: "Soy ingeniero junior con 2 años de experiencia. Me preocupa sonar inseguro en entrevistas técnicas."
+- Antes: "Usa el patrón Singleton para gestión de estado"
+- Ahora: "Explica el patrón Singleton con confianza: 'Asegura una única instancia global'. Menciona uso en Redux"
+
+**Archivos modificados**:
+- `lib/claude.ts:168-203` → Añadido `UserContext` interface + lógica de inyección de contexto
+- `app/api/analyze/route.ts:20-57` → Query Supabase para obtener `user_context` (auth + anónimo)
+- `extension/background.js:174` → Obtener y enviar `anonymous_id` al endpoint
+
+## ✨ Funcionalidad en Sesión 18: Especificaciones de Assets Profesionales
+
+**Funcionalidad**: Documentación completa de especificaciones de diseño para todos los assets visuales necesarios para Chrome Web Store.
+
+**Entregables creados**:
+
+1. **ICON_DESIGN_SPECS.md** — Especificaciones técnicas completas:
+   - Concept visual: "C" de Confident con gradiente purple
+   - Paleta de colores (#8B5CF6 → #6366F1)
+   - Specs técnicas para icon128.png, icon48.png, icon16.png
+   - Specs para promotional tile 440x280px
+   - Prompts listos para DALL-E/Midjourney
+   - Herramientas recomendadas (Figma, Icon Kitchen, Canva)
+
+2. **CHROME_WEB_STORE_ASSETS/** — Carpeta estructurada:
+   - README.md con checklist pre-publicación
+   - Guía para capturar screenshots
+   - Listado de assets requeridos vs pendientes
+   - Instrucciones paso a paso para cada tipo de asset
+
+3. **Manifest.json** — Ya configurado ✅:
+   - Rutas correctas a icons/ ✅
+   - Listo para reemplazar placeholders con versiones profesionales
+
+**Próximos pasos** (requiere herramientas externas):
+- Generar iconos usando Figma o generador IA con prompts proporcionados
+- Crear promotional tile 440x280px
+- Capturar screenshots del panel y dashboard (opcional, recomendado)
+- Reemplazar placeholders en `extension/icons/`
+
+**Archivos**:
+- `ICON_DESIGN_SPECS.md` — Guía maestra de diseño
+- `CHROME_WEB_STORE_ASSETS/README.md` — Checklist y tracking
+
 ## Próxima sesión
-Sesión: 16 — Políticas Legales (Privacidad + Términos)
-Objetivo: Crear páginas /privacy y /terms para cumplir con RGPD y requisitos Chrome Web Store
-Primer archivo a tocar: `app/privacy/page.tsx`
-Contexto importante: Requerido antes de publicar en Chrome Web Store
+Sesión: 19 — Testing Exhaustivo Pre-Publicación
+Objetivo: Ejecutar TESTING_CHECKLIST.md completo + verificar flujos end-to-end
+Primer archivo a tocar: `TESTING_CHECKLIST.md` (ya existe desde Sesión 13)
+Contexto importante: Última verificación antes de publicar en Chrome Web Store
 
 ## Deuda técnica conocida
 - ScriptProcessorNode → AudioWorklet (deprecated pero funcional)
@@ -206,3 +295,30 @@ Ver historial completo en commit anterior de PROGRESS.md
 ✅ Nueva página /profile creada con formulario de personalización
 ✅ Link "Mi Perfil" añadido al header del dashboard
 ✅ API /api/profile/context actualizada para JWT auth + legacy format
+
+### Sesión 16 — Políticas Legales (Privacidad + Términos)
+✅ Página /privacy creada con política RGPD completa
+✅ Página /terms creada con términos Chrome Web Store compliant
+✅ Footer con links legales en landing y dashboard
+✅ Diseño Apple-style con sticky header
+✅ Secciones completas: datos, legal basis, ARCO, terceros, cookies
+
+### Sesión 17 — IA Contextual (Personalización de Sugerencias)
+✅ UserContext interface añadido a lib/claude.ts
+✅ getSystemPrompt() ahora acepta contexto opcional del usuario
+✅ /api/analyze obtiene user_context de Supabase (auth + anónimo)
+✅ background.js envía anonymous_id al endpoint
+✅ Claude personaliza sugerencias según descripción, preocupaciones y objetivos del usuario
+✅ Inyección dinámica de contexto en system prompt
+✅ Soporte completo para usuarios autenticados y anónimos
+
+### Sesión 18 — Assets Profesionales (Especificaciones de Diseño)
+✅ ICON_DESIGN_SPECS.md creado con especificaciones completas
+✅ Paleta de colores definida (gradiente purple #8B5CF6 → #6366F1)
+✅ Specs técnicas para icon16.png, icon48.png, icon128.png
+✅ Specs para promotional tile 440x280px
+✅ Prompts para generadores IA (DALL-E, Midjourney) listos
+✅ Carpeta CHROME_WEB_STORE_ASSETS/ creada
+✅ README.md con checklist pre-publicación
+✅ Guía de herramientas recomendadas (Figma, Icon Kitchen, Canva)
+✅ Manifest.json ya configurado con rutas correctas

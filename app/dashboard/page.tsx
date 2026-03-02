@@ -432,6 +432,37 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white mt-16">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-slate-600">
+              © 2026 Confident. RGPD • Solo texto, no audio.
+            </div>
+            <div className="flex items-center gap-6 text-sm">
+              <Link
+                href="/privacy"
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Privacidad
+              </Link>
+              <Link
+                href="/terms"
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Términos
+              </Link>
+              <a
+                href="mailto:legal@tryconfident.com"
+                className="text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                Contacto
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
