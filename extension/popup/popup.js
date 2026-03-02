@@ -39,21 +39,56 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// VERIFICAR SI EL TAB ACTIVO ES GOOGLE MEET
+// VERIFICAR SI EL TAB ACTIVO ES UNA PLATAFORMA SOPORTADA
+// Sesión 21: Multi-plataforma (Meet, Teams, Zoom)
 // ─────────────────────────────────────────────────────────────
 
 async function checkIfInMeet() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    if (!tab || !tab.url?.includes('meet.google.com')) {
+    if (!tab || !tab.url) {
       showElement(notInMeet);
       startBtn.disabled = true;
       return;
     }
 
+    // Verificar si es una plataforma soportada
+    const supportedPlatforms = [
+      'meet.google.com',
+      'teams.microsoft.com',
+      'zoom.us'
+    ];
+
+    const isSupported = supportedPlatforms.some(domain => tab.url.includes(domain));
+
+    if (!isSupported) {
+      showElement(notInMeet);
+      startBtn.disabled = true;
+
+      // Actualizar mensaje para multi-plataforma
+      notInMeet.innerHTML = `
+        <div class="not-in-meet-content">
+          <p style="margin-bottom: 12px;">⚠️ Abre una videollamada en:</p>
+          <ul style="list-style: none; padding: 0; text-align: left; font-size: 13px;">
+            <li style="margin: 4px 0;">🎥 Google Meet</li>
+            <li style="margin: 4px 0;">💼 Microsoft Teams</li>
+            <li style="margin: 4px 0;">📹 Zoom</li>
+          </ul>
+        </div>
+      `;
+      return;
+    }
+
     currentTabId = tab.id;
     hideElement(notInMeet);
+
+    // Obtener plataforma detectada desde storage
+    const { currentPlatform } = await chrome.storage.session.get('currentPlatform');
+    if (currentPlatform) {
+      // Mostrar plataforma detectada en el popup (opcional)
+      console.log('[Popup] Plataforma detectada:', currentPlatform.displayName);
+    }
   } catch (err) {
     showError('Error al detectar el tab: ' + err.message);
   }

@@ -87,6 +87,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     return false;
   }
+
+  // Sesión 21: Detección de plataforma multi-plataforma
+  if (message.action === 'PLATFORM_READY') {
+    (async () => {
+      const { platform, url } = message;
+      LOG.log('[Confident] Plataforma detectada:', platform.displayName);
+
+      // Guardar plataforma actual en storage
+      await chrome.storage.session.set({
+        currentPlatform: platform,
+        platformUrl: url
+      });
+
+      // Enviar plataforma al panel (si está abierto)
+      sendToPanel('PLATFORM_DETECTED', { platform });
+    })();
+    return false;
+  }
 });
 
 // ─────────────────────────────────────────────────────────────

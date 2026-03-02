@@ -103,6 +103,23 @@ chrome.runtime.onMessage.addListener((message) => {
     return false;
   }
 
+  // Sesión 21: Detección de plataforma multi-plataforma
+  if (message.action === 'PLATFORM_DETECTED') {
+    const { platform } = message;
+    console.log('[Panel] Plataforma detectada:', platform.displayName);
+
+    // Guardar plataforma globalmente
+    window.currentPlatform = platform;
+
+    // Actualizar indicador de plataforma en UI (si existe)
+    const platformIndicator = document.querySelector('.platform-indicator');
+    if (platformIndicator) {
+      platformIndicator.textContent = `${platform.icon} ${platform.displayName}`;
+      platformIndicator.style.color = platform.color;
+    }
+    return false;
+  }
+
   if (message.action === 'REQUEST_CONSENT') {
     // El popup solicita mostrar pantalla de consentimiento
     showState('consent');

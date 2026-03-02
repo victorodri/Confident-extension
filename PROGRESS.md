@@ -1,7 +1,7 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 20 — Preparación Final para Publicación Chrome Web Store
+Sesión completada: 21 — Multi-plataforma (Google Meet, Teams, Zoom)
 Fecha: Marzo 2, 2026
 
 ## Qué está funcionando
@@ -192,6 +192,18 @@ extension/manifest.json                                 ← Version bumped a 1.0
 CHROME_WEB_STORE_PUBLICATION.md                         ← NUEVO: Guía completa de publicación
 ```
 
+## 🎯 Archivos creados/modificados en Sesión 21
+
+```
+PLANNING_PRE_LAUNCH.md                                  ← NUEVO: Planning sesiones 21-27 (multi-plataforma + multi-idioma)
+extension/platforms.js                                  ← NUEVO: Sistema de detección de plataforma
+extension/manifest.json                                 ← host_permissions Teams + Zoom + content_scripts actualizado
+extension/content-script.js                             ← Detección multi-plataforma + mensaje PLATFORM_READY
+extension/background.js                                 ← Handler PLATFORM_READY + almacenar plataforma en storage
+extension/popup/popup.js                                ← Verificación multi-plataforma + mensaje multi-plataforma
+extension/side-panel/panel.js                           ← Handler PLATFORM_DETECTED + mostrar plataforma en UI
+```
+
 ## ✨ Nueva funcionalidad en Sesión 17: IA Contextual
 
 **Funcionalidad**: Claude ahora personaliza sus sugerencias basándose en el contexto del usuario (descripción, preocupaciones, objetivos) guardado en `/profile`.
@@ -357,10 +369,74 @@ CHROME_WEB_STORE_PUBLICATION.md                         ← NUEVO: Guía complet
 - CHROME_WEB_STORE_PUBLICATION.md — Guía maestra completa
 - extension/manifest.json — Version 1.0.0
 
+## ⚠️ CAMBIO DE PLAN — Pre-Lanzamiento
+
+**Requisitos adicionales antes de publicación**:
+1. **Multi-plataforma**: Google Meet + Microsoft Teams + Zoom
+2. **Multi-idioma**: Español + Inglés (extensión + web)
+
+**Nuevo planning**: Ver `PLANNING_PRE_LAUNCH.md` con 7 sesiones (21-27)
+
+**Razón**: Requisitos mínimos para v1.0 según usuario.
+
+**Tiempo estimado**: 13-19 horas adicionales antes de publicar.
+
+## ✨ Funcionalidad en Sesión 21: Multi-plataforma (Google Meet, Teams, Zoom)
+
+**Funcionalidad**: Extensión ahora funciona en 3 plataformas de videollamadas con detección automática.
+
+**Plataformas soportadas**:
+1. **Google Meet** (🎥) — meet.google.com
+2. **Microsoft Teams** (💼) — teams.microsoft.com
+3. **Zoom** (📹) — *.zoom.us
+
+**Implementación**:
+
+1. **platforms.js** — Sistema de detección:
+   - `detect Platform(url)`: Detecta plataforma actual por URL
+   - `isSupportedPlatform(url)`: Verifica si es soportada
+   - `getPlatformById(id)`: Obtiene configuración por ID
+   - Configuración por plataforma: id, name, displayName, icon, color
+
+2. **manifest.json** — Permisos extendidos:
+   - host_permissions: `teams.microsoft.com/*`, `*.zoom.us/*`
+   - content_scripts: matches para las 3 plataformas
+   - Inyecta platforms.js antes de content-script.js
+
+3. **content-script.js** — Detección automática:
+   - Detecta plataforma al cargar
+   - Envía mensaje `PLATFORM_READY` a background con datos de plataforma
+   - Observer para cambios de URL (SPA navigation)
+
+4. **background.js** — Almacenamiento:
+   - Handler `PLATFORM_READY`: Guarda plataforma en chrome.storage.session
+   - Envía `PLATFORM_DETECTED` al panel
+
+5. **popup.js** — Verificación multi-plataforma:
+   - Verifica si tab actual es plataforma soportada
+   - Mensaje actualizado con 3 plataformas
+   - Habilita botón "Iniciar" solo si es plataforma válida
+
+6. **panel.js** — Indicador de plataforma:
+   - Recibe `PLATFORM_DETECTED`
+   - Guarda plataforma globalmente
+   - Actualiza `.platform-indicator` con icon y nombre
+
+**Testing pendiente**:
+- ⏳ Google Meet → Verificar detección
+- ⏳ Teams web → Verificar detección + captura audio
+- ⏳ Zoom web → Verificar detección + captura audio
+
+**Archivos**:
+- extension/platforms.js (NUEVO)
+- PLANNING_PRE_LAUNCH.md (NUEVO)
+- 6 archivos modificados (manifest, content-script, background, popup, panel)
+
 ## Próxima sesión
-Sesión: 21+ — Testing Manual + Assets + Publicación
-Objetivo: Ejecutar testing manual, generar assets visuales, publicar en Chrome Web Store
-Contexto importante: Última fase antes de lanzamiento v1.0
+Sesión: 22 — Multi-idioma Extensión (i18n Chrome API)
+Objetivo: Extensión en Español + Inglés usando Chrome i18n API
+Primer archivo a tocar: `extension/_locales/es/messages.json` (crear)
+Contexto importante: Estructura _locales/[lang]/messages.json + Chrome i18n getMessage()
 
 ## Deuda técnica conocida
 - ScriptProcessorNode → AudioWorklet (deprecated pero funcional)
@@ -455,3 +531,16 @@ Ver historial completo en commit anterior de PROGRESS.md
 ✅ Comando empaquetado ZIP documentado
 ✅ Métricas de éxito definidas (semana 1, mes 1)
 ✅ Roadmap v1.1 con prioridades post-publicación
+
+### Sesión 21 — Multi-plataforma (Google Meet, Teams, Zoom)
+✅ PLANNING_PRE_LAUNCH.md creado con sesiones 21-27 detalladas
+✅ extension/platforms.js creado con sistema de detección
+✅ Soporte Google Meet, Microsoft Teams, Zoom
+✅ manifest.json: host_permissions Teams + Zoom
+✅ manifest.json: content_scripts para 3 plataformas
+✅ content-script.js: Detección automática + mensaje PLATFORM_READY
+✅ background.js: Handler PLATFORM_READY + storage
+✅ popup.js: Verificación multi-plataforma + mensaje actualizado
+✅ panel.js: Handler PLATFORM_DETECTED + indicador de plataforma
+✅ Configuración por plataforma: icon, color, displayName
+✅ Testing manual pendiente (3 plataformas)
