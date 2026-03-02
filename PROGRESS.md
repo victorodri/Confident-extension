@@ -1,7 +1,7 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 19 — Testing Exhaustivo Pre-Publicación (Code Review)
+Sesión completada: 20 — Preparación Final para Publicación Chrome Web Store
 Fecha: Marzo 2, 2026
 
 ## Qué está funcionando
@@ -185,6 +185,13 @@ CHROME_WEB_STORE_ASSETS/                                ← NUEVO: Carpeta para 
 TESTING_REPORT.md                                       ← NUEVO: Reporte exhaustivo de testing con 51 tests documentados
 ```
 
+## 🎯 Archivos modificados/creados en Sesión 20
+
+```
+extension/manifest.json                                 ← Version bumped a 1.0.0 + descripción mejorada
+CHROME_WEB_STORE_PUBLICATION.md                         ← NUEVO: Guía completa de publicación
+```
+
 ## ✨ Nueva funcionalidad en Sesión 17: IA Contextual
 
 **Funcionalidad**: Claude ahora personaliza sus sugerencias basándose en el contexto del usuario (descripción, preocupaciones, objetivos) guardado en `/profile`.
@@ -310,11 +317,50 @@ TESTING_REPORT.md                                       ← NUEVO: Reporte exhau
 - TESTING_REPORT.md — Reporte exhaustivo con 51 tests
 - TESTING_CHECKLIST.md — Checklist original (Sesión 13)
 
+## ✨ Funcionalidad en Sesión 20: Preparación Final para Publicación
+
+**Funcionalidad**: Documentación completa para publicación en Chrome Web Store.
+
+**Entregables creados**:
+
+1. **Manifest.json v1.0.0**:
+   - Version bumped de 0.1.7 → 1.0.0 ✅
+   - Descripción mejorada (más descriptiva y comercial)
+
+2. **CHROME_WEB_STORE_PUBLICATION.md** — Guía maestra completa:
+   - **Descripción corta**: 127/132 caracteres ✅
+   - **Descripción detallada**: HTML completo con características, casos de uso, privacidad
+   - **Justificación de permisos**: 7 permisos justificados (tabCapture, storage, sidePanel, scripting, offscreen, activeTab, host_permissions)
+   - **Screenshots sugeridos**: 5 capturas documentadas con descripción
+   - **Proceso de publicación**: 5 pasos detallados desde crear cuenta hasta post-publicación
+   - **Checklist pre-publicación**: 20 items verificables
+   - **Empaquetado ZIP**: Comando y archivos a incluir
+   - **Métricas de éxito**: Objetivos semana 1 y mes 1
+   - **Roadmap v1.1**: Prioridades post-publicación
+
+**Status de publicación**:
+- ✅ **Código**: 100% listo
+- ✅ **Documentación**: Completa
+- ✅ **Legal**: Políticas publicadas
+- ⏳ **Assets**: Iconos y screenshots pendientes (ver ICON_DESIGN_SPECS.md)
+- ⏳ **Testing manual**: Pendiente ejecutar (ver TESTING_REPORT.md)
+
+**Próximos pasos para publicación**:
+1. Generar iconos profesionales (16x16, 48x48, 128x128, promotional tile 440x280)
+2. Capturar screenshots (mínimo 1, recomendado 5)
+3. Ejecutar testing manual completo (36 tests pendientes)
+4. Crear ZIP de extensión
+5. Crear cuenta Developer Chrome Web Store ($5)
+6. Subir y submitir para revisión
+
+**Archivos**:
+- CHROME_WEB_STORE_PUBLICATION.md — Guía maestra completa
+- extension/manifest.json — Version 1.0.0
+
 ## Próxima sesión
-Sesión: 20 — Preparación Final para Publicación
-Objetivo: Bump version 1.0.0 + Descripción Chrome Web Store + Justificación permisos
-Primer archivo a tocar: `extension/manifest.json`
-Contexto importante: Última sesión antes de subir a Chrome Web Store (testing manual se hace aparte)
+Sesión: 21+ — Testing Manual + Assets + Publicación
+Objetivo: Ejecutar testing manual, generar assets visuales, publicar en Chrome Web Store
+Contexto importante: Última fase antes de lanzamiento v1.0
 
 ## Deuda técnica conocida
 - ScriptProcessorNode → AudioWorklet (deprecated pero funcional)
@@ -395,3 +441,17 @@ Ver historial completo en commit anterior de PROGRESS.md
 ✅ Verificada IA contextual implementación
 ✅ Documentados 36 tests manuales pendientes (requieren servidor + extensión cargada)
 ✅ Checklist pre-publicación incluido en reporte
+
+### Sesión 20 — Preparación Final para Publicación Chrome Web Store
+✅ Manifest.json version bumped a 1.0.0
+✅ Descripción manifest mejorada (más comercial y descriptiva)
+✅ CHROME_WEB_STORE_PUBLICATION.md creado con guía completa
+✅ Descripción corta: 127/132 caracteres
+✅ Descripción detallada: HTML completo con features, casos de uso, privacidad
+✅ Justificación de 7 permisos documentada (tabCapture, storage, sidePanel, etc.)
+✅ 5 screenshots sugeridos con descripciones
+✅ Proceso de publicación completo (5 pasos)
+✅ Checklist pre-publicación (20 items)
+✅ Comando empaquetado ZIP documentado
+✅ Métricas de éxito definidas (semana 1, mes 1)
+✅ Roadmap v1.1 con prioridades post-publicación

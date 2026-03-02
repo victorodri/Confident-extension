@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Confident",
-  "version": "0.1.7",
-  "description": "Tu confidente en cada conversación importante",
+  "version": "1.0.0",
+  "description": "Tu confidente silencioso durante videollamadas. Sugerencias IA en tiempo real para entrevistas, ventas y reuniones.",
 
   "permissions": [
     "tabCapture",
