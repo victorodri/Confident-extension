@@ -25,7 +25,14 @@ const translations = {
     sessionCounterUpgrade: 'Ver planes Pro',
     sessionCounterRemaining: 'sesiones restantes',
     sessionCounterLimitReached: 'Límite alcanzado',
-    processing: 'Procesando...'
+    processing: 'Procesando...',
+    emptyTitle: 'Listo para ayudarte',
+    emptyDesc: 'Abre Google Meet y activa Confident<br>desde el popup de la extensión',
+    endSessionButton: 'He terminado esta reunión',
+    viewDashboard: 'Ver resumen y transcripción en Dashboard',
+    profileCandidate: 'Candidato',
+    profileSales: 'Vendedor',
+    profileDefender: 'Defensor'
   },
   en: {
     consentLabel: 'I have informed participants that this conversation will be transcribed and obtained their consent.',
@@ -42,7 +49,14 @@ const translations = {
     sessionCounterUpgrade: 'View Pro plans',
     sessionCounterRemaining: 'sessions remaining',
     sessionCounterLimitReached: 'Limit reached',
-    processing: 'Processing...'
+    processing: 'Processing...',
+    emptyTitle: 'Ready to help',
+    emptyDesc: 'Open Google Meet and activate Confident<br>from the extension popup',
+    endSessionButton: "I've finished this meeting",
+    viewDashboard: 'View summary and transcript in Dashboard',
+    profileCandidate: 'Candidate',
+    profileSales: 'Salesperson',
+    profileDefender: 'Defender'
   }
 };
 
@@ -61,6 +75,12 @@ function updateAllTranslations() {
     el.textContent = i18n(key);
   });
 
+  // Actualizar textos con HTML (innerHTML)
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    el.innerHTML = i18n(key);
+  });
+
   // Actualizar placeholders
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const key = el.getAttribute('data-i18n-placeholder');
@@ -77,6 +97,12 @@ async function changeLanguage(lang) {
   currentLanguage = lang;
   await chrome.storage.local.set({ user_language: lang });
   updateAllTranslations();
+
+  // Actualizar estado de sesión activa si hay una sesión
+  const data = await chrome.storage.session.get(['sessionActive', 'profile']);
+  if (data.sessionActive && data.profile) {
+    statusText.textContent = profileLabel(data.profile) + ' — ' + i18n('statusActive');
+  }
 
   // Actualizar contador de sesiones si está visible
   if (!sessionCounterFooter.classList.contains('hidden')) {
@@ -562,11 +588,11 @@ function setupEventListeners() {
 
 function profileLabel(profile) {
   const labels = {
-    candidato: 'Candidato',
-    vendedor: 'Vendedor',
-    defensor: 'Defensor',
+    candidato: i18n('profileCandidate'),
+    vendedor: i18n('profileSales'),
+    defensor: i18n('profileDefender'),
   };
-  return labels[profile] ?? profile ?? 'Sesión';
+  return labels[profile] ?? profile ?? (currentLanguage === 'es' ? 'Sesión' : 'Session');
 }
 
 // Muestra un mensaje de estado temporal debajo de "Escuchando..."
