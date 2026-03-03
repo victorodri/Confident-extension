@@ -11,13 +11,13 @@ Este directorio contiene todos los assets necesarios para la publicación en Chr
 - ✅ `icon48.png` (48x48px) — Toolbar
 - ✅ `icon128.png` (128x128px) — Chrome Web Store listing
 
-**Status**: Existen placeholders. **PENDIENTE** reemplazar con versiones profesionales.
+**Status**: ✅ **COMPLETADO** — Iconos profesionales implementados (Sesión 26)
 
-**Cómo generar**: Ver `/ICON_DESIGN_SPECS.md` para especificaciones completas y prompts.
+**Fuente**: Generados desde `/visual/` y redimensionados a tamaños exactos requeridos.
 
 ---
 
-### 2. Promotional Tile ⏳
+### 2. Promotional Tile ✅
 **Archivo**: `promotional-tile.png` (440x280px)
 
 **Descripción**: Banner promocional que aparece en la página de la extensión en Chrome Web Store.
@@ -28,9 +28,9 @@ Este directorio contiene todos los assets necesarios para la publicación en Chr
 - Texto "Confident" + tagline a la derecha
 - 3 cards flotantes con colores de urgencia (opcional)
 
-**Status**: ⏳ **PENDIENTE** crear.
+**Status**: ✅ **COMPLETADO** — Creado desde Castellano.png (Sesión 26)
 
-**Cómo generar**: Ver `/ICON_DESIGN_SPECS.md` sección "Promotional Tile".
+**Ubicación**: `/CHROME_WEB_STORE_ASSETS/promotional-tile.png`
 
 ---
 
@@ -83,16 +83,18 @@ Este directorio contiene todos los assets necesarios para la publicación en Chr
 
 Antes de enviar a Chrome Web Store, verificar:
 
-- [ ] Iconos 16/48/128 reemplazados con versiones profesionales
-- [ ] Promotional tile 440x280 creado
+- [x] Iconos 16/48/128 reemplazados con versiones profesionales ✅
+- [x] Promotional tile 440x280 creado ✅
 - [ ] Mínimo 1 screenshot (recomendado 3-5)
-- [ ] Manifest.json apunta a los iconos correctos ✅
+- [x] Manifest.json apunta a los iconos correctos ✅
 - [ ] Descripción corta (<132 caracteres) lista
 - [ ] Descripción detallada lista
-- [ ] Política de privacidad publicada (/privacy) ✅
-- [ ] Términos de servicio publicados (/terms) ✅
+- [x] Política de privacidad publicada (/privacy) ✅
+- [x] Términos de servicio publicados (/terms) ✅
 - [ ] Justificación de permisos preparada
+
+**Progreso**: 5/9 completados (56%)
 
 ---
 
-**Última actualización**: Marzo 2, 2026
+**Última actualización**: Marzo 3, 2026
