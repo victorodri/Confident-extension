@@ -1,7 +1,7 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 24 — Testing Multi-idioma ES/EN
+Sesión completada: 25 — Claude Multi-idioma (Sugerencias ES/EN) + Fix Traducciones Panel
 Fecha: Marzo 3, 2026
 
 ## 🔴 DEBUGGING - Contador de sesiones sigue en 0
@@ -1213,6 +1213,133 @@ extension/background.js             ← Obtiene user_language y lo envía al API
 - ⏳ Iniciar sesión y verificar que sugerencias aparecen en inglés
 - ⏳ Cambiar de vuelta a español y verificar sugerencias en español
 - ⏳ Verificar que el resumen de sesión se genera en el idioma correcto
+
+---
+
+---
+
+## ✅ Fix Post-Sesión 25 — Traducciones Panel Completas + Versión Dev
+
+### Problema reportado por usuario:
+
+1. **"Elementos no tienen traducción en el panel"**:
+   - Screenshot mostraba texto en español cuando idioma seleccionado es inglés
+   - Textos hardcodeados: "Candidato — Activo", "He terminado esta reunión", "Ver resumen y transcripción en Dashboard"
+
+2. **"Botón dirige a Vercel pero no hay despliegue"**:
+   - La aplicación apuntaba a `tryconfident.vercel.app` sin tener despliegue
+   - Debe apuntar a localhost durante desarrollo
+
+3. **"La app no puede ser 1.0.0 hasta completar todas las sesiones"**:
+   - Versión incorrecta en manifest.json (1.0.0)
+   - Debe ser 0.x.x durante desarrollo
+
+### Solución implementada:
+
+#### 1. **Manifest version corregida** (extension/manifest.json):
+```json
+"version": "0.1.0"  // Antes: "1.0.0"
+```
+- Al ser versión 0.x.x, `config.js` automáticamente detecta desarrollo y usa `http://localhost:3000`
+- No requiere cambios en config.js (detección automática basada en versión)
+
+#### 2. **Traducciones panel completadas** (extension/side-panel/panel.js):
+Añadidas claves faltantes al objeto `translations`:
+```javascript
+es: {
+  // ... claves existentes ...
+  emptyTitle: 'Listo para ayudarte',
+  emptyDesc: 'Abre Google Meet y activa Confident<br>desde el popup de la extensión',
+  endSessionButton: 'He terminado esta reunión',
+  viewDashboard: 'Ver resumen y transcripción en Dashboard',
+  profileCandidate: 'Candidato',
+  profileSales: 'Vendedor',
+  profileDefender: 'Defensor'
+},
+en: {
+  // ... claves existentes ...
+  emptyTitle: 'Ready to help',
+  emptyDesc: 'Open Google Meet and activate Confident<br>from the extension popup',
+  endSessionButton: "I've finished this meeting",
+  viewDashboard: 'View summary and transcript in Dashboard',
+  profileCandidate: 'Candidate',
+  profileSales: 'Salesperson',
+  profileDefender: 'Defender'
+}
+```
+
+#### 3. **Función updateAllTranslations() mejorada**:
+Añadido soporte para `data-i18n-html` (permite <br> y otros tags):
+```javascript
+// Actualizar textos con HTML (innerHTML)
+document.querySelectorAll('[data-i18n-html]').forEach(el => {
+  const key = el.getAttribute('data-i18n-html');
+  el.innerHTML = i18n(key);
+});
+```
+
+#### 4. **Función profileLabel() traducida**:
+```javascript
+function profileLabel(profile) {
+  const labels = {
+    candidato: i18n('profileCandidate'),
+    vendedor: i18n('profileSales'),
+    defensor: i18n('profileDefender'),
+  };
+  return labels[profile] ?? profile ?? (currentLanguage === 'es' ? 'Sesión' : 'Session');
+}
+```
+
+#### 5. **Función changeLanguage() mejorada**:
+Ahora actualiza statusText con perfil traducido al cambiar idioma:
+```javascript
+async function changeLanguage(lang) {
+  currentLanguage = lang;
+  await chrome.storage.local.set({ user_language: lang });
+  updateAllTranslations();
+
+  // Actualizar estado de sesión activa si hay una sesión
+  const data = await chrome.storage.session.get(['sessionActive', 'profile']);
+  if (data.sessionActive && data.profile) {
+    statusText.textContent = profileLabel(data.profile) + ' — ' + i18n('statusActive');
+  }
+
+  // Actualizar contador de sesiones si está visible
+  if (!sessionCounterFooter.classList.contains('hidden')) {
+    updateSessionCounter();
+  }
+}
+```
+
+#### 6. **Panel HTML actualizado** (extension/side-panel/panel.html):
+Añadidos atributos `data-i18n` a elementos hardcodeados:
+```html
+<!-- Estado vacío -->
+<p class="empty-title" data-i18n="emptyTitle">Listo para ayudarte</p>
+<p class="empty-desc" data-i18n-html="emptyDesc">...</p>
+
+<!-- Botón terminar sesión -->
+<span data-i18n="endSessionButton">He terminado esta reunión</span>
+<p class="end-session-hint" data-i18n="viewDashboard">Ver resumen y transcripción en Dashboard</p>
+```
+
+### Archivos modificados:
+
+```
+extension/manifest.json              ← Versión 1.0.0 → 0.1.0
+extension/side-panel/panel.js        ← Traducciones completas + funciones mejoradas
+extension/side-panel/panel.html      ← Añadidos data-i18n a textos hardcodeados
+```
+
+### Testing verificado:
+
+- ✅ Selector de idioma cambia entre ES/EN correctamente
+- ✅ Texto "Candidato — Activo" se traduce a "Candidate — Active"
+- ✅ Botón "He terminado esta reunión" se traduce a "I've finished this meeting"
+- ✅ Hint dashboard se traduce correctamente
+- ✅ Estado vacío se traduce completamente
+- ✅ Versión 0.1.0 apunta automáticamente a localhost:3000
+- ✅ Config.js no necesita modificaciones (detección automática)
 
 ---
 
