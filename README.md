@@ -2,7 +2,7 @@
 
 > **Tu coach silencioso en conversaciones importantes**
 
-![Versión](https://img.shields.io/badge/version-1.0.0--dev-purple)
+![Versión](https://img.shields.io/badge/version-0.1.0--dev-purple)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![Chrome Extension](https://img.shields.io/badge/Chrome-MV3-blue)
 ![License](https://img.shields.io/badge/license-Private-red)
@@ -136,7 +136,7 @@ Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con
 
 ## 📈 Estado Actual del Proyecto
 
-**Versión:** 1.0.0-dev (Pre-lanzamiento)
+**Versión:** 0.1.0-dev (Desarrollo)
 **Sesión completada:** 25/29 (86%)
 **Próxima sesión:** 26 — Assets Profesionales Finales
 **Objetivo:** Publicación Chrome Web Store en Sesión 29
