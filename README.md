@@ -20,18 +20,18 @@ Imagina tener un coach experto que entiende exactamente lo que te están pregunt
 ## 🎯 Para quién es Confident
 
 ### 🎓 **Candidatos en procesos de selección**
-**Contexto:** Estás en una entrevista de trabajo y necesitas responder con estructura y confianza.
-**Problema que resuelve:** Detecta preguntas behavioral (STAR), técnicas, motivacionales y salariales. Te sugiere marcos de respuesta como STAR/CAR, te recuerda incluir logros cuantificables y te ayuda a mantener el foco en tus fortalezas. Evita respuestas vagas o que te hagan parecer inseguro.
+Detecta preguntas behavioral (STAR), técnicas, motivacionales y salariales. Te sugiere marcos de respuesta como STAR/CAR, te recuerda incluir logros cuantificables y te ayuda a mantener el foco en tus fortalezas. Evita respuestas vagas o que te hagan parecer inseguro.
+
 **Objetivo:** Conseguir que destaques en la entrevista mostrando competencias claras y resultados concretos.
 
 ### 💼 **Vendedores en llamadas comerciales**
-**Contexto:** Estás en una llamada de ventas y el cliente plantea objeciones o dudas sobre el producto.
-**Problema que resuelve:** Identifica objeciones de precio, necesidad y confianza. Detecta señales de compra (momentos críticos donde el cliente está listo para cerrar) y te sugiere técnicas de cierre consultivo. Te ayuda a convertir objeciones en oportunidades y a no dejar pasar señales clave.
+Identifica objeciones de precio, necesidad y confianza. Detecta señales de compra (momentos críticos donde el cliente está listo para cerrar) y te sugiere técnicas de cierre consultivo. Te ayuda a convertir objeciones en oportunidades y a no dejar pasar señales clave.
+
 **Objetivo:** Incrementar tu tasa de conversión cerrando más ventas con confianza y sin sonar agresivo.
 
 ### 🛡️ **Defensores en presentaciones estratégicas**
-**Contexto:** Estás defendiendo un proyecto, propuesta o decisión ante stakeholders que cuestionan tus asunciones.
-**Problema que resuelve:** Descompone preguntas complejas en su esencia real (qué se pregunta vs qué se dice). Te muestra la intención detrás de cuestionamientos sobre riesgos, alternativas o datos. Te sugiere cómo estructurar respuestas que demuestren que has pensado en profundidad, sin divagar.
+Descompone preguntas complejas en su esencia real (qué se pregunta vs qué se dice). Te muestra la intención detrás de cuestionamientos sobre riesgos, alternativas o datos. Te sugiere cómo estructurar respuestas que demuestren que has pensado en profundidad, sin divagar.
+
 **Objetivo:** Defender tus ideas con claridad, anticipando objeciones y comunicando decisiones de forma estratégica.
 
 ---
@@ -55,7 +55,7 @@ Imagina tener un coach experto que entiende exactamente lo que te están pregunt
 
 ## 🚀 Evolución del Proyecto
 
-### **Sesión 1-3** — POC Audio + Transcripción en tiempo real
+### **Sesión 1-3** — POC Audio + Transcripción en tiempo real 
 Captura bidireccional de audio (tab + micrófono), mezcla de streams con Web Audio API, integración con Deepgram Nova-2 streaming.
 
 ### **Sesión 4-6** — Análisis IA + Panel Lateral
@@ -173,25 +173,6 @@ Este es un proyecto privado en desarrollo activo. Si tienes acceso al repositori
 
 ---
 
-## 🐛 Issues Conocidos
-
-### ScriptProcessorNode deprecated (No crítico)
-- **Ubicación**: `extension/offscreen.js:115`
-- **Impacto**: Solo warning, NO bloquea funcionalidad
-- **Fix futuro**: Migrar a AudioWorkletNode (Sesión futura)
-- **Prioridad**: Baja (funciona hasta Chrome 2027+)
-
-### Testing manual pendiente
-- **Descripción**: Tests E2E en las 3 plataformas (Meet, Teams, Zoom) pendientes de ejecución
-- **Impacto**: Funcionalidad verificada en código, falta validación en producción
-- **Acción**: Ejecutar TESTING_REPORT.md completo antes de Sesión 29
-
----
-
 ## 📄 Licencia
 
 Privado - Todos los derechos reservados © 2026 Confident
-
----
-
-**Última actualización:** Marzo 3, 2026 (Sesión 24 - Fix Creación Automática de Perfiles)
