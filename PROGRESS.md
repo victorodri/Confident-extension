@@ -1343,15 +1343,114 @@ extension/side-panel/panel.html      ← Añadidos data-i18n a textos hardcodead
 
 ---
 
+---
+
+## ✅ Sesión 26 completada — Assets Profesionales Chrome Web Store
+
+### Funcionalidad implementada:
+
+**Assets profesionales listos para publicación en Chrome Web Store**:
+
+#### 1. **Iconos de extensión** (extension/icons/):
+- ✅ **icon16.png** (16x16px) - Extension management
+  - Redimensionado desde `visual/Icon.png` con `sips`
+  - Tamaño exacto verificado: 16x16
+
+- ✅ **icon48.png** (48x48px) - Toolbar
+  - Copiado desde `visual/Favicon.png` (ya en tamaño correcto)
+  - Tamaño exacto verificado: 48x48
+
+- ✅ **icon128.png** (128x128px) - Chrome Web Store listing
+  - Redimensionado desde `visual/Fondo Claro.png` (150x150 → 128x128)
+  - Tamaño exacto verificado: 128x128
+
+#### 2. **Promotional Tile** (CHROME_WEB_STORE_ASSETS/):
+- ✅ **promotional-tile.png** (440x280px)
+  - Redimensionado desde `visual/Castellano.png` (660x420 → 440x280)
+  - Aspecto ratio correcto: 1.57:1
+  - Tamaño exacto verificado: 440x280
+  - Peso: 151KB (dentro del límite de 1MB)
+
+#### 3. **Documentación creada**:
+- ✅ **ICON_DESIGN_SPECS.md**:
+  - Paleta de colores completa (Purple #8B5CF6, #6366F1)
+  - Especificaciones técnicas para cada tamaño
+  - Prompts IA listos para DALL-E/Midjourney
+  - Workflow de generación con Figma e Icon Kitchen
+  - Checklist de calidad
+
+- ✅ **CHROME_WEB_STORE_ASSETS/README.md actualizado**:
+  - Status de assets: placeholders → profesionales ✅
+  - Checklist pre-publicación: 5/9 completados (56%)
+
+### Flujo de trabajo ejecutado:
+
+```bash
+# 1. Redimensionar iconos con sips (macOS)
+sips -z 16 16 Icon.png --out icon16.png
+cp Favicon.png icon48.png  # Ya en tamaño correcto
+sips -z 128 128 "Fondo Claro.png" --out icon128.png
+sips -z 280 440 Castellano.png --out promotional-tile.png
+
+# 2. Copiar a ubicaciones correctas
+cp visual/icon*.png extension/icons/
+cp visual/promotional-tile.png CHROME_WEB_STORE_ASSETS/
+
+# 3. Verificar dimensiones
+for f in *.png; do
+  echo "$f: $(file "$f" | grep -o '[0-9]* x [0-9]*')"
+done
+```
+
+### Verificaciones realizadas:
+
+- ✅ Dimensiones exactas confirmadas (16x16, 48x48, 128x128, 440x280)
+- ✅ Formato PNG 24-bit
+- ✅ Peso optimizado (<1MB)
+- ✅ Manifest.json apunta correctamente a los iconos
+- ✅ Placeholders sobrescritos con versiones profesionales
+
+### Archivos modificados:
+
+```
+extension/icons/icon16.png           ← Placeholder → Profesional
+extension/icons/icon48.png           ← Placeholder → Profesional
+extension/icons/icon128.png          ← Placeholder → Profesional
+CHROME_WEB_STORE_ASSETS/promotional-tile.png  ← NUEVO
+CHROME_WEB_STORE_ASSETS/ICON_DESIGN_SPECS.md  ← NUEVO
+CHROME_WEB_STORE_ASSETS/README.md    ← Actualizado (checklist 56%)
+visual/                               ← Carpeta con diseños originales añadida
+```
+
+### Checklist pre-publicación actualizado:
+
+- [x] Iconos 16/48/128 reemplazados con versiones profesionales ✅
+- [x] Promotional tile 440x280 creado ✅
+- [ ] Mínimo 1 screenshot (recomendado 3-5)
+- [x] Manifest.json apunta a los iconos correctos ✅
+- [ ] Descripción corta (<132 caracteres) lista
+- [ ] Descripción detallada lista
+- [x] Política de privacidad publicada (/privacy) ✅
+- [x] Términos de servicio publicados (/terms) ✅
+- [ ] Justificación de permisos preparada
+
+**Progreso**: 5/9 completados (56%)
+
+---
+
 ## Próxima sesión
 
-Sesión: 26 — Assets Profesionales Finales (Iconos + Promotional Tile)
-Objetivo: Generar iconos profesionales y promotional tile para Chrome Web Store
+Sesión: 27 — Screenshots Chrome Web Store (3-5 capturas profesionales)
+Objetivo: Capturar y anotar screenshots para Chrome Web Store listing
 Duración estimada: 1 hora
-Herramientas: Generador IA (DALL-E, Midjourney) o Figma
+Herramientas: CleanShot X (Mac) o ShareX (Windows) + Excalidraw
 
-**Tareas Sesión 26**:
-1. Generar icon16.png, icon48.png, icon128.png usando prompts de ICON_DESIGN_SPECS.md
-2. Crear promotional tile 440x280px
-3. Reemplazar placeholders en extension/icons/
-4. Verificar en manifest.json que las rutas son correctas
+**Tareas Sesión 27**:
+1. Capturar screenshot 1: Panel lateral con sugerencia crítica (urgencia 3 roja)
+2. Capturar screenshot 2: Dashboard con historial de sesiones
+3. Capturar screenshot 3: Multi-plataforma (logos Meet, Teams, Zoom)
+4. (Opcional) Screenshot 4: Perfil personalizado (/profile)
+5. (Opcional) Screenshot 5: Mensaje de privacidad/consentimiento
+6. Redimensionar a 1280x800px
+7. Anotar con flechas/texto si es necesario
+8. Guardar en CHROME_WEB_STORE_ASSETS/screenshots/
