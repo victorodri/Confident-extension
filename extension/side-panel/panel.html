@@ -10,7 +10,13 @@
 
   <!-- ─── HEADER ─── -->
   <header class="header">
-    <span class="logo">Confident</span>
+    <div class="header-top">
+      <span class="logo">Confident</span>
+      <select id="language-selector" class="language-selector">
+        <option value="es">🇪🇸 ES</option>
+        <option value="en">🇬🇧 EN</option>
+      </select>
+    </div>
     <div class="session-status">
       <span class="status-dot" id="statusDot"></span>
       <span class="status-text" id="statusText">Sin sesión activa</span>
@@ -29,27 +35,26 @@
       <div class="consent-checkbox-wrapper">
         <label class="consent-label">
           <input type="checkbox" id="consentCheckbox" />
-          <span>He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.</span>
+          <span data-i18n="consentLabel"></span>
         </label>
       </div>
 
       <!-- Campo opcional: emails de participantes -->
       <div class="participants-section">
         <label class="input-label">
-          Emails de participantes (opcional)
-          <span class="input-hint">Se enviará transcripción al finalizar</span>
+          <span data-i18n="participantEmailsLabel"></span>
+          <span class="input-hint" data-i18n="participantEmailsHint"></span>
         </label>
         <input
           type="text"
           id="participantEmails"
-          placeholder="email1@ejemplo.com, email2@ejemplo.com"
+          data-i18n-placeholder="participantEmailsPlaceholder"
           class="email-input"
         />
       </div>
 
       <!-- Botón para confirmar y comenzar -->
-      <button id="startSessionBtn" class="btn-start-session" disabled>
-        Iniciar sesión
+      <button id="startSessionBtn" class="btn-start-session" disabled data-i18n="startButton">
       </button>
     </div>
 
@@ -67,7 +72,7 @@
       <div class="listening-animation">
         <span></span><span></span><span></span>
       </div>
-      <p class="listening-text">Escuchando...</p>
+      <p class="listening-text" data-i18n="listening"></p>
       <p id="statusMsg" class="status-msg hidden"></p>
     </div>
 
@@ -89,7 +94,7 @@
   <section class="history-section">
     <button class="history-toggle" id="historyToggle">
       <span id="historyArrow">▸</span>
-      <span>Historial</span>
+      <span data-i18n="sessionHistory"></span>
       <span id="historyCount" class="history-count hidden">0</span>
     </button>
     <ul class="history-list hidden" id="historyList"></ul>

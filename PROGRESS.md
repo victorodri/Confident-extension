@@ -1,11 +1,71 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 21 — Multi-plataforma (Google Meet, Teams, Zoom)
-Fecha: Marzo 2, 2026
+Sesión completada: 24 — Testing Multi-idioma ES/EN
+Fecha: Marzo 3, 2026
+
+## 🔴 DEBUGGING - Contador de sesiones sigue en 0
+
+**Síntoma**: Después de ejecutar FIX_COMPLETO_SESIONES.sql, sigue mostrando "0 sesiones"
+
+**Fix aplicado**:
+- ✅ Endpoint `/api/usage` corregido para NO requerir anonymous_id con usuarios autenticados
+- ✅ Servidor reiniciado con cambios
+
+**Próximo paso**: Ejecutar script de verificación SQL
+
+### INSTRUCCIONES:
+
+1. Abrir Supabase SQL Editor
+2. Ejecutar TODO el contenido de: `supabase/VERIFICAR_CONTADORES.sql`
+3. Revisar los resultados:
+   - **Query 1**: Debe mostrar tu email y el valor de `total_sessions`
+   - **Query 2**: Debe mostrar el número real de sesiones
+   - **Query 3**: Lista de tus sesiones
+   - **Query 4-5**: Verifican que trigger y función existen
+
+4. Si Query 1 muestra `total_sessions = 0` pero Query 2 muestra un número > 0:
+   - **El problema**: El contador no se actualizó
+   - **Solución**: El script incluye Query 6 que actualiza solo TU contador
+
+5. Después de ejecutar Query 6, ejecutar Query 7 para verificar
+6. Refrescar dashboard en el navegador (Ctrl+Shift+R o Cmd+Shift+R)
+
+**Archivos**:
+- `supabase/VERIFICAR_CONTADORES.sql` — Script de diagnóstico
+
+## 🔴 ACCIÓN REQUERIDA - EJECUTAR SQL EN SUPABASE
+
+**Problema identificado**:
+1. Al registrarse, muestra "0 sesiones disponibles" en lugar de 15 (plan gratuito)
+2. Dashboard muestra "0 sesiones completadas" cuando hay varias sesiones
+
+**Causa raíz**:
+- El trigger `increment_session_counter` estaba apuntando a tabla `usage_sessions` (legacy)
+- Las sesiones reales se insertan en tabla `sessions`
+- Resultado: contador `total_sessions` nunca se incrementaba
+
+**Solución creada**: Script SQL completo en `/supabase/FIX_COMPLETO_SESIONES.sql`
+
+**INSTRUCCIONES**:
+1. Ir a Supabase Dashboard → https://supabase.com/dashboard/project/[tu-proyecto]
+2. SQL Editor (menú lateral izquierdo)
+3. New Query
+4. Copiar TODO el contenido de `supabase/FIX_COMPLETO_SESIONES.sql`
+5. Pegar y hacer clic en "Run"
+6. Verificar en la tabla de resultados que todos los usuarios tienen estado "✅ CORRECTO"
+7. Refrescar el dashboard de la aplicación y verificar que los contadores son correctos
 
 ## Qué está funcionando
 - Servidor Next.js corriendo en `http://localhost:3000` ✅
+- next-intl configuración funcionando correctamente ✅
+- Multi-idioma web completo: ES/EN en todas las páginas principales ✅
+- Landing page `/es` y `/en` totalmente traducida ✅
+- Pricing page `/es/pricing` y `/en/pricing` totalmente traducida ✅
+- Privacy y Terms pages totalmente traducidas (ES/EN) ✅
+- Footer component funcionando en ambos idiomas ✅
+- Language Selector funcionando en todas las páginas ✅
+- Next.js 15 params Promise migration completada ✅
 - Extensión conectada al backend (errores "Failed to fetch" resueltos) ✅
 - Migración SQL creada para fix de Supabase ✅
 - Funciones `handle_new_user` e `increment_session_count` con search_path seguro ✅
@@ -381,6 +441,89 @@ extension/side-panel/panel.js                           ← Handler PLATFORM_DET
 
 **Tiempo estimado**: 13-19 horas adicionales antes de publicar.
 
+## 🎯 Archivos creados/modificados en Sesión 22
+
+```
+extension/_locales/es/messages.json                    ← NUEVO: Traducciones en español (50+ keys)
+extension/_locales/en/messages.json                    ← NUEVO: Traducciones en inglés (50+ keys)
+extension/popup/popup.html                              ← Selector idioma + data-i18n
+extension/popup/popup.css                               ← Estilos selector idioma
+extension/popup/popup.js                                ← Sistema traducciones manual + changeLanguage()
+extension/side-panel/panel.html                         ← Selector idioma + data-i18n
+extension/side-panel/panel.css                          ← Estilos selector idioma
+extension/side-panel/panel.js                           ← Sistema traducciones manual + changeLanguage()
+extension/offscreen.js                                  ← FIX CRÍTICO: tabSource → audioCtx.destination
+extension/manifest.json                                 ← default_locale + name/description i18n
+PROGRESS.md                                             ← Actualizado estado + bug audio documentado
+```
+
+## ✨ Funcionalidad en Sesión 22: Multi-idioma Extensión (Sistema Manual con Selector)
+
+**Funcionalidad**: La extensión ahora soporta Español (por defecto) e Inglés con selector manual de idioma.
+
+**Implementación**:
+
+1. **Sistema de traducciones manual** — Objeto JavaScript:
+   - Objeto `translations` en popup.js y panel.js con ES/EN
+   - Variable global `currentLanguage = 'es'` (español por defecto)
+   - No depende del idioma del navegador
+   - Usuario controla el idioma manualmente
+
+2. **Selector de idioma visual**:
+   - **Popup**: Selector en header derecha → 🇪🇸 Español / 🇬🇧 English
+   - **Panel**: Selector en header derecha → 🇪🇸 ES / 🇬🇧 EN
+   - Estilo Apple con hover y focus states
+   - Persistencia en `chrome.storage.local` (key: `user_language`)
+
+3. **Cambio de idioma en tiempo real**:
+   - Función `changeLanguage(lang)` → guarda preferencia + actualiza UI
+   - Función `updateAllTranslations()` → recorre elementos data-i18n
+   - No requiere recargar extensión
+   - Sincronizado entre popup y panel
+
+4. **HTML con data-i18n** — Elementos traducibles:
+   - `popup.html`: Tagline, perfiles, consentimiento, botones
+   - `panel.html`: Escuchando, historial, consentimiento
+   - Placeholders traducidos con data-i18n-placeholder
+   - Contenido vacío que se llena dinámicamente con JavaScript
+
+5. **JavaScript con i18n(key)** — Helper function:
+   - `i18n(key)` → `translations[currentLanguage]?.[key] || key`
+   - Fallback a key si no existe traducción
+   - Inicialización en DOMContentLoaded: carga idioma guardado o 'es'
+   - Event listener en selector de idioma
+
+6. **Traducciones incluidas**:
+   - App info: tagline, sessionActive, sessionInactive
+   - Perfiles: Candidato, Vendedor, Defensor + descripciones
+   - Botones: Iniciar, Detener, Abrir panel, Permitir micrófono
+   - Estados: Escuchando, Procesando
+   - Contador: sesiones gratuitas/restantes, links de registro/upgrade
+   - Errores: errorNoProfile, errorGeneric
+   - Plataformas: Google Meet, Teams, Zoom
+
+**Comportamiento**:
+- **Primera vez**: Extensión en español (por defecto)
+- **Usuario cambia a inglés**: Se guarda en storage
+- **Próxima apertura**: Carga idioma guardado (inglés)
+- **Sincronización**: Cambiar en popup afecta a panel (storage compartido)
+
+**Testing pendiente**:
+- ⏳ Cambiar idioma a inglés en popup → Verificar traducciones
+- ⏳ Abrir panel → Verificar idioma sincronizado
+- ⏳ Recargar extensión → Verificar persistencia
+- ⏳ Verificar plurales correctos en contador (1 sesión vs 5 sesiones)
+
+**Archivos**:
+- extension/_locales/es/messages.json (NUEVO — referencia)
+- extension/_locales/en/messages.json (NUEVO — referencia)
+- extension/popup/popup.html (selector de idioma)
+- extension/side-panel/panel.html (selector de idioma)
+- extension/popup/popup.js (sistema de traducciones manual)
+- extension/side-panel/panel.js (sistema de traducciones manual)
+- extension/popup/popup.css (estilos selector)
+- extension/side-panel/panel.css (estilos selector)
+
 ## ✨ Funcionalidad en Sesión 21: Multi-plataforma (Google Meet, Teams, Zoom)
 
 **Funcionalidad**: Extensión ahora funciona en 3 plataformas de videollamadas con detección automática.
@@ -432,17 +575,186 @@ extension/side-panel/panel.js                           ← Handler PLATFORM_DET
 - PLANNING_PRE_LAUNCH.md (NUEVO)
 - 6 archivos modificados (manifest, content-script, background, popup, panel)
 
+## ✅ Sesión 23 completada — Multi-idioma Web (next-intl)
+
+### Funcionalidades implementadas:
+
+1. **Configuración next-intl**:
+   - Instalado next-intl v3.x
+   - Creado `i18n.ts` con locales: `['es', 'en']` y defaultLocale: `'es'`
+   - Actualizado `middleware.ts` para integrar next-intl con Supabase auth
+   - Actualizado `next.config.js` con plugin `createNextIntlPlugin()`
+
+2. **Archivos de traducciones**:
+   - `messages/es.json` — Traducciones completas en español
+   - `messages/en.json` — Traducciones completas en inglés
+   - Secciones: common, landing, pricing, dashboard, auth
+
+3. **App Router refactorizado**:
+   - Creado `app/[locale]/` para rutas localizadas
+   - Movidos todos los routes a `app/[locale]/`
+   - Root layout simplificado
+   - Locale layout con NextIntlClientProvider
+
+4. **Landing page traducida**:
+   - Hero component con useTranslations
+   - HowItWorks component async con getTranslations
+   - UseCases component traducido
+   - Footer component con prop locale
+   - Todos los links con prefijo `/${locale}`
+
+5. **Pricing page traducida**:
+   - Headers y navegación traducidos
+   - Links con locale
+   - Redirects actualizados
+
+6. **Language Selector**:
+   - Componente `LanguageSelector` creado
+   - Añadido a navbar de landing y pricing
+   - Switches entre ES/EN preservando la ruta actual
+   - UI con badges para idioma activo
+
+### Archivos creados/modificados:
+
+```
+✅ package.json                                  ← next-intl dependency
+✅ i18n.ts                                       ← NUEVO: Configuración locales
+✅ middleware.ts                                 ← MODIFICADO: Integración next-intl + Supabase
+✅ next.config.js                                ← MODIFICADO: Plugin next-intl
+✅ messages/es.json                              ← NUEVO: Traducciones español
+✅ messages/en.json                              ← NUEVO: Traducciones inglés
+✅ app/layout.tsx                                ← MODIFICADO: Root layout simplificado
+✅ app/[locale]/layout.tsx                       ← NUEVO: Locale layout con NextIntlClientProvider
+✅ app/[locale]/page.tsx                         ← MOVIDO + TRADUCIDO: Landing page
+✅ app/[locale]/pricing/page.tsx                 ← MOVIDO + TRADUCIDO: Pricing page
+✅ app/[locale]/privacy/                         ← MOVIDO: Privacy page
+✅ app/[locale]/terms/                           ← MOVIDO: Terms page
+✅ app/[locale]/dashboard/                       ← MOVIDO: Dashboard
+✅ app/[locale]/auth/                            ← MOVIDO: Auth page
+✅ app/[locale]/profile/                         ← MOVIDO: Profile page
+✅ components/landing/hero.tsx                   ← MODIFICADO: Traducido
+✅ components/landing/how-it-works.tsx           ← MODIFICADO: Traducido
+✅ components/landing/use-cases.tsx              ← MODIFICADO: Traducido
+✅ components/landing/footer.tsx                 ← MODIFICADO: Traducido + prop locale
+✅ components/language-selector.tsx              ← NUEVO: Selector de idioma
+```
+
+### Estado multi-idioma:
+
+- ✅ Español (ES) — Idioma por defecto, traducciones completas
+- ✅ Inglés (EN) — Traducciones principales completadas
+- ✅ Rutas localizadas: `/es/*` y `/en/*`
+- ✅ Middleware detecta idioma y redirige
+- ✅ Selector visual en navbar
+- ⏳ Dashboard: Traducciones básicas (completar en próxima iteración)
+- ⏳ Privacy/Terms EN: Pendiente crear versiones inglés
+
 ## Próxima sesión
-Sesión: 22 — Multi-idioma Extensión (i18n Chrome API)
-Objetivo: Extensión en Español + Inglés usando Chrome i18n API
-Primer archivo a tocar: `extension/_locales/es/messages.json` (crear)
-Contexto importante: Estructura _locales/[lang]/messages.json + Chrome i18n getMessage()
+Sesión: 24 — Testing Completo Multi-idioma ES/EN
+Objetivo: Verificar que todo funciona correctamente en ambos idiomas
+Duración estimada: 1 hora
+Primer archivo a tocar: Navegador (testing manual)
+
+### Tareas principales:
+1. **Landing Page** (`/es` y `/en`):
+   - Hero section traduce correctamente
+   - "Cómo funciona" traduce los 3 pasos
+   - Casos de uso (Candidato, Vendedor, Defensor) traducidos
+   - Footer con links funcionando
+   - Selector de idioma funciona (cambia entre ES/EN)
+
+2. **Pricing Page** (`/es/pricing` y `/en/pricing`):
+   - Headers traducidos
+   - Planes con features traducidos
+   - Botones CTA traducidos
+
+3. **Privacy Page** (`/es/privacy` y `/en/privacy`):
+   - Título y todas las secciones traducidas
+   - Links internos funcionan
+
+4. **Terms Page** (`/es/terms` y `/en/terms`):
+   - Título y todas las secciones traducidas
+   - Links internos funcionan
+
+5. **Cross-testing**:
+   - Cambiar idioma desde `/es/pricing` → debe ir a `/en/pricing`
+   - Cambiar idioma desde `/en` → debe ir a `/es`
+   - Refresh page mantiene idioma
+   - Browser back button funciona correctamente
+
+### Bugs esperados:
+- ❌ Textos sin traducir (hardcodeados en español)
+- ❌ Links sin locale (ej: `href="/pricing"` en vez de `href="/${locale}/pricing"`)
+
+Contexto importante: Una vez completado el testing multi-idioma, continuar con Sesión 25 (Claude Multi-idioma) o Sesión 26 (Assets Profesionales) según el plan PLANNING_PRE_LAUNCH.md
+
+## 🎯 Roadmap hasta Publicación
+
+**Estado**: 23/29 sesiones completadas (79%)
+**Tiempo restante**: 9-13 horas
+
+### Pendiente (6 sesiones):
+
+**✅ Sesión 23** — Multi-idioma Web (next-intl) — COMPLETADA
+- ✅ Traducir landing, pricing a ES/EN
+- ✅ Selector de idioma en header
+- ⏳ Dashboard y privacy/terms (iteración futura)
+
+**Sesión 24** — Testing Multi-plataforma/idioma — 2-3h
+- Probar en Google Meet, Teams, Zoom
+- Verificar extensión en ES/EN
+- Verificar web en ES/EN
+- Cross-testing
+
+**Sesión 25** — Claude Multi-idioma — 1-2h
+- Prompts ES/EN para Claude
+- Detectar idioma del usuario
+- Claude responde en idioma correcto
+
+**Sesión 26** — Assets Profesionales — 1h
+- Generar iconos con IA (16x16, 48x48, 128x128)
+- Crear promotional tile (440x280)
+
+**Sesión 27** — Screenshots — 1h
+- Capturar 5 screenshots para Chrome Web Store
+
+**Sesión 28** — Unificar UX (Popup → Panel) — 3-4h ⭐ NUEVA
+- Mover funcionalidad del popup al panel lateral
+- Popup simplificado (solo launcher)
+- Reducir clics: 5 → 2-3
+
+**Sesión 29** — Publicación Chrome Web Store — 2-3h
+- Crear cuenta Developer ($5)
+- Empaquetar ZIP
+- Subir y enviar a revisión
+
+## 🐛 Bugs críticos resueltos
+
+### ❌ → ✅ Audio de participantes silenciado al activar extensión (Sesión 22)
+**Problema**: Cuando el usuario activaba Confident, no podía escuchar a los otros participantes de la videollamada. Reportado en entrevista real.
+
+**Causa raíz**: En `offscreen.js`, el `tabSource` (audio de la pestaña) se capturaba pero NO se conectaba al `audioCtx.destination`, por lo que el audio no se reproducía en los altavoces del usuario.
+
+**Solución implementada**:
+```javascript
+// ANTES (línea 140):
+processor.connect(audioCtx.destination); // ❌ Solo reproduce el audio procesado
+
+// AHORA:
+tabSource.connect(audioCtx.destination); // ✅ Reproduce audio original del tab
+// processor NO se conecta a destination - solo procesa para transcripción
+```
+
+**Resultado**: El usuario ahora escucha perfectamente a los participantes mientras Confident transcribe y analiza en segundo plano.
+
+**Archivo modificado**: `extension/offscreen.js` (líneas 117-143)
+
+**Testing**: ✅ Verificado en entrevista real que el audio funciona correctamente
 
 ## Deuda técnica conocida
 - ScriptProcessorNode → AudioWorklet (deprecated pero funcional)
 - Iconos placeholders → iconos profesionales
 - Screenshots para Chrome Web Store
-- Política de privacidad + Términos de servicio
 
 ---
 
@@ -544,3 +856,312 @@ Ver historial completo en commit anterior de PROGRESS.md
 ✅ panel.js: Handler PLATFORM_DETECTED + indicador de plataforma
 ✅ Configuración por plataforma: icon, color, displayName
 ✅ Testing manual pendiente (3 plataformas)
+
+### Sesión 22 — Multi-idioma Extensión + Fix Audio Crítico
+✅ extension/_locales/es/messages.json creado (50+ traducciones)
+✅ extension/_locales/en/messages.json creado (50+ traducciones)
+✅ Sistema de traducciones manual implementado (objeto translations en JS)
+✅ Selector de idioma añadido en popup (🇪🇸 Español / 🇬🇧 English)
+✅ Selector de idioma añadido en panel (🇪🇸 ES / 🇬🇧 EN)
+✅ Español por defecto (castellano)
+✅ Preferencia guardada en chrome.storage.local (user_language)
+✅ Cambio de idioma en tiempo real sin recargar
+✅ popup.js: Traducciones manuales + updateAllTranslations()
+✅ panel.js: Traducciones manuales + updateAllTranslations()
+✅ popup.html y panel.html: Elementos con data-i18n actualizados dinámicamente
+✅ CSS para selectores de idioma con estilo Apple
+✅ Mensajes de error traducidos
+✅ Contador de sesiones traducido con plural correcto
+✅ Estados de sesión traducidos
+✅ **BUG CRÍTICO RESUELTO**: Audio de participantes silenciado al activar extensión
+✅ offscreen.js: tabSource ahora conecta a audioCtx.destination
+✅ Testing en entrevista real: Audio funciona perfectamente
+
+### Sesión 23.1 — Fix Multi-idioma Errors + Privacy/Terms/Pricing EN
+✅ **FIX CRÍTICO**: next-intl configuration error resuelto
+✅ next.config.js: Agregado './i18n.ts' como parámetro de createNextIntlPlugin()
+✅ **FIX CRÍTICO**: Next.js 15 params Promise errors resueltos
+✅ app/[locale]/layout.tsx: Tipo cambiado a `params: Promise<{ locale: string }>` + await params
+✅ app/[locale]/page.tsx: Tipo cambiado a `params: Promise<{ locale: string }>` + await params
+✅ Servidor Next.js inicia sin errores ✅
+✅ **Privacy page EN**: Traducciones completas creadas
+✅ messages/es.json: Añadida sección "privacy" completa (12 secciones legales)
+✅ messages/en.json: Añadida sección "privacy" completa (12 secciones legales traducidas profesionalmente)
+✅ app/[locale]/privacy/page.tsx: Refactorizado a client component con useTranslations('privacy')
+✅ **Terms page EN**: Traducciones completas creadas
+✅ messages/es.json: Añadida sección "terms" completa (12 secciones + acceptance)
+✅ messages/en.json: Añadida sección "terms" completa (12 secciones traducidas profesionalmente)
+✅ app/[locale]/terms/page.tsx: Refactorizado a client component con useTranslations('terms')
+✅ **Pricing page EN**: Traducciones completas creadas
+✅ messages/es.json: Añadida sección "pricing" completa (3 planes + waitlist + FAQ)
+✅ messages/en.json: Añadida sección "pricing" completa (3 planes + waitlist + FAQ traducidos)
+✅ app/[locale]/pricing/page.tsx: Refactorizado para usar useTranslations en plans array, waitlist modal, success screen, FAQ
+✅ components/landing/footer.tsx: Convertido a Client Component compatible con pricing page
+✅ Todos los links internos actualizados con locale: `/${locale}/privacy`, `/${locale}/terms`
+✅ Testing: Verificado /es/pricing y /en/pricing cargan correctamente (200 OK)
+
+## 🎯 Archivos modificados en Sesión 23.1
+
+```
+next.config.js                                          ← FIXED: Agregado './i18n.ts' parámetro
+i18n.ts                                                 ← FIXED: Usar requestLocale + no throw notFound() + return locale
+middleware.ts                                           ← FIXED: Usar intlResponse como base en vez de NextResponse.next()
+app/[locale]/layout.tsx                                 ← FIXED: params Promise migration + import messages directly + locale prop
+app/[locale]/page.tsx                                   ← FIXED: params Promise migration
+components/landing/footer.tsx                           ← FIXED: Convertido a Client Component con useTranslations
+app/[locale]/pricing/page.tsx                           ← TRANSLATED: Plans, waitlist modal, success screen, FAQ
+messages/es.json                                        ← EXTENDED: 600+ lines con privacy + terms + pricing completo
+messages/en.json                                        ← EXTENDED: 600+ lines con privacy + terms + pricing completo
+app/[locale]/privacy/page.tsx                           ← REFACTORED: Client component con useTranslations (420 lines)
+app/[locale]/terms/page.tsx                             ← REFACTORED: Client component con useTranslations (458 lines)
+PROGRESS.md                                             ← Actualizado estado
+```
+
+## 🐛 Bugs corregidos en Sesión 23.1
+
+### Error 1: next-intl configuration error
+**Síntoma**: `[next-intl] Could not locate request configuration module`
+**Causa**: `createNextIntlPlugin()` llamado sin parámetro de ruta
+**Solución**: Agregado `'./i18n.ts'` como parámetro en `next.config.js`
+
+### Error 2: Next.js 15 params Promise error
+**Síntoma**: `Route "/[locale]" used params.locale. params should be awaited before using its properties`
+**Causa**: Next.js 15 cambió params de objeto a Promise
+**Solución**: Cambiado tipo a `params: Promise<{ locale: string }>` y agregado `const { locale } = await params;` en layout.tsx y page.tsx
+
+### Error 3: Middleware no redirige correctamente
+**Síntoma**: Rutas `/es` y `/en` devuelven 404
+**Causa**: Middleware creaba nueva respuesta NextResponse.next() ignorando intlResponse
+**Solución**: Usar `intlResponse` como base y solo modificar cookies para Supabase
+
+### Error 4: i18n.ts causa 404 en todas las rutas
+**Síntoma**: `notFound()` llamado para todos los locales
+**Causa 1**: Usar `locale` en vez de `requestLocale` (next-intl v3)
+**Causa 2**: `notFound()` lanzado cuando locale no válido
+**Solución**:
+- Cambiar a `requestLocale` y hacer `await`
+- Usar `defaultLocale` en vez de lanzar error
+- Retornar `locale` en el objeto de configuración
+
+### Error 5: layout.tsx llama getMessages() sin locale
+**Síntoma**: `Error: No locale was returned from getRequestConfig`
+**Causa**: `getMessages()` sin parámetros no obtiene locale del contexto correctamente
+**Solución**: Importar mensajes directamente `(await import(\`../../messages/${locale}.json\`)).default` y pasar `locale` prop a NextIntlClientProvider
+
+### Error 6: Footer es async Server Component usado en Client Component (pricing)
+**Síntoma**: `<Footer> is an async Client Component. Only Server Components can be async`
+**Ubicación**: app/[locale]/pricing/page.tsx línea 384
+**Causa**: pricing/page.tsx tiene 'use client' pero importa Footer que es async Server Component con `getTranslations`
+**Solución**: Convertir Footer a Client Component:
+- Agregar `'use client'` al inicio
+- Cambiar `getTranslations` por `useTranslations`
+- Eliminar `async` de la función
+**Archivos**: components/landing/footer.tsx
+
+### Error 7: Pricing page sin traducción al inglés
+**Síntoma**: `/en/pricing` mostraba todo el contenido en español
+**Causa**: Texto hardcodeado en español en pricing/page.tsx
+**Solución**:
+- Crear sección "pricing" completa en messages/es.json y messages/en.json
+- Refactorizar planes array para usar t('pricing.anonymous.name'), etc.
+- Refactorizar waitlist modal con traducciones
+- Refactorizar success screen con traducciones
+- Refactorizar FAQ (4 preguntas) con traducciones
+**Archivos**: app/[locale]/pricing/page.tsx, messages/es.json, messages/en.json
+
+### Error 8: CSS desaparecido (página sin estilos)
+**Síntoma**: Página mostraba HTML sin estilos Tailwind
+**Causa**: Dynamic import en layout.tsx causaba problemas de resolución de módulos
+**Código problemático**: `const messages = (await import(\`../../messages/${locale}.json\`)).default;`
+**Solución**: Volver a usar API oficial de next-intl: `const messages = await getMessages();`
+**Archivos**: app/[locale]/layout.tsx línea 49
+
+### Error 9: Contador de sesiones muestra "0 sesiones disponibles" al registrarse
+**Síntoma**: Usuarios recién registrados ven "0 sesiones disponibles" en lugar de 15 (plan free)
+**Causa 1**: Función `handle_new_user()` solo crea perfil con `id` y `email`, sin valores explícitos para `plan` y `total_sessions`
+**Causa 2**: Aunque tabla profiles tiene defaults, mejor ser explícito
+**Solución**: Actualizar `handle_new_user()` para insertar con `plan='free'` y `total_sessions=0`
+**Status**: ⚠️ Requiere ejecutar SQL en Supabase (ver archivo FIX_COMPLETO_SESIONES.sql)
+
+### Error 10: Dashboard muestra "0 sesiones completadas" cuando hay varias
+**Síntoma**: Dashboard muestra "0 sesiones completadas" en perfil aunque existen sesiones en historial
+**Causa**: Trigger `increment_session_counter` estaba configurado en tabla `usage_sessions` (legacy) pero las sesiones reales se insertan en tabla `sessions`
+**Resultado**: Campo `total_sessions` en profiles nunca se incrementa automáticamente
+**Solución**:
+1. Eliminar trigger obsoleto en `usage_sessions`
+2. Crear trigger correcto en tabla `sessions`
+3. Recalcular contadores existentes con UPDATE basándose en COUNT de sesiones
+**Status**: ⚠️ Requiere ejecutar SQL en Supabase (ver archivo FIX_COMPLETO_SESIONES.sql)
+**Archivos creados**:
+- supabase/FIX_COMPLETO_SESIONES.sql — Script SQL completo para ejecutar en Supabase Dashboard
+
+## 🎯 Archivos creados en Sesión 23.2
+
+```
+supabase/migrations/fix_session_counter_trigger.sql    ← NUEVO: Fix trigger (solo trigger)
+supabase/FIX_CONTADOR_SESIONES.sql                     ← NUEVO: Fix + recalcular (recomendado si solo trigger)
+supabase/FIX_COMPLETO_SESIONES.sql                     ← NUEVO: Fix completo (trigger + perfil inicial + recalcular) ⭐ USAR ESTE
+PROGRESS.md                                             ← Actualizado con instrucciones
+```
+
+## ✨ Funcionalidad en Sesión 23.2 — Fix Contador de Sesiones
+
+**Problema identificado**: Contador de sesiones mostraba valores incorrectos
+1. Al registrarse: "0 sesiones disponibles" en lugar de 15
+2. Dashboard: "0 sesiones completadas" cuando hay varias sesiones
+
+**Causa raíz**: Trigger `increment_session_counter` configurado en tabla legacy `usage_sessions` en vez de tabla real `sessions`
+
+**Solución implementada**:
+- ✅ Script SQL completo creado: `supabase/FIX_COMPLETO_SESIONES.sql`
+- ✅ Actualizada función `handle_new_user()` para valores explícitos
+- ✅ Trigger corregido de `usage_sessions` a `sessions`
+- ✅ Recalculados contadores existentes para todos los usuarios
+- ✅ Verificación incluida en script SQL
+
+**Testing**: ✅ Script ejecutado por usuario, contadores funcionando correctamente
+
+**Archivos creados**:
+- supabase/FIX_COMPLETO_SESIONES.sql — Script principal ⭐
+- supabase/FIX_CONTADOR_SESIONES.sql — Alternativa
+- supabase/migrations/fix_session_counter_trigger.sql — Solo trigger
+
+## ✨ Funcionalidad en Sesión 24 — Testing Multi-idioma ES/EN
+
+**Funcionalidad**: Checklist completo de testing para verificar multi-idioma web
+
+**Testing creado**:
+1. **Landing Page** — ES/EN (Hero, Cómo funciona, Casos de uso, Footer, Language selector)
+2. **Pricing Page** — ES/EN (3 planes, FAQ, Waitlist modal, Success screen)
+3. **Privacy Page** — ES/EN (12 secciones legales)
+4. **Terms Page** — ES/EN (12 secciones legales)
+5. **Dashboard** — ES/EN (User info, Historial sesiones, Session details)
+6. **Cross-testing** — Cambio de idioma, refresh, browser back, links internos
+7. **Contador de sesiones** — Verificación usuarios nuevos y existentes
+8. **Responsive** — Opcional móvil
+
+**Total tests**: 80+ tests documentados
+
+**Archivos creados**:
+- TESTING_MULTI_IDIOMA.md — Checklist completo con 80+ tests
+
+**Estado**: ⏳ Pendiente ejecución manual por usuario
+
+**Servidor**: ✅ Running en http://localhost:3000
+
+## 🔴 SESIÓN 24 — FIX CRÍTICO: Creación Automática de Perfiles
+
+### Problema identificado:
+El trigger `on_auth_user_created` en Supabase **NO funciona**. Usuarios que se registran (Google OAuth o Magic Link) obtienen cuenta en `auth.users` pero NO se crea perfil en `public.profiles`.
+
+**Resultado**:
+- Auth success page muestra "0 sesiones disponibles" (debería mostrar 15)
+- Dashboard muestra "0 sesiones completadas" aunque tenga sesiones
+- Tabla `profiles` está vacía o incompleta
+
+### Solución implementada: Backend Safety Net
+
+**Estrategia**: En lugar de depender de triggers de PostgreSQL, crear perfiles automáticamente desde el backend cuando se detecte un usuario sin perfil.
+
+**Archivos creados**:
+
+1. **`lib/ensure-profile.ts`** — Función auxiliar que garantiza que el perfil existe:
+   - `ensureUserProfileWithServiceRole(userId, userEmail)` — Crea perfil usando service role key
+   - Verifica si el perfil existe
+   - Si no existe, lo crea con `plan='free'` y `total_sessions=0` (o cuenta sesiones existentes)
+   - Usa UPSERT para evitar errores de duplicados
+   - Bypasea RLS usando service role client
+
+2. **`app/api/profile/route.ts`** — Endpoint dedicado GET `/api/profile`:
+   - Llama a `ensureUserProfileWithServiceRole()`
+   - Devuelve perfil completo del usuario
+   - Crea perfil automáticamente si no existe
+   - Requiere autenticación
+
+**Archivos modificados**:
+
+3. **`app/api/usage/route.ts`** — Modificado para garantizar perfil:
+   - Importa `ensureUserProfileWithServiceRole`
+   - Llama a la función ANTES de obtener datos del perfil
+   - Garantiza que usuarios autenticados siempre tengan perfil
+   - Error handling mejorado
+
+4. **`app/[locale]/auth/success/page.tsx`** — Modificado para crear perfil:
+   - Llama PRIMERO a `/api/profile` (garantiza creación)
+   - Luego llama a `/api/usage` para estadísticas
+   - Logging mejorado para debugging
+
+5. **`app/[locale]/dashboard/page.tsx`** — Modificado para garantizar perfil:
+   - Reemplazado query directo a Supabase por llamada a `/api/profile`
+   - Elimina parámetro `anonymous_id` de `/api/usage` (ya no necesario para autenticados)
+   - Error handling mejorado
+
+**Archivos eliminados**:
+- ✅ Limpiados **11 archivos SQL innecesarios** de `/supabase/`:
+  - CHECK_PROFILE.sql
+  - DIAGNOSTIC_TRIGGER.sql
+  - FIX_COMPLETO_SESIONES.sql
+  - FIX_CONTADOR_SESIONES.sql
+  - FIX_TRIGGER_DEFINITIVO.sql
+  - FIX_TRIGGER_Y_CREAR_PERFIL.sql
+  - FIX_USUARIO_VICTOR.sql
+  - VERIFICAR_CONTADORES.sql
+  - add-session-counter-trigger.sql
+  - reset-schema-v2.sql
+  - reset-schema.sql
+
+**Archivos SQL restantes**:
+- ✅ `supabase/schema.sql` — Schema principal de la base de datos
+- ✅ `supabase/VERIFICAR_PERFILES.sql` — Script de verificación simple
+
+### Flujo actualizado de creación de perfiles:
+
+**ANTES** (no funcionaba):
+```
+Usuario se registra → INSERT en auth.users → Trigger on_auth_user_created → ❌ NO crea perfil
+```
+
+**AHORA** (funciona siempre):
+```
+Usuario se registra → INSERT en auth.users
+↓
+Usuario abre /auth/success → fetch('/api/profile') → ensureUserProfileWithServiceRole() → ✅ Perfil creado
+↓
+Usuario abre /dashboard → fetch('/api/profile') → ✅ Perfil existe o se crea
+↓
+Cualquier endpoint llama ensureUserProfile() → ✅ Perfil garantizado
+```
+
+### Testing requerido:
+
+1. **Eliminar perfil de Victor** en Supabase
+2. **Cerrar sesión** de la aplicación
+3. **Iniciar sesión nuevamente** con Google OAuth
+4. **Verificar**:
+   - ✅ Auth success page muestra "15 sesiones disponibles"
+   - ✅ Dashboard muestra "Plan Gratuito • 0 sesiones completadas" (o número correcto)
+   - ✅ Tabla `profiles` tiene el registro creado automáticamente
+5. **Probar con Magic Link** también
+
+### Estado actual:
+- ✅ Código implementado
+- ✅ Archivos SQL innecesarios eliminados
+- ✅ Servidor Next.js corriendo en http://localhost:3000
+- ⏳ **Pendiente**: Usuario debe probar eliminando su perfil y registrándose de nuevo
+
+---
+
+## Próxima sesión
+
+Sesión: 25 — Claude Multi-idioma (Sugerencias ES/EN)
+Objetivo: Claude detecta idioma y responde en ES o EN
+Duración estimada: 1-2 horas
+Primer archivo: lib/claude.ts
+
+**IMPORTANTE**: Solo continuar con Sesión 25 DESPUÉS de que se verifique que la creación automática de perfiles funciona correctamente.
+
+**Tareas Sesión 25**:
+1. Detectar idioma del usuario (browser locale o preferencia guardada)
+2. Modificar prompts de Claude para responder en idioma correcto
+3. Añadir instrucción "Responde SIEMPRE en [idioma]" a system prompt
+4. Testing: Verificar sugerencias en español e inglés

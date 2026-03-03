@@ -13,13 +13,28 @@ export default function AuthSuccessPage() {
   useEffect(() => {
     async function loadUserStats() {
       try {
-        // Obtener stats del usuario
-        const response = await fetch('/api/usage');
-        if (response.ok) {
-          const data = await response.json();
-          setRemaining(data.remaining || 0);
+        // PRIMERO: Garantizar que el perfil existe
+        console.log('[AuthSuccess] Creando/verificando perfil...');
+        const profileResponse = await fetch('/api/profile');
+
+        if (!profileResponse.ok) {
+          console.error('[AuthSuccess] Error obteniendo perfil:', profileResponse.status);
+          setLoading(false);
+          return;
+        }
+
+        const profileData = await profileResponse.json();
+        console.log('[AuthSuccess] Perfil obtenido:', profileData);
+
+        // SEGUNDO: Obtener stats de uso
+        const usageResponse = await fetch('/api/usage');
+        if (usageResponse.ok) {
+          const usageData = await usageResponse.json();
+          console.log('[AuthSuccess] Usage data:', usageData);
+
+          setRemaining(usageData.remaining || 0);
           // Inferir cuántas sesiones se añadieron (15 es el límite Free)
-          const added = data.user_type === 'free' ? 10 : 0;
+          const added = usageData.user_type === 'free' ? 10 : 0;
           setSessionsAdded(added);
         }
       } catch (err) {

@@ -2,6 +2,111 @@
 // Sesión 1: selector de perfil + API key + botón iniciar/detener
 
 // ─────────────────────────────────────────────────────────────
+// IDIOMA ACTUAL (por defecto: español)
+// ─────────────────────────────────────────────────────────────
+
+let currentLanguage = 'es';
+
+// Traducciones manuales (español e inglés)
+const translations = {
+  es: {
+    tagline: 'Tu confidente en cada conversación',
+    sessionActive: 'Sesión activa',
+    selectProfile: 'Selecciona tu perfil',
+    profileCandidate: 'Candidato',
+    profileCandidateDesc: 'Entrevistas de trabajo',
+    profileSales: 'Vendedor',
+    profileSalesDesc: 'Llamadas comerciales',
+    profileDefender: 'Defensor',
+    profileDefenderDesc: 'Reuniones técnicas',
+    consentLabel: 'He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.',
+    participantEmailsLabel: 'Emails de participantes (opcional)',
+    participantEmailsHint: 'Se enviará transcripción al finalizar',
+    participantEmailsPlaceholder: 'email1@ejemplo.com, email2@ejemplo.com',
+    requestMicButton: '🎤 Permitir acceso al micrófono',
+    startButton: 'Iniciar sesión',
+    stopButton: 'Detener sesión',
+    openPanelButton: 'Abrir panel lateral →',
+    notInPlatform: 'Abre una videollamada en:',
+    platformGoogleMeet: '🎥 Google Meet',
+    platformTeams: '💼 Microsoft Teams',
+    platformZoom: '📹 Zoom',
+    errorNoProfile: 'Selecciona un perfil antes de iniciar',
+    errorGeneric: 'Error al procesar la solicitud',
+    processing: 'Procesando...'
+  },
+  en: {
+    tagline: 'Your confident in every conversation',
+    sessionActive: 'Active session',
+    selectProfile: 'Select your profile',
+    profileCandidate: 'Candidate',
+    profileCandidateDesc: 'Job interviews',
+    profileSales: 'Salesperson',
+    profileSalesDesc: 'Sales calls',
+    profileDefender: 'Defender',
+    profileDefenderDesc: 'Technical meetings',
+    consentLabel: 'I have informed participants that this conversation will be transcribed and obtained their consent.',
+    participantEmailsLabel: 'Participant emails (optional)',
+    participantEmailsHint: 'Transcript will be sent at the end',
+    participantEmailsPlaceholder: 'email1@example.com, email2@example.com',
+    requestMicButton: '🎤 Allow microphone access',
+    startButton: 'Start session',
+    stopButton: 'Stop session',
+    openPanelButton: 'Open side panel →',
+    notInPlatform: 'Open a video call on:',
+    platformGoogleMeet: '🎥 Google Meet',
+    platformTeams: '💼 Microsoft Teams',
+    platformZoom: '📹 Zoom',
+    errorNoProfile: 'Select a profile before starting',
+    errorGeneric: 'Error processing request',
+    processing: 'Processing...'
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// HELPER: i18n
+// ─────────────────────────────────────────────────────────────
+
+function i18n(key) {
+  return translations[currentLanguage]?.[key] || key;
+}
+
+function updateAllTranslations() {
+  // Actualizar textos
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = i18n(key);
+  });
+
+  // Actualizar placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = i18n(key);
+  });
+}
+
+async function changeLanguage(lang) {
+  currentLanguage = lang;
+  await chrome.storage.local.set({ user_language: lang });
+  updateAllTranslations();
+
+  // Actualizar mensaje de plataforma si está visible
+  const notInMeet = document.getElementById('not-in-meet');
+  if (notInMeet && !notInMeet.classList.contains('hidden')) {
+    notInMeet.innerHTML = `
+      <div class="not-in-meet-content">
+        <p style="margin-bottom: 12px;">⚠️ ${i18n('notInPlatform')}</p>
+        <ul style="list-style: none; padding: 0; text-align: left; font-size: 13px;">
+          <li style="margin: 4px 0;">${i18n('platformGoogleMeet')}</li>
+          <li style="margin: 4px 0;">${i18n('platformTeams')}</li>
+          <li style="margin: 4px 0;">${i18n('platformZoom')}</li>
+        </ul>
+      </div>
+    `;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // ELEMENTOS DEL DOM
 // ─────────────────────────────────────────────────────────────
 
@@ -33,6 +138,22 @@ let currentTabId = null;
 // ─────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Cargar idioma guardado (por defecto: español)
+  const { user_language } = await chrome.storage.local.get('user_language');
+  currentLanguage = user_language || 'es';
+
+  // Actualizar selector de idioma
+  const languageSelector = document.getElementById('language-selector');
+  if (languageSelector) {
+    languageSelector.value = currentLanguage;
+    languageSelector.addEventListener('change', (e) => {
+      changeLanguage(e.target.value);
+    });
+  }
+
+  // Inicializar traducciones
+  updateAllTranslations();
+
   await checkIfInMeet();
   await restoreState();
   setupEventListeners();
@@ -69,11 +190,11 @@ async function checkIfInMeet() {
       // Actualizar mensaje para multi-plataforma
       notInMeet.innerHTML = `
         <div class="not-in-meet-content">
-          <p style="margin-bottom: 12px;">⚠️ Abre una videollamada en:</p>
+          <p style="margin-bottom: 12px;">⚠️ ${i18n('notInPlatform')}</p>
           <ul style="list-style: none; padding: 0; text-align: left; font-size: 13px;">
-            <li style="margin: 4px 0;">🎥 Google Meet</li>
-            <li style="margin: 4px 0;">💼 Microsoft Teams</li>
-            <li style="margin: 4px 0;">📹 Zoom</li>
+            <li style="margin: 4px 0;">${i18n('platformGoogleMeet')}</li>
+            <li style="margin: 4px 0;">${i18n('platformTeams')}</li>
+            <li style="margin: 4px 0;">${i18n('platformZoom')}</li>
           </ul>
         </div>
       `;
@@ -289,23 +410,23 @@ async function handleStartClick() {
   hideError();
 
   if (!selectedProfile) {
-    showError('Selecciona un perfil antes de iniciar.');
+    showError(i18n('errorNoProfile'));
     return;
   }
 
   if (!currentTabId) {
-    showError('No se detectó un tab de Google Meet activo.');
+    showError(i18n('errorGeneric'));
     return;
   }
 
   if (!micPermissionGranted) {
-    showError('Primero permite el acceso al micrófono.');
+    showError(i18n('requestMicButton'));
     showElement(requestMicBtn);
     return;
   }
 
   startBtn.disabled = true;
-  startBtn.textContent = 'Verificando límite...';
+  startBtn.textContent = i18n('processing');
 
   try {
     // 🔴 NUEVO: Verificar límites antes de iniciar
@@ -319,11 +440,11 @@ async function handleStartClick() {
       chrome.tabs.create({ url });
 
       startBtn.disabled = false;
-      startBtn.textContent = 'Iniciar sesión';
+      startBtn.textContent = i18n('startButton');
       return;
     }
 
-    startBtn.textContent = 'Iniciando...';
+    startBtn.textContent = i18n('processing');
 
     // Guardar consentimiento y emails (Sesión 6)
     const emailsInput = participantEmailsInput.value.trim();

@@ -1,0 +1,158 @@
+{
+  "appName": {
+    "message": "Confident",
+    "description": "Nombre de la aplicación"
+  },
+  "appDesc": {
+    "message": "Tu confidente silencioso en videollamadas. Sugerencias IA en tiempo real para entrevistas, ventas y reuniones.",
+    "description": "Descripción de la aplicación"
+  },
+  "tagline": {
+    "message": "Tu confidente en cada conversación",
+    "description": "Tagline del popup"
+  },
+  "sessionActive": {
+    "message": "Sesión activa",
+    "description": "Estado de sesión activa"
+  },
+  "selectProfile": {
+    "message": "Selecciona tu perfil",
+    "description": "Label selector de perfil"
+  },
+  "profileCandidate": {
+    "message": "Candidato",
+    "description": "Perfil candidato"
+  },
+  "profileCandidateDesc": {
+    "message": "Entrevistas de trabajo",
+    "description": "Descripción perfil candidato"
+  },
+  "profileSales": {
+    "message": "Vendedor",
+    "description": "Perfil vendedor"
+  },
+  "profileSalesDesc": {
+    "message": "Llamadas comerciales",
+    "description": "Descripción perfil vendedor"
+  },
+  "profileDefender": {
+    "message": "Defensor",
+    "description": "Perfil defensor"
+  },
+  "profileDefenderDesc": {
+    "message": "Reuniones técnicas",
+    "description": "Descripción perfil defensor"
+  },
+  "consentLabel": {
+    "message": "He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.",
+    "description": "Label checkbox consentimiento"
+  },
+  "participantEmailsLabel": {
+    "message": "Emails de participantes (opcional)",
+    "description": "Label campo emails"
+  },
+  "participantEmailsHint": {
+    "message": "Se enviará transcripción al finalizar",
+    "description": "Hint campo emails"
+  },
+  "participantEmailsPlaceholder": {
+    "message": "email1@ejemplo.com, email2@ejemplo.com",
+    "description": "Placeholder campo emails"
+  },
+  "requestMicButton": {
+    "message": "🎤 Permitir acceso al micrófono",
+    "description": "Botón permitir micrófono"
+  },
+  "startButton": {
+    "message": "Iniciar sesión",
+    "description": "Botón iniciar sesión"
+  },
+  "stopButton": {
+    "message": "Detener sesión",
+    "description": "Botón detener sesión"
+  },
+  "openPanelButton": {
+    "message": "Abrir panel lateral →",
+    "description": "Botón abrir panel"
+  },
+  "notInPlatform": {
+    "message": "Abre una videollamada en:",
+    "description": "Mensaje no está en plataforma soportada"
+  },
+  "platformGoogleMeet": {
+    "message": "🎥 Google Meet",
+    "description": "Google Meet"
+  },
+  "platformTeams": {
+    "message": "💼 Microsoft Teams",
+    "description": "Microsoft Teams"
+  },
+  "platformZoom": {
+    "message": "📹 Zoom",
+    "description": "Zoom"
+  },
+  "listening": {
+    "message": "Escuchando...",
+    "description": "Estado escuchando"
+  },
+  "processing": {
+    "message": "Procesando...",
+    "description": "Estado procesando"
+  },
+  "sessionHistory": {
+    "message": "Historial de sesión",
+    "description": "Título historial"
+  },
+  "noSuggestionsYet": {
+    "message": "Aún no hay sugerencias. Habla durante la videollamada para recibir asistencia.",
+    "description": "Sin sugerencias aún"
+  },
+  "sessionCounter": {
+    "message": "sesiones gratuitas",
+    "description": "Contador de sesiones"
+  },
+  "sessionCounterRegister": {
+    "message": "Regístrate para 10 más",
+    "description": "Link registro en contador"
+  },
+  "sessionCounterUpgrade": {
+    "message": "Ver planes Pro",
+    "description": "Link upgrade en contador"
+  },
+  "sessionCounterRemaining": {
+    "message": "sesiones restantes",
+    "description": "Sesiones restantes"
+  },
+  "sessionCounterLimitReached": {
+    "message": "Límite alcanzado",
+    "description": "Límite de sesiones alcanzado"
+  },
+  "errorGeneric": {
+    "message": "Error al procesar la solicitud",
+    "description": "Error genérico"
+  },
+  "errorServer": {
+    "message": "Error del servidor. Verifica que npm run dev esté corriendo.",
+    "description": "Error servidor"
+  },
+  "errorNoProfile": {
+    "message": "Selecciona un perfil antes de iniciar",
+    "description": "Error no perfil seleccionado"
+  },
+  "errorNoConsent": {
+    "message": "Debes marcar el checkbox de consentimiento",
+    "description": "Error no consentimiento"
+  },
+  "sessionInactive": {
+    "message": "Sin sesión activa",
+    "description": "Estado de sesión inactiva"
+  },
+  "statusActive": {
+    "message": "Activo",
+    "description": "Sufijo de estado activo"
+  },
+  "noSuggestionsPlaceholder": {
+    "message": "Aún no hay sugerencias",
+    "description": "Placeholder cuando no hay sugerencias"
+  }
+}

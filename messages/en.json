@@ -1,0 +1,617 @@
+{
+  "common": {
+    "appName": "Confident",
+    "tagline": "Your confident in every conversation",
+    "getStarted": "Get started",
+    "learnMore": "Learn more",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "dashboard": "Dashboard",
+    "pricing": "Pricing",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact",
+    "language": "Language",
+    "backToHome": "← Back to home"
+  },
+  "landing": {
+    "hero": {
+      "title": "Your confident in every important conversation",
+      "subtitle": "Confident assists you in real-time during video calls. AI suggestions for interviews, sales, and meetings without anyone noticing.",
+      "cta": "Try free — no registration",
+      "ctaSecondary": "See how it works"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "step1Title": "Install extension",
+      "step1Desc": "Add Confident to Chrome in seconds",
+      "step2Title": "Activate in your video call",
+      "step2Desc": "One click in Google Meet, Teams or Zoom",
+      "step3Title": "Get suggestions",
+      "step3Desc": "Side panel with what to say at each moment"
+    },
+    "useCases": {
+      "title": "For every situation",
+      "candidateTitle": "Candidate",
+      "candidateDesc": "Stand out in technical and behavioral interviews. Confident suggests STAR frameworks and structured responses.",
+      "salesTitle": "Salesperson",
+      "salesDesc": "Close more deals. Detect objections, buying signals, and key closing moments.",
+      "defenderTitle": "Defender",
+      "defenderDesc": "Handle complex meetings. Understand difficult questions and structure clear responses."
+    },
+    "features": {
+      "title": "Features",
+      "realTimeTitle": "Real-time analysis",
+      "realTimeDesc": "Claude analyzes the conversation and suggests what to say now",
+      "multiPlatformTitle": "Multi-platform",
+      "multiPlatformDesc": "Works on Google Meet, Microsoft Teams and Zoom",
+      "privateTitle": "100% private",
+      "privateDesc": "Text only, we never store audio. GDPR compliant",
+      "smartCardsTitle": "Smart Cards with urgency",
+      "smartCardsDesc": "Green, yellow or red depending on the importance of the moment"
+    },
+    "pricing": {
+      "title": "Transparent pricing",
+      "subtitle": "Start free, upgrade when you want",
+      "cta": "View plans"
+    },
+    "footer": {
+      "tagline": "Your silent confident",
+      "madeIn": "Made with ❤️ in Spain",
+      "allRightsReserved": "All rights reserved"
+    }
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Choose the plan that best suits you",
+    "anonymous": {
+      "name": "Anonymous",
+      "price": "€0",
+      "period": "no registration",
+      "description": "Try Confident without creating an account",
+      "cta": "Start now",
+      "badge": null,
+      "features": [
+        "5 free sessions",
+        "No account needed",
+        "3 profiles available",
+        "Real-time suggestions",
+        "Basic transcriptions"
+      ]
+    },
+    "free": {
+      "name": "Free",
+      "price": "€0",
+      "period": "forever",
+      "description": "Perfect for trying Confident",
+      "cta": "Create free account",
+      "badge": "Recommended",
+      "features": [
+        "15 total sessions",
+        "5 anonymous + 10 with Google",
+        "3 profiles (Candidate, Salesperson, Defender)",
+        "Real-time suggestions",
+        "Email transcriptions",
+        "Session history"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "€19",
+      "period": "/month",
+      "description": "For those with frequent critical conversations",
+      "cta": "Join waitlist",
+      "badge": "Coming soon",
+      "features": [
+        "Unlimited sessions",
+        "Everything in Free, plus:",
+        "Performance analytics",
+        "Practice mode (coming soon)",
+        "Priority support",
+        "Early access to new features"
+      ]
+    },
+    "waitlist": {
+      "title": "Pro Plan — Waitlist",
+      "subtitle": "Confident Pro will be available soon. Leave your email and you'll be among the first to know.",
+      "nameLabel": "Name",
+      "namePlaceholder": "Your name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "your@email.com",
+      "priceInfo": "€19/month — Unlimited sessions + analytics + priority support",
+      "cancelButton": "Cancel",
+      "submitButton": "Join waitlist",
+      "submittingButton": "Sending..."
+    },
+    "waitlistSuccess": {
+      "title": "You're on the list! 🎉",
+      "subtitle": "We'll notify you by email when Confident Pro is available.",
+      "freePlanInfo": "In the meantime, you can keep using the free plan (15 sessions).",
+      "createFreeButton": "Create free account",
+      "backButton": "Back to home"
+    },
+    "backLink": "← Back",
+    "faqTitle": "Frequently Asked Questions",
+    "faq": {
+      "q1": {
+        "question": "Why 15 sessions and not unlimited on the free plan?",
+        "answer": "We want you to try Confident without commitment, but AI costs (Claude + Deepgram) are significant. 15 sessions are enough to validate if it works for you."
+      },
+      "q2": {
+        "question": "Can I cancel anytime?",
+        "answer": "Yes, without penalty. Cancel from your dashboard at any time."
+      },
+      "q3": {
+        "question": "What happens to my data if I cancel?",
+        "answer": "You can delete them completely from the dashboard or request it at hola@tryconfident.com. We comply with GDPR (ARCO rights)."
+      },
+      "q4": {
+        "question": "Will there be a team plan?",
+        "answer": "Yes, we're working on a Teams plan (€49/month for 5 users). If you're interested, write to us at hola@tryconfident.com."
+      }
+    }
+  },
+  "dashboard": {
+    "title": "My sessions",
+    "noSessions": "You don't have any sessions yet",
+    "noSessionsDesc": "Start a video call and activate Confident to see your sessions here",
+    "session": "Session",
+    "platform": "Platform",
+    "profile": "Profile",
+    "duration": "Duration",
+    "suggestions": "Suggestions",
+    "date": "Date",
+    "viewDetails": "View details",
+    "transcriptions": "Transcriptions",
+    "suggestionsReceived": "Suggestions received",
+    "downloadTranscript": "Download transcript",
+    "profiles": {
+      "candidato": "Candidate",
+      "vendedor": "Salesperson",
+      "defensor": "Defender"
+    }
+  },
+  "auth": {
+    "signInWith": "Continue with {provider}",
+    "signInTitle": "Sign in to Confident",
+    "signInSubtitle": "Access your dashboard and manage your sessions",
+    "signUpTitle": "Create Confident account",
+    "signUpSubtitle": "Sign up for unlimited sessions"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: March 1, 2026",
+    "section1": {
+      "title": "1. Introduction",
+      "p1": "At Confident we take your privacy very seriously. This Privacy Policy explains what data we collect, how we use it, where we store it and what your rights are.",
+      "p2": "Confident is a Chrome extension that acts as a real-time assistant during Google Meet video calls. We comply with the European Union's General Data Protection Regulation (GDPR)."
+    },
+    "section2": {
+      "title": "2. What data we collect",
+      "yes": {
+        "title": "2.1 Data we DO collect",
+        "item1": {
+          "label": "Text transcriptions:",
+          "text": "We convert the audio from your video calls into text to show you real-time suggestions. Transcriptions are stored in our database."
+        },
+        "item2": {
+          "label": "Generated suggestions:",
+          "text": "We save the suggestions that the AI shows you during the session, along with your feedback (👍/👎)."
+        },
+        "item3": {
+          "label": "Email:",
+          "text": "If you decide to create an account with Google OAuth, we save your email address to identify you."
+        },
+        "item4": {
+          "label": "Device fingerprint:",
+          "text": "An anonymous identifier generated from your browser characteristics (does NOT include personal information). We use it for the free sessions counter."
+        },
+        "item5": {
+          "label": "Session metadata:",
+          "text": "Start/end date/time, duration, selected profile (Candidate/Salesperson/Defender)."
+        },
+        "item6": {
+          "label": "Usage data (analytics):",
+          "text": "Anonymous events of how you use the extension (e.g.: \"session started\", \"suggestion shown\"). We process them with Posthog EU."
+        }
+      },
+      "no": {
+        "title": "2.2 Data we DO NOT collect",
+        "banner": {
+          "title": "✅ Audio NEVER stored",
+          "text": "The audio from your video calls is processed only in real-time and is never saved on any server. We only save the text resulting from the transcription."
+        },
+        "item1": "We DO NOT record video",
+        "item2": "We DO NOT access your camera",
+        "item3": "We DO NOT read your emails or personal files",
+        "item4": "We DO NOT track your activity outside of Google Meet"
+      }
+    },
+    "section3": {
+      "title": "3. How we use your data",
+      "intro": "We use your data exclusively to:",
+      "item1": {
+        "label": "Show you real-time suggestions",
+        "text": "during your video calls (main purpose of the service)."
+      },
+      "item2": {
+        "label": "Improve the quality of suggestions",
+        "text": "by analyzing which suggestions were helpful (based on your 👍/👎 feedback)."
+      },
+      "item3": {
+        "label": "Send you your session summary by email",
+        "text": "when it ends (only if you provided your email)."
+      },
+      "item4": {
+        "label": "Manage the freemium limits system",
+        "text": "(5 anonymous sessions, 15 with free account)."
+      },
+      "item5": {
+        "label": "Show your session history",
+        "text": "in the dashboard (only accessible by you)."
+      },
+      "item6": {
+        "label": "Aggregated and anonymous analytics",
+        "text": "to improve the product (e.g.: average latency, error rates)."
+      }
+    },
+    "section4": {
+      "title": "4. Where we store your data",
+      "banner": {
+        "title": "🇪🇺 Data stored in the European Union",
+        "text": "All your data is stored in Supabase (PostgreSQL) in the Frankfurt, Germany region, complying with GDPR."
+      },
+      "text": "We do not transfer your data outside the EU except for real-time processing with third-party services (see section 5)."
+    },
+    "section5": {
+      "title": "5. Third parties that process data",
+      "intro": "To offer the service, we temporarily send data to these providers:",
+      "deepgram": {
+        "name": "Deepgram (United States)",
+        "what": "What we send:",
+        "whatText": "Real-time audio (streaming)",
+        "why": "What for:",
+        "whyText": "Speech-to-text transcription",
+        "retention": "Retention:",
+        "retentionText": "They DO NOT store the audio. Real-time processing only.",
+        "policy": "Policy:"
+      },
+      "anthropic": {
+        "name": "Anthropic (United States)",
+        "what": "What we send:",
+        "whatText": "Text transcriptions + conversation context",
+        "why": "What for:",
+        "whyText": "AI analysis (Claude) to generate suggestions",
+        "retention": "Retention:",
+        "retentionText": "30 days according to their enterprise data policy.",
+        "policy": "Policy:"
+      },
+      "resend": {
+        "name": "Resend (United States)",
+        "what": "What we send:",
+        "whatText": "Email + session transcription",
+        "why": "What for:",
+        "whyText": "Send you your session summary by email",
+        "retention": "Retention:",
+        "retentionText": "Email logs for 30 days.",
+        "policy": "Policy:"
+      },
+      "posthog": {
+        "name": "Posthog EU (European Union)",
+        "what": "What we send:",
+        "whatText": "Anonymous usage events (e.g.: \"session started\")",
+        "why": "What for:",
+        "whyText": "Analytics and product improvement",
+        "retention": "Retention:",
+        "retentionText": "Aggregated and anonymous data. EU region.",
+        "policy": "Policy:"
+      }
+    },
+    "section6": {
+      "title": "6. How long we keep your data",
+      "item1": {
+        "label": "Transcriptions and suggestions:",
+        "text": "Indefinitely, until you decide to delete them from your dashboard or request the deletion of your account."
+      },
+      "item2": {
+        "label": "Device fingerprint:",
+        "text": "Until you clear the extension data in Chrome."
+      },
+      "item3": {
+        "label": "User account:",
+        "text": "Until you request the deletion of your account."
+      },
+      "item4": {
+        "label": "Server logs:",
+        "text": "90 days maximum (for debugging only)."
+      }
+    },
+    "section7": {
+      "title": "7. Your rights (GDPR)",
+      "intro": "Under the GDPR, you have the following rights:",
+      "right1": {
+        "title": "✅ Right of Access",
+        "text": "You can download all your transcriptions and suggestions from the dashboard at any time."
+      },
+      "right2": {
+        "title": "✅ Right to Rectification",
+        "text": "If you detect an error in your data, you can request its correction by sending an email to privacy@tryconfident.com"
+      },
+      "right3": {
+        "title": "✅ Right to Erasure (Deletion)",
+        "text": "You can delete individual sessions from the dashboard or request the complete deletion of your account by contacting privacy@tryconfident.com. We will delete all your data within 30 days."
+      },
+      "right4": {
+        "title": "✅ Right to Object",
+        "text": "You can object to the processing of your data at any time by stopping use of the service."
+      },
+      "right5": {
+        "title": "✅ Right to Data Portability",
+        "text": "You can export your transcriptions in JSON format from the dashboard."
+      },
+      "banner": {
+        "title": "📧 Data Rights Requests (Access, Rectification, Erasure, Objection)",
+        "text": "To exercise any of these rights, send an email to privacy@tryconfident.com with the subject \"Data Rights Request\" and we will respond within a maximum of 30 days."
+      }
+    },
+    "section8": {
+      "title": "8. Cookies and Tracking",
+      "intro": "We use the following tracking technologies:",
+      "item1": {
+        "label": "Session cookies (Supabase Auth):",
+        "text": "To keep your session active. Essential for the service to function."
+      },
+      "item2": {
+        "label": "Local Storage (chrome.storage):",
+        "text": "To save your device fingerprint and local preferences in the extension."
+      },
+      "item3": {
+        "label": "Posthog (Analytics):",
+        "text": "To measure product usage in an aggregated and anonymous way. You can disable tracking by installing an anti-tracking extension."
+      }
+    },
+    "section9": {
+      "title": "9. Data security",
+      "intro": "We implement the following security measures:",
+      "item1": {
+        "label": "Encryption in transit:",
+        "text": "All communications use HTTPS/WSS (TLS 1.3)."
+      },
+      "item2": {
+        "label": "Encryption at rest:",
+        "text": "Data in Supabase is encrypted on disk."
+      },
+      "item3": {
+        "label": "Row Level Security (RLS):",
+        "text": "Only you can access your own transcriptions and suggestions."
+      },
+      "item4": {
+        "label": "OAuth authentication:",
+        "text": "We don't store passwords. We use Google OAuth."
+      },
+      "item5": {
+        "label": "No XSS:",
+        "text": "Manual DOM construction to prevent injection attacks."
+      }
+    },
+    "section10": {
+      "title": "10. Minors",
+      "text": "Confident is designed for adults (18+) in professional contexts. We do not knowingly collect data from minors under 16 years old. If we detect that a minor has created an account, we will delete their data immediately."
+    },
+    "section11": {
+      "title": "11. Changes to this policy",
+      "text": "We may update this Privacy Policy occasionally. We will notify you of significant changes by email (if you have an account) or via a notice in the extension. The \"Last updated\" date at the top of the document indicates the current version."
+    },
+    "section12": {
+      "title": "12. Contact",
+      "intro": "If you have questions about this Privacy Policy or want to exercise your GDPR rights:",
+      "company": "Confident",
+      "email": "Email:",
+      "responseTime": "Response time:",
+      "responseTimeText": "Maximum 30 business days",
+      "dataProtection": "Data Protection:",
+      "dataProtectionText": "GDPR Compliance (EU)"
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: March 1, 2026",
+    "section1": {
+      "title": "1. Acceptance of Terms",
+      "p1": "By installing, accessing or using the Chrome extension \"Confident\" (hereinafter, the \"Service\"), you agree to be legally bound by these Terms of Service (hereinafter, the \"Terms\").",
+      "p2": "If you do not agree with these Terms, do not use the Service."
+    },
+    "section2": {
+      "title": "2. Service Description",
+      "intro": "Confident is a Chrome extension that acts as a real-time assistant during Google Meet video calls. The Service:",
+      "item1": "Captures the audio from your video call (Google Meet tab + microphone)",
+      "item2": "Converts the audio to text through automatic transcription",
+      "item3": "Analyzes the conversation context with artificial intelligence (AI)",
+      "item4": "Shows real-time suggestions in a side panel",
+      "item5": "Saves transcriptions and suggestions in your account for later consultation",
+      "banner": {
+        "title": "⚠️ Important: Confident is an assistance tool",
+        "text": "Suggestions generated by AI are advisory and do not replace your professional judgment. We are not responsible for decisions you make based on the Service's suggestions."
+      }
+    },
+    "section3": {
+      "title": "3. Usage Requirements",
+      "technical": {
+        "title": "3.1 Technical requirements",
+        "intro": "To use the Service you need:",
+        "item1": "Google Chrome browser (version 120 or higher)",
+        "item2": "Stable internet connection",
+        "item3": "Functional microphone",
+        "item4": "Audio capture permission in Chrome"
+      },
+      "age": {
+        "title": "3.2 Age requirements",
+        "text": "You must be at least 18 years old to use the Service. If you are between 16 and 18 years old, you need the consent of your parents or legal guardians."
+      },
+      "consent": {
+        "title": "3.3 Mandatory consent",
+        "banner": {
+          "title": "🚨 CRITICAL: Participant consent",
+          "p1": "Before starting a session, you MUST inform all participants that the conversation will be transcribed and obtain their explicit consent.",
+          "p2": "Failure to comply with this obligation may constitute a violation of privacy and conversation recording laws in your jurisdiction. You are solely responsible for obtaining these consents."
+        }
+      }
+    },
+    "section4": {
+      "title": "4. Plans and Usage Limits",
+      "anonymous": {
+        "title": "4.1 Anonymous Plan (Free)",
+        "item1": "5 free sessions without registration",
+        "item2": "Transcriptions and suggestions are not saved permanently",
+        "item3": "No access to dashboard or history"
+      },
+      "free": {
+        "title": "4.2 Free Plan (Google Account)",
+        "item1": "15 sessions with Google account (includes the 5 anonymous ones)",
+        "item2": "Access to dashboard with session history",
+        "item3": "Transcriptions and suggestions saved permanently",
+        "item4": "Automatic email with summary when session ends"
+      },
+      "pro": {
+        "title": "4.3 Pro Plan (Paid)",
+        "item1": "Unlimited sessions",
+        "item2": "Priority in improvements and new features",
+        "item3": "Priority support",
+        "note": "Note: The Pro Plan is currently on waitlist. Prices and payment terms will be communicated before activation."
+      }
+    },
+    "section5": {
+      "title": "5. Acceptable Use",
+      "acceptable": {
+        "title": "5.1 You may use the Service for:",
+        "item1": "Assistance in job interviews (as a candidate)",
+        "item2": "Support in commercial calls and sales",
+        "item3": "Help in presentations and project defenses",
+        "item4": "Any other legitimate professional use where you have participant consent"
+      },
+      "unacceptable": {
+        "title": "5.2 You may NOT use the Service to:",
+        "item1": "Record conversations without consent from all participants",
+        "item2": "Transcribe illegal, offensive content or that violates third party rights",
+        "item3": "Share or sell other people's transcriptions without their permission",
+        "item4": "Reverse engineer, modify or attempt to hack the Service",
+        "item5": "Use the Service to directly compete with us",
+        "item6": "Overload or damage the Service infrastructure",
+        "item7": "Circumvent usage limits (e.g.: create multiple fake accounts)"
+      },
+      "banner": {
+        "title": "⚠️ Consequences of misuse",
+        "text": "We reserve the right to suspend or cancel your account immediately if we detect unacceptable use of the Service, without right to refund."
+      }
+    },
+    "section6": {
+      "title": "6. Intellectual Property",
+      "yourContent": {
+        "title": "6.1 Your content",
+        "text": "You retain all rights to the transcriptions of your conversations. We only store them to show them to you and improve the Service."
+      },
+      "ourContent": {
+        "title": "6.2 Our content",
+        "intro": "Confident, its code, design, brand and all elements of the Service are property of Confident and are protected by intellectual property laws. You may not:",
+        "item1": "Copy, modify or distribute the extension code",
+        "item2": "Use our brand (\"Confident\") for derivative products",
+        "item3": "Create competing services based on our code or design"
+      }
+    },
+    "section7": {
+      "title": "7. Limitation of Liability",
+      "banner": {
+        "title": "Service \"as is\"",
+        "text": "The Service is offered \"as is\" and \"as available\", without warranties of any kind, express or implied."
+      },
+      "intro": "We do not guarantee that:",
+      "item1": "The Service is always available, without interruptions or errors",
+      "item2": "Transcriptions are 100% accurate (they may contain errors)",
+      "item3": "AI suggestions are always correct or appropriate",
+      "item4": "The Service is compatible with future versions of Chrome or Google Meet",
+      "exclusion": {
+        "title": "7.1 Exclusion of damages",
+        "intro": "To the maximum extent permitted by law, Confident will not be liable for:",
+        "item1": "Direct, indirect, incidental or consequential damages arising from use of the Service",
+        "item2": "Loss of job opportunities, sales or projects from following incorrect suggestions",
+        "item3": "Legal problems arising from recording without consent",
+        "item4": "Data loss due to technical failures",
+        "item5": "Damage to your professional reputation"
+      },
+      "note": {
+        "title": "💡 Use your professional judgment",
+        "text": "Confident is a support tool, not a substitute for your experience and judgment. Always review suggestions before acting."
+      }
+    },
+    "section8": {
+      "title": "8. Cancellation and Termination",
+      "byYou": {
+        "title": "8.1 On your part",
+        "intro": "You can cancel your account at any time by:",
+        "item1": "Uninstalling the Chrome extension",
+        "item2": "Requesting deletion of your account at privacy@tryconfident.com"
+      },
+      "byUs": {
+        "title": "8.2 On our part",
+        "intro": "We may suspend or cancel your account if:",
+        "item1": "You violate these Terms of Service",
+        "item2": "We detect fraudulent or abusive use",
+        "item3": "Required by law",
+        "item4": "We decide to discontinue the Service (with 30 days prior notice)"
+      }
+    },
+    "section9": {
+      "title": "9. Modifications to Service and Terms",
+      "service": {
+        "title": "9.1 Service modifications",
+        "text": "We reserve the right to modify, suspend or discontinue the Service (or any part of it) at any time, with or without prior notice."
+      },
+      "terms": {
+        "title": "9.2 Modifications to these Terms",
+        "intro": "We may update these Terms occasionally. We will notify you of significant changes through:",
+        "item1": "Email (if you have an account)",
+        "item2": "Notice in the extension",
+        "item3": "Update to the \"Last updated\" date at the top of the document",
+        "outro": "Continued use of the Service after changes constitutes your acceptance of the new Terms."
+      }
+    },
+    "section10": {
+      "title": "10. Applicable Law and Jurisdiction",
+      "p1": "These Terms are governed by the laws of Spain and the European Union (GDPR).",
+      "p2": "Any dispute arising from these Terms will be resolved in the courts of Madrid, Spain, unless consumer protection laws in your country establish another mandatory jurisdiction."
+    },
+    "section11": {
+      "title": "11. General Provisions",
+      "complete": {
+        "title": "11.1 Complete agreement",
+        "text": "These Terms, together with our Privacy Policy, constitute the complete agreement between you and Confident."
+      },
+      "severability": {
+        "title": "11.2 Severability",
+        "text": "If any provision of these Terms is deemed invalid or unenforceable, the remaining provisions will continue in full force."
+      },
+      "noWaiver": {
+        "title": "11.3 No waiver",
+        "text": "Our failure to exercise any right under these Terms does not constitute a waiver of that right."
+      }
+    },
+    "section12": {
+      "title": "12. Contact",
+      "intro": "If you have questions about these Terms of Service:",
+      "company": "Confident",
+      "email": "Email:",
+      "support": "Support:",
+      "responseTime": "Response time:",
+      "responseTimeText": "Maximum 5 business days"
+    },
+    "acceptance": {
+      "title": "✅ By using Confident, you confirm that:",
+      "item1": "You have read and understood these Terms of Service",
+      "item2": "You are at least 18 years old or have consent from your parents/guardians",
+      "item3": "You will obtain consent from all participants before transcribing",
+      "item4": "You will use the Service responsibly and legally",
+      "item5": "You accept the limitations of liability described above"
+    }
+  }
+}

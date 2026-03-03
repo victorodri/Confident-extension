@@ -1,23 +1,26 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { getTranslations } from 'next-intl/server';
 
-export function HowItWorks() {
+export async function HowItWorks() {
+  const t = await getTranslations('landing.howItWorks');
+
   const steps = [
     {
       number: '1',
-      title: 'Instala la extensión',
-      description: 'Un clic desde Chrome Web Store. Compatible solo con Google Meet.',
+      title: t('step1Title'),
+      description: t('step1Desc'),
       icon: '📥'
     },
     {
       number: '2',
-      title: 'Activa en Meet',
-      description: 'Selecciona tu perfil (Candidato, Vendedor o Defensor) y pulsa iniciar.',
+      title: t('step2Title'),
+      description: t('step2Desc'),
       icon: '▶️'
     },
     {
       number: '3',
-      title: 'Recibe sugerencias',
-      description: 'El panel lateral te muestra qué decir en <5 segundos. Solo tú lo ves.',
+      title: t('step3Title'),
+      description: t('step3Desc'),
       icon: '💡'
     }
   ];
@@ -28,11 +31,8 @@ export function HowItWorks() {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4">
-            Cómo funciona
+            {t('title')}
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            En 3 pasos simples estás listo para tu próxima conversación crítica
-          </p>
         </div>
 
         {/* Steps */}

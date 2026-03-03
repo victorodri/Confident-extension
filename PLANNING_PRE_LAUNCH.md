@@ -300,8 +300,8 @@
 
 ---
 
-### Sesión 27: Screenshots + Publicación (2-3h)
-**Objetivo**: Capturar screenshots y publicar en Chrome Web Store
+### Sesión 27: Screenshots (1h)
+**Objetivo**: Capturar screenshots profesionales para Chrome Web Store
 
 #### Tareas:
 
@@ -309,6 +309,102 @@
    - 5 screenshots según CHROME_WEB_STORE_PUBLICATION.md
    - Redimensionar a 1280x800px
    - Guardar en `/CHROME_WEB_STORE_ASSETS/screenshots/`
+   - Screenshots:
+     1. Panel lateral con sugerencia urgente (roja)
+     2. Panel lateral con múltiples sugerencias
+     3. Popup con selector de perfil
+     4. Dashboard con transcripciones
+     5. Panel lateral en Google Meet activo
+
+**Ubicación**:
+- `CHROME_WEB_STORE_ASSETS/screenshots/` (5 archivos PNG)
+
+---
+
+### Sesión 28: Unificar UX — Popup → Panel Lateral (3-4h)
+**Objetivo**: Mover TODA la funcionalidad del popup al panel lateral para UX unificada
+
+**Razón**: Reducir fricción del usuario. Actualmente requiere:
+1. Clic en icono extensión → abrir popup
+2. Seleccionar perfil
+3. Marcar checkbox
+4. Clic "Iniciar sesión"
+5. Clic "Abrir panel lateral"
+
+**Objetivo UX**: Todo en un solo panel lateral.
+
+#### Tareas:
+
+1. **Analizar flujo actual** (15 min)
+   - Documentar todos los elementos del popup
+   - Identificar qué mover al panel
+   - Diseñar nuevo flujo UX
+
+2. **Actualizar side-panel/panel.html** (1h)
+   - Añadir selector de perfil al panel
+   - Añadir checkbox de consentimiento
+   - Añadir campo de emails
+   - Añadir botón "Iniciar sesión"
+   - Mantener selector de idioma
+   - Reorganizar layout para incluir todo
+
+3. **Actualizar side-panel/panel.css** (45 min)
+   - Estilos para selector de perfil en panel
+   - Layout responsivo
+   - Animaciones de transición entre estados
+   - Asegurar que todo cabe sin scroll excesivo
+
+4. **Actualizar side-panel/panel.js** (1h)
+   - Mover lógica de selección de perfil
+   - Mover lógica de consentimiento
+   - Mover lógica de inicio de sesión
+   - Comunicación con background.js
+   - Manejar estados: inicial → consentimiento → activo
+
+5. **Simplificar popup** (30 min)
+   - Dejar popup SOLO con:
+     - Logo + selector idioma
+     - Mensaje: "Abre el panel lateral para usar Confident →"
+     - Botón: "Abrir Panel Lateral"
+   - Popup se convierte en launcher minimalista
+
+6. **Actualizar popup.js** (30 min)
+   - Eliminar lógica de sesión
+   - Solo botón para abrir panel
+   - Detectar si ya está en plataforma soportada
+
+7. **Testing completo** (45 min)
+   - Flujo completo desde panel
+   - Verificar que no se necesita usar popup
+   - Verificar selector de idioma funciona en panel
+   - Verificar selector de perfil en panel
+   - Probar en las 3 plataformas
+
+**Resultado**:
+- **Popup**: Solo launcher (1 clic para abrir panel)
+- **Panel**: Experiencia completa (seleccionar perfil → iniciar → ver sugerencias)
+- **Clics reducidos**: De 5 clics a 2-3 clics
+
+**Archivos modificados**:
+- `extension/side-panel/panel.html` (añadir controles)
+- `extension/side-panel/panel.css` (nuevo layout)
+- `extension/side-panel/panel.js` (lógica completa)
+- `extension/popup/popup.html` (simplificar)
+- `extension/popup/popup.css` (simplificar)
+- `extension/popup/popup.js` (simplificar)
+
+---
+
+### Sesión 29: Publicación Chrome Web Store (2-3h)
+**Objetivo**: Publicar extensión en Chrome Web Store
+
+#### Tareas:
+
+1. **Verificación final** (30 min)
+   - Verificar manifest.json v1.0.0
+   - Verificar todos los assets listos
+   - Verificar todas las traducciones
+   - Verificar políticas legales publicadas
 
 2. **Empaquetar extensión** (15 min)
    ```bash
@@ -330,6 +426,11 @@
 5. **Actualizar PROGRESS.md** (15 min)
    - Documentar publicación
    - Status: "Pending review"
+
+6. **Preparar anuncio** (30 min)
+   - Redactar tweet de lanzamiento
+   - Preparar post LinkedIn
+   - Documentar primeros pasos para usuarios
 
 ---
 
@@ -359,19 +460,22 @@
 | Sesión | Duración | Acumulado |
 |--------|----------|-----------|
 | 21. Multi-plataforma | 2-3h | 2-3h |
-| 22. i18n Extensión | 2-3h | 4-6h |
+| 22. i18n Extensión + Fix Audio | 2-3h | 4-6h |
 | 23. i18n Web | 3-4h | 7-10h |
-| 24. Testing | 2-3h | 9-13h |
+| 24. Testing Multi-plataforma/idioma | 2-3h | 9-13h |
 | 25. Claude multi-idioma | 1-2h | 10-15h |
-| 26. Assets | 1h | 11-16h |
-| 27. Publicación | 2-3h | 13-19h |
+| 26. Assets Profesionales | 1h | 11-16h |
+| 27. Screenshots | 1h | 12-17h |
+| 28. Unificar UX (Popup→Panel) | 3-4h | 15-21h |
+| 29. Publicación Chrome Web Store | 2-3h | 17-24h |
 
-**Total**: 13-19 horas de trabajo antes de publicar
+**Total**: 17-24 horas de trabajo antes de publicar
 
 **Organización sugerida**:
-- Semana 1: Sesiones 21-23 (implementación core)
-- Semana 2: Sesiones 24-25 (testing + ajustes)
-- Semana 3: Sesiones 26-27 (assets + publicación)
+- Semana 1: Sesiones 21-23 (multi-plataforma + multi-idioma)
+- Semana 2: Sesiones 24-26 (testing + Claude + assets)
+- Semana 3: Sesiones 27-28 (screenshots + UX unificada)
+- Semana 4: Sesión 29 (publicación final)
 
 ---
 
@@ -383,38 +487,54 @@
 - [x] ✅ Personalización de perfil
 - [x] ✅ IA contextual
 - [x] ✅ Dashboard + Email
-- [ ] ⏳ Multi-plataforma (Meet, Teams, Zoom)
-- [ ] ⏳ Multi-idioma extensión (ES/EN)
-- [ ] ⏳ Multi-idioma web (ES/EN)
-- [ ] ⏳ Claude multi-idioma
+- [x] ✅ Multi-plataforma (Meet, Teams, Zoom) — Sesión 21
+- [x] ✅ Multi-idioma extensión (ES/EN) — Sesión 22
+- [x] ✅ Fix audio crítico (participantes silenciados) — Sesión 22
+- [ ] ⏳ Multi-idioma web (ES/EN) — Sesión 23
+- [ ] ⏳ Claude multi-idioma — Sesión 25
+- [ ] ⏳ UX unificada (Popup → Panel) — Sesión 28
 
 ### Assets
-- [ ] ⏳ Iconos profesionales 16/48/128
-- [ ] ⏳ Promotional tile 440x280
-- [ ] ⏳ Screenshots (5)
+- [ ] ⏳ Iconos profesionales 16/48/128 — Sesión 26
+- [ ] ⏳ Promotional tile 440x280 — Sesión 26
+- [ ] ⏳ Screenshots (5) — Sesión 27
 
 ### Testing
 - [x] ✅ Code review (100%)
-- [ ] ⏳ Multi-plataforma (3 plataformas)
-- [ ] ⏳ Multi-idioma (2 idiomas)
-- [ ] ⏳ Testing manual completo
+- [ ] ⏳ Multi-plataforma (3 plataformas) — Sesión 24
+- [ ] ⏳ Multi-idioma (2 idiomas) — Sesión 24
+- [ ] ⏳ Testing manual completo — Sesión 24
 
 ### Legal
 - [x] ✅ Privacy policy (ES)
-- [ ] ⏳ Privacy policy (EN)
+- [ ] ⏳ Privacy policy (EN) — Sesión 23
 - [x] ✅ Terms of service (ES)
-- [ ] ⏳ Terms of service (EN)
+- [ ] ⏳ Terms of service (EN) — Sesión 23
+
+### UX
+- [ ] ⏳ Popup simplificado (solo launcher) — Sesión 28
+- [ ] ⏳ Panel con funcionalidad completa — Sesión 28
+- [ ] ⏳ Reducción de fricción (5 clics → 2-3 clics) — Sesión 28
 
 ### Publicación
 - [x] ✅ Manifest v1.0.0
 - [x] ✅ Descripción Chrome Web Store
 - [x] ✅ Justificación permisos
-- [ ] ⏳ Cuenta Developer
-- [ ] ⏳ ZIP creado
-- [ ] ⏳ Submitted for review
+- [ ] ⏳ Cuenta Developer — Sesión 29
+- [ ] ⏳ ZIP creado — Sesión 29
+- [ ] ⏳ Submitted for review — Sesión 29
 
 ---
 
-**Próximo paso**: Comenzar Sesión 21 (Multi-plataforma)
+## Estado Actual
+
+**Sesiones completadas**: 1-22 (22/29)
+**Progreso**: 76% implementado
+
+**Últimas sesiones completadas**:
+- ✅ Sesión 21: Multi-plataforma (Google Meet, Teams, Zoom)
+- ✅ Sesión 22: Multi-idioma Extensión + Fix Audio Crítico
+
+**Próximo paso**: Sesión 23 (Multi-idioma Web con next-intl)
 
 **Última actualización**: Marzo 2, 2026

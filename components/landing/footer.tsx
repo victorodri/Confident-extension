@@ -1,6 +1,11 @@
-import Link from 'next/link';
+'use client';
 
-export function Footer() {
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+
+export function Footer({ locale }: { locale: string }) {
+  const t = useTranslations('landing.footer');
+  const tCommon = useTranslations('common');
   const currentYear = new Date().getFullYear();
 
   return (
@@ -10,35 +15,35 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <h3 className="text-white font-bold text-xl mb-2">Confident</h3>
+            <h3 className="text-white font-bold text-xl mb-2">{tCommon('appName')}</h3>
             <p className="text-sm text-slate-400 mb-4">
-              Tu confidente en cada conversación importante
+              {t('tagline')}
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span>RGPD • Solo texto, no audio</span>
+              <span>{locale === 'es' ? 'RGPD • Solo texto, no audio' : 'GDPR • Text only, no audio'}</span>
             </div>
           </div>
 
           {/* Product */}
           <div>
-            <h4 className="text-white font-semibold mb-3">Producto</h4>
+            <h4 className="text-white font-semibold mb-3">{locale === 'es' ? 'Producto' : 'Product'}</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/#how-it-works" className="hover:text-white transition-colors">
-                  Cómo funciona
+                <Link href={`/${locale}#how-it-works`} className="hover:text-white transition-colors">
+                  {locale === 'es' ? 'Cómo funciona' : 'How it works'}
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="hover:text-white transition-colors">
-                  Precios
+                <Link href={`/${locale}/pricing`} className="hover:text-white transition-colors">
+                  {tCommon('pricing')}
                 </Link>
               </li>
               <li>
-                <Link href="/auth" className="hover:text-white transition-colors">
-                  Comenzar
+                <Link href={`/${locale}/auth`} className="hover:text-white transition-colors">
+                  {tCommon('getStarted')}
                 </Link>
               </li>
             </ul>
@@ -46,21 +51,21 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-white font-semibold mb-3">Legal</h4>
+            <h4 className="text-white font-semibold mb-3">{locale === 'es' ? 'Legal' : 'Legal'}</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/privacy" className="hover:text-white transition-colors">
-                  Privacidad
+                <Link href={`/${locale}/privacy`} className="hover:text-white transition-colors">
+                  {tCommon('privacy')}
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white transition-colors">
-                  Términos
+                <Link href={`/${locale}/terms`} className="hover:text-white transition-colors">
+                  {tCommon('terms')}
                 </Link>
               </li>
               <li>
-                <Link href="/data-request" className="hover:text-white transition-colors">
-                  Solicitar mis datos (ARCO)
+                <Link href={`/${locale}/data-request`} className="hover:text-white transition-colors">
+                  {locale === 'es' ? 'Solicitar mis datos (ARCO)' : 'Request my data (ARCO)'}
                 </Link>
               </li>
             </ul>
@@ -70,7 +75,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-slate-500">
-            © {currentYear} Confident. Todos los derechos reservados.
+            © {currentYear} Confident. {t('allRightsReserved')}
           </p>
 
           {/* Contact */}

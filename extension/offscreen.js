@@ -114,7 +114,11 @@ async function startAudioPipeline(streamId, profile) {
   const bufferSize = 4096;
   processor = audioCtx.createScriptProcessor(bufferSize, 1, 1);
 
-  // 6. Si tenemos ambos streams, mezclarlos
+  // 6. IMPORTANTE: Conectar tabSource directamente al destination para que el usuario escuche el audio
+  // Esto asegura que el audio de la videollamada NO se silencie
+  tabSource.connect(audioCtx.destination);
+
+  // 7. Si tenemos ambos streams, mezclarlos para procesamiento
   if (micSource) {
     // Crear mezclador
     const merger = audioCtx.createChannelMerger(2);
@@ -133,11 +137,11 @@ async function startAudioPipeline(streamId, profile) {
 
     mixGain.connect(processor);
   } else {
-    // Solo tab
+    // Solo tab - conectar al processor para procesamiento
     tabSource.connect(processor);
   }
 
-  processor.connect(audioCtx.destination);
+  // NO conectar processor a destination - ya tenemos el audio directo del tab
 
   // 7. Procesar audio: acumular y enviar cada N segundos
   processor.onaudioprocess = (e) => {

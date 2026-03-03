@@ -3,6 +3,88 @@
 // La sesión se gestiona desde popup.js — el panel solo muestra el estado.
 
 // ─────────────────────────────────────────────────────────────
+// IDIOMA ACTUAL (por defecto: español)
+// ─────────────────────────────────────────────────────────────
+
+let currentLanguage = 'es';
+
+// Traducciones manuales (español e inglés)
+const translations = {
+  es: {
+    consentLabel: 'He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.',
+    participantEmailsLabel: 'Emails de participantes (opcional)',
+    participantEmailsHint: 'Se enviará transcripción al finalizar',
+    participantEmailsPlaceholder: 'email1@ejemplo.com, email2@ejemplo.com',
+    startButton: 'Iniciar sesión',
+    listening: 'Escuchando...',
+    sessionHistory: 'Historial de sesión',
+    sessionInactive: 'Sin sesión activa',
+    statusActive: 'Activo',
+    sessionCounter: 'sesiones gratuitas',
+    sessionCounterRegister: 'Regístrate para 10 más',
+    sessionCounterUpgrade: 'Ver planes Pro',
+    sessionCounterRemaining: 'sesiones restantes',
+    sessionCounterLimitReached: 'Límite alcanzado',
+    processing: 'Procesando...'
+  },
+  en: {
+    consentLabel: 'I have informed participants that this conversation will be transcribed and obtained their consent.',
+    participantEmailsLabel: 'Participant emails (optional)',
+    participantEmailsHint: 'Transcript will be sent at the end',
+    participantEmailsPlaceholder: 'email1@example.com, email2@example.com',
+    startButton: 'Start session',
+    listening: 'Listening...',
+    sessionHistory: 'Session history',
+    sessionInactive: 'No active session',
+    statusActive: 'Active',
+    sessionCounter: 'free sessions',
+    sessionCounterRegister: 'Sign up for 10 more',
+    sessionCounterUpgrade: 'View Pro plans',
+    sessionCounterRemaining: 'sessions remaining',
+    sessionCounterLimitReached: 'Limit reached',
+    processing: 'Processing...'
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// HELPER: i18n
+// ─────────────────────────────────────────────────────────────
+
+function i18n(key) {
+  return translations[currentLanguage]?.[key] || key;
+}
+
+function updateAllTranslations() {
+  // Actualizar textos
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.textContent = i18n(key);
+  });
+
+  // Actualizar placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.placeholder = i18n(key);
+  });
+
+  // Actualizar statusText si no hay sesión activa
+  if (statusText && !statusText.classList.contains('active')) {
+    statusText.textContent = i18n('sessionInactive');
+  }
+}
+
+async function changeLanguage(lang) {
+  currentLanguage = lang;
+  await chrome.storage.local.set({ user_language: lang });
+  updateAllTranslations();
+
+  // Actualizar contador de sesiones si está visible
+  if (!sessionCounterFooter.classList.contains('hidden')) {
+    updateSessionCounter();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
 // ESTADO LOCAL
 // ─────────────────────────────────────────────────────────────
 
@@ -42,7 +124,23 @@ const counterFooterText = document.getElementById('counterFooterText');
 // INICIALIZACIÓN
 // ─────────────────────────────────────────────────────────────
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Cargar idioma guardado (por defecto: español)
+  const { user_language } = await chrome.storage.local.get('user_language');
+  currentLanguage = user_language || 'es';
+
+  // Actualizar selector de idioma
+  const languageSelector = document.getElementById('language-selector');
+  if (languageSelector) {
+    languageSelector.value = currentLanguage;
+    languageSelector.addEventListener('change', (e) => {
+      changeLanguage(e.target.value);
+    });
+  }
+
+  // Inicializar traducciones
+  updateAllTranslations();
+
   restoreSessionState();
   setupEventListeners();
 });
@@ -135,7 +233,7 @@ function setSessionActive(active, profile) {
   if (active) {
     statusDot.classList.add('active');
     statusText.classList.add('active');
-    statusText.textContent = profileLabel(profile) + ' — Activo';
+    statusText.textContent = profileLabel(profile) + ' — ' + i18n('statusActive');
     showState('listening');
 
     // Mostrar botón de terminar sesión
@@ -152,7 +250,7 @@ function setSessionActive(active, profile) {
 function setSessionInactive() {
   statusDot.classList.remove('active');
   statusText.classList.remove('active');
-  statusText.textContent = 'Sin sesión activa';
+  statusText.textContent = i18n('sessionInactive');
   showState('empty');
 
   // Limpiar todas las cards
@@ -198,7 +296,7 @@ function renderSuggestion(result) {
     // Solo mostrar estado "listening" si NO hay cards activas todavía
     if (!hasActiveSuggestion) {
       showState('listening');
-      showStatusMessage('Escuchando...');
+      showStatusMessage(i18n('listening'));
     }
     // Si ya hay cards visibles, mantenerlas — no hacer nada
     return;
@@ -401,7 +499,7 @@ async function handleStartSession() {
   showState('listening');
   statusDot.classList.add('active');
   statusText.classList.add('active');
-  statusText.textContent = profileLabel(savedProfile) + ' — Activo';
+  statusText.textContent = profileLabel(savedProfile) + ' — ' + i18n('statusActive');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -518,44 +616,47 @@ async function updateSessionCounter() {
       showCounter = false;
     } else if (user_type === 'anonymous') {
       // Anónimo - siempre mostrar con link a registro
-      const text = `${remaining} ${remaining === 1 ? 'sesión gratuita' : 'sesiones gratuitas'}. `;
+      const sessionsText = remaining === 1
+        ? (currentLanguage === 'es' ? 'sesión gratuita' : 'free session')
+        : i18n('sessionCounter');
+      const text = `${remaining} ${sessionsText}. `;
       const textNode = document.createTextNode(text);
 
       const link = document.createElement('a');
       link.href = `${CONFIG.ENDPOINTS.AUTH}?reason=limit_soft`;
       link.target = '_blank';
-      link.textContent = 'Regístrate';
-
-      const moreText = document.createTextNode(' para 10 más');
+      link.textContent = i18n('sessionCounterRegister');
 
       counterFooterText.appendChild(textNode);
       counterFooterText.appendChild(link);
-      counterFooterText.appendChild(moreText);
 
       showCounter = true;
     } else if (user_type === 'free') {
       // Free - solo mostrar si quedan ≤3
       if (remaining <= 3 && remaining > 0) {
-        const text = `${remaining} ${remaining === 1 ? 'sesión' : 'sesiones'} restantes. `;
+        const sessionsText = remaining === 1
+          ? (currentLanguage === 'es' ? 'sesión restante' : 'session remaining')
+          : i18n('sessionCounterRemaining');
+        const text = `${remaining} ${sessionsText}. `;
         const textNode = document.createTextNode(text);
 
         const link = document.createElement('a');
         link.href = CONFIG.ENDPOINTS.PRICING;
         link.target = '_blank';
-        link.textContent = 'Ver planes Pro';
+        link.textContent = i18n('sessionCounterUpgrade');
 
         counterFooterText.appendChild(textNode);
         counterFooterText.appendChild(link);
 
         showCounter = true;
       } else if (remaining === 0) {
-        const text = 'Límite alcanzado. ';
+        const text = i18n('sessionCounterLimitReached') + '. ';
         const textNode = document.createTextNode(text);
 
         const link = document.createElement('a');
         link.href = CONFIG.ENDPOINTS.PRICING;
         link.target = '_blank';
-        link.textContent = 'Ver planes Pro';
+        link.textContent = i18n('sessionCounterUpgrade');
 
         counterFooterText.appendChild(textNode);
         counterFooterText.appendChild(link);

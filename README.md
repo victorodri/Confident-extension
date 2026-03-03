@@ -2,8 +2,6 @@
 
 > **Tu coach silencioso en conversaciones importantes**
 
-Extensión de Chrome que actúa como asistente inteligente en tiempo real durante videollamadas de Google Meet. Escucha, analiza con IA y muestra sugerencias contextuales en un panel lateral.
-
 ![Versión](https://img.shields.io/badge/version-1.0.0--dev-purple)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![Chrome Extension](https://img.shields.io/badge/Chrome-MV3-blue)
@@ -11,268 +9,115 @@ Extensión de Chrome que actúa como asistente inteligente en tiempo real durant
 
 ---
 
-## 🎯 ¿Qué es Confident?
+## 💡 ¿Qué es Confident?
 
-Confident es una extensión de Chrome que te asiste en tiempo real durante conversaciones críticas. Utiliza IA (Claude Sonnet 4.6) para:
+**Confident** es una extensión de Chrome con IA que te asiste en tiempo real durante videollamadas críticas. Escucha la conversación, analiza con inteligencia artificial y te muestra sugerencias contextuales en un panel lateral para ayudarte a responder con confianza.
 
-- ✅ **Detectar señales clave** — Identifica preguntas STAR, objeciones de venta, cuestionamientos complejos
-- ✅ **Sugerir respuestas** — Adaptadas a tu perfil (Candidato, Vendedor, Defensor)
-- ✅ **Mostrar contexto** — Qué se está preguntando realmente y por qué
-- ✅ **Destacar keywords** — Palabras clave para incluir en tu respuesta
-- ✅ **Urgencia visual** — Sistema de 3 niveles (info/importante/crítico)
-
-### Los tres perfiles especializados
-
-| Perfil | Contexto | Señales que detecta |
-|--------|----------|---------------------|
-| **🎓 Candidato** | Entrevistas de trabajo | Preguntas behavioral (STAR), técnicas, salariales, motivacionales |
-| **💼 Vendedor** | Llamadas comerciales | Objeciones (precio/necesidad/confianza), señales de compra, cierre |
-| **🛡️ Defensor** | Presentaciones estratégicas | Preguntas complejas, cuestionamientos, desafíos de asunciones |
+Imagina tener un coach experto que entiende exactamente lo que te están preguntando y te sugiere cómo responder, pero sin interrumpir tu conversación. Eso es Confident.
 
 ---
 
-## 🚀 Funcionalidades principales
+## 🎯 Para quién es Confident
 
-### ✅ Implementado (MVP)
+### 🎓 **Candidatos en procesos de selección**
+**Contexto:** Estás en una entrevista de trabajo y necesitas responder con estructura y confianza.
+**Problema que resuelve:** Detecta preguntas behavioral (STAR), técnicas, motivacionales y salariales. Te sugiere marcos de respuesta como STAR/CAR, te recuerda incluir logros cuantificables y te ayuda a mantener el foco en tus fortalezas. Evita respuestas vagas o que te hagan parecer inseguro.
+**Objetivo:** Conseguir que destaques en la entrevista mostrando competencias claras y resultados concretos.
 
-**Core:**
-- ✅ Captura bidireccional de audio (tab + micrófono) con Web Audio API
-- ✅ Transcripción en tiempo real con Deepgram Nova-2
-- ✅ Análisis inteligente con Claude Sonnet 4.6 (Structured Outputs)
-- ✅ Panel lateral con sugerencias en <5 segundos
-- ✅ Sistema de urgencia visual (verde/amarillo/rojo)
+### 💼 **Vendedores en llamadas comerciales**
+**Contexto:** Estás en una llamada de ventas y el cliente plantea objeciones o dudas sobre el producto.
+**Problema que resuelve:** Identifica objeciones de precio, necesidad y confianza. Detecta señales de compra (momentos críticos donde el cliente está listo para cerrar) y te sugiere técnicas de cierre consultivo. Te ayuda a convertir objeciones en oportunidades y a no dejar pasar señales clave.
+**Objetivo:** Incrementar tu tasa de conversión cerrando más ventas con confianza y sin sonar agresivo.
 
-**Autenticación & Freemium:**
-- ✅ Sistema freemium completo con 3 niveles:
-  - **Anónimo**: 5 sesiones sin registro
-  - **Gratis**: 15 sesiones con cuenta Google
-  - **Pro**: Sesiones ilimitadas (lista de espera activa)
-- ✅ Google OAuth con Supabase Auth
-- ✅ Device fingerprinting anti-pirateo
-- ✅ Contador de sesiones en panel lateral
-- ✅ Paywalls suave (sesión 6) y duro (sesión 16)
-
-**Dashboard & Email:**
-- ✅ Dashboard con historial de sesiones
-- ✅ Transcripciones y sugerencias guardadas por sesión
-- ✅ Auto-selección de sesión al cerrar desde panel
-- ✅ Email automático con resumen al finalizar
-- ✅ Página de perfil para personalización opcional
-
-**UX & Compliance:**
-- ✅ Checkbox de consentimiento obligatorio (RGPD)
-- ✅ UI estilo Apple (SF Pro, minimalista, sombras sutiles)
-- ✅ Onboarding NO bloqueante (movido a /profile)
-- ✅ Analytics con Posthog (funnel completo)
-- ✅ Landing page + página de precios
-
-### 🔜 Próximas sesiones (Roadmap v1.0)
-
-**Sesión 16** — Políticas Legales (CRÍTICO para CWS):
-- 📄 Página `/privacy` con política de privacidad RGPD-compliant
-- 📄 Página `/terms` con términos de servicio
-- 🔗 Links en footer de landing page y dashboard
-
-**Sesión 17** — Assets Profesionales:
-- 🎨 Iconos de extensión (16px, 32px, 48px, 128px)
-- 📸 Screenshots para Chrome Web Store (1280x800)
-- 🖼️ Promotional tiles (440x280, 920x680, 1400x560)
-
-**Sesión 18-20** — Testing Exhaustivo:
-- ✅ Test matriz de navegadores (Chrome, Edge)
-- ✅ Test flujo freemium completo
-- ✅ Test audio en diferentes escenarios (muted, 2+ speakers)
-- ✅ Test latencia <5s en 10 sesiones consecutivas
-
-**Sesión 21-23** — Publicación Chrome Web Store:
-- 📦 Preparar package final (manifest v3 validated)
-- 📝 Descripción optimizada para CWS
-- 🚀 Enviar a revisión + monitorear aprobación
-
-**Sesión 24-27** (OPCIONAL - mientras revisión CWS):
-- 🌍 Soporte multi-platform (Teams, Zoom)
-- 📊 Dashboard analytics avanzado (métricas de rendimiento personal)
-- 🎓 Modo práctica (simulaciones sin estar en llamada)
+### 🛡️ **Defensores en presentaciones estratégicas**
+**Contexto:** Estás defendiendo un proyecto, propuesta o decisión ante stakeholders que cuestionan tus asunciones.
+**Problema que resuelve:** Descompone preguntas complejas en su esencia real (qué se pregunta vs qué se dice). Te muestra la intención detrás de cuestionamientos sobre riesgos, alternativas o datos. Te sugiere cómo estructurar respuestas que demuestren que has pensado en profundidad, sin divagar.
+**Objetivo:** Defender tus ideas con claridad, anticipando objeciones y comunicando decisiones de forma estratégica.
 
 ---
 
-## 📦 Stack Técnico
+## 📊 Stack Técnico
 
-### Frontend (Landing + Dashboard)
-- **Framework**: Next.js 15.3.9 (App Router, React Server Components)
-- **Estilos**: Tailwind CSS + diseño custom Apple-inspired
-- **Tipografía**: SF Pro Display (system font)
-- **Analytics**: Posthog EU (RGPD-compliant)
-
-### Extensión Chrome
-- **Manifest**: V3 (MV3)
-- **Audio**: Web Audio API + `chrome.tabCapture` + `getUserMedia`
-- **Arquitectura**: Vanilla JS (sin frameworks, máxima compatibilidad)
-- **Storage**: `chrome.storage.local` + `chrome.storage.session`
-- **Logging**: Sistema condicional (solo dev mode)
-
-### Backend (Serverless)
-- **Plataforma**: Vercel Edge Functions
-- **Database**: Supabase PostgreSQL (Frankfurt, EU)
-- **Auth**: Supabase Auth con Google OAuth
-- **Transcripción**: Deepgram Nova-2 (streaming WebSocket)
-- **IA**: Anthropic Claude Sonnet 4.6
-- **Email**: Resend (3K emails/mes gratis)
-- **CORS**: Configurado para extensión Chrome
+| Componente | Tecnología | Para qué se usa |
+|------------|-----------|-----------------|
+| **Interfaz web** | Next.js 15 + Tailwind CSS | Landing page, dashboard de sesiones y configuración de perfil |
+| **Extensión** | Chrome Manifest V3 | Captura audio, muestra sugerencias en panel lateral |
+| **Captura de audio** | Web Audio API + Chrome TabCapture | Escucha tu voz y la de los participantes en tiempo real |
+| **Transcripción** | Deepgram Nova-2 | Convierte el audio en texto al instante |
+| **Inteligencia Artificial** | Claude Sonnet 4.6 (Anthropic) | Analiza la conversación y genera sugerencias personalizadas |
+| **Base de datos** | Supabase PostgreSQL (EU) | Almacena transcripciones, sugerencias y tu historial |
+| **Autenticación** | Supabase Auth + Google OAuth | Inicio de sesión seguro con tu cuenta de Google |
+| **Email** | Resend | Envía transcripciones automáticas al finalizar sesión |
+| **Analytics** | Posthog (EU) | Métricas de uso (RGPD compliant) |
+| **Hosting** | Vercel | Servidor web con funciones serverless |
 
 ---
 
-## 🛠️ Instalación Local
+## 🚀 Evolución del Proyecto
 
-### Prerequisitos
+### **Sesión 1-3** — POC Audio + Transcripción en tiempo real
+Captura bidireccional de audio (tab + micrófono), mezcla de streams con Web Audio API, integración con Deepgram Nova-2 streaming.
 
-- Node.js 18+
-- npm o pnpm
-- Cuenta en Supabase (gratuita)
-- Cuenta en Anthropic (Claude API)
-- Cuenta en Deepgram ($200 crédito gratis)
-- Cuenta en Resend (3K emails/mes gratis)
-- Chrome browser
+### **Sesión 4-6** — Análisis IA + Panel Lateral
+Integración Claude Sonnet 4.6, 3 prompts especializados (Candidato/Vendedor/Defensor), panel lateral funcional con sugerencias y sistema de urgencia visual.
 
-### 1. Clonar repositorio
+### **Sesión 7-9** — Backend + Base de Datos
+Next.js API Routes en Vercel, Supabase PostgreSQL con RLS, schema completo (profiles, sessions, transcriptions, suggestions), Google OAuth.
 
-```bash
-git clone https://github.com/victorodri/Confident.git
-cd Confident
-```
+### **Sesión 10-12** — Freemium + Dashboard
+Sistema de límites (5 anónimas / 15 gratis / ∞ pro), device fingerprinting, paywalls suave y duro, dashboard con historial, email automático con transcripción.
 
-### 2. Instalar dependencias
+### **Sesión 13** — Fix Bugs Críticos + Smart Cards
+Endpoint `/api/usage` corregido, smart cards con lógica de urgencia 1/2/3, CSS diferenciado por urgencia (verde/amarillo/rojo), testing checklist creado.
 
-```bash
-npm install
-```
+### **Sesión 14** — Onboarding Personalizado
+Modal de onboarding Apple/Wispr Flow style, 3 campos de personalización (Descripción, Preocupaciones, Objetivos), endpoint `/api/profile/context`, columna `user_context` en base de datos.
 
-### 3. Configurar variables de entorno
+### **Sesión 15** — Fix Errores Críticos + UX Mejoras
+CORS configurado, funciones Supabase con `search_path` seguro, políticas RLS optimizadas, redirección automática al dashboard con sesión seleccionada, onboarding movido a `/profile` (reducción fricción UX).
 
-Copia `.env.example` a `.env.local`:
+### **Sesión 16** — Políticas Legales (RGPD + Chrome Web Store)
+Páginas `/privacy` y `/terms` creadas y RGPD-compliant, links en footer de landing y dashboard, diseño Apple-style con sticky header, secciones completas: datos, base legal, derechos ARCO, terceros, cookies.
 
-```bash
-cp .env.example .env.local
-```
+### **Sesión 17** — IA Contextual (Personalización de Sugerencias)
+Claude ahora usa el contexto del usuario (descripción, preocupaciones, objetivos) guardado en `/profile` para personalizar sugerencias. Inyección dinámica de contexto en system prompt, soporte para usuarios autenticados y anónimos.
 
-Completa las variables (ver `.env.example` para detalles):
+### **Sesión 18** — Assets Profesionales (Especificaciones de Diseño)
+ICON_DESIGN_SPECS.md creado con paleta de colores, specs para icon16/48/128, promotional tile 440x280, prompts para generadores IA listos, carpeta CHROME_WEB_STORE_ASSETS/ con checklist pre-publicación.
 
-```bash
-# Anthropic (Claude)
-ANTHROPIC_API_KEY=sk-ant-...
+### **Sesión 19** — Testing Exhaustivo Pre-Publicación (Code Review)
+TESTING_REPORT.md con 51 tests documentados, code review completo ejecutado (15/15 tests de código pasados), verificación endpoint `/api/usage`, smart cards logic, CSS styles, XSS protection, manifest.json, IA contextual.
 
-# Deepgram (Transcripción)
-DEEPGRAM_API_KEY=...
-NEXT_PUBLIC_DEEPGRAM_API_KEY=...
+### **Sesión 20** — Preparación Final para Publicación Chrome Web Store
+Manifest.json v1.0.0, CHROME_WEB_STORE_PUBLICATION.md con guía completa, descripción corta/detallada, justificación de permisos, proceso de publicación, checklist pre-publicación, métricas de éxito, roadmap v1.1.
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...  # SOLO servidor, NUNCA exponer
+### **Sesión 21** — Multi-plataforma (Google Meet, Teams, Zoom)
+Sistema de detección automática de plataforma (platforms.js), soporte para Google Meet, Microsoft Teams y Zoom, manifest.json con permisos extendidos, indicador visual de plataforma en panel.
 
-# Resend (Email)
-RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=onboarding@resend.dev
+### **Sesión 22** — Multi-idioma Extensión + Fix Audio Crítico
+Sistema de traducciones manual ES/EN, selector de idioma en popup y panel, traducciones en español e inglés (50+ keys), preferencia guardada en storage. **BUG CRÍTICO RESUELTO**: Audio de participantes silenciado al activar extensión (offscreen.js: tabSource conectado a audioCtx.destination).
 
-# Posthog (Analytics)
-NEXT_PUBLIC_POSTHOG_KEY=phc_...
-NEXT_PUBLIC_POSTHOG_HOST=https://eu.posthog.com
+### **Sesión 23** — Multi-idioma Web (next-intl)
+Configuración next-intl con locales ES/EN, rutas localizadas `/[locale]/`, traducciones completas en messages/es.json y messages/en.json, landing/pricing/privacy/terms traducidos, language selector en navbar, middleware integrado con Supabase auth. **Fix contador sesiones**: Trigger corregido de `usage_sessions` a `sessions`, función `handle_new_user()` actualizada con valores explícitos.
 
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-### 4. Configurar Supabase
-
-1. Crea un proyecto en [supabase.com](https://supabase.com)
-2. Ejecuta el schema: `supabase/schema.sql` en SQL Editor
-3. Aplica la migración de seguridad: `supabase/migrations/20260301_fix_security_issues.sql`
-4. Configura Google OAuth en Authentication → Providers → Google
-
-### 5. Cargar extensión en Chrome
-
-1. Abre Chrome → `chrome://extensions`
-2. Activa "Modo de desarrollador"
-3. Clic "Cargar extensión sin empaquetar"
-4. Selecciona la carpeta `extension/` del proyecto
-
-### 6. Ejecutar servidor de desarrollo
-
-```bash
-npm run dev
-```
-
-Abre [http://localhost:3000](http://localhost:3000)
-
-### 7. Probar el flujo completo
-
-1. Abre Google Meet (o crea una reunión de prueba)
-2. Clic en el icono de Confident en la barra de extensiones
-3. Selecciona un perfil (Candidato/Vendedor/Defensor)
-4. Marca el checkbox de consentimiento
-5. Clic "Iniciar sesión"
-6. El panel lateral se abre automáticamente
-7. Habla en la reunión y observa las sugerencias aparecer
+### **Sesión 24** — Fix Creación Automática de Perfiles (CRÍTICO)
+**Problema**: Trigger Supabase `on_auth_user_created` no funcionaba, usuarios sin perfil mostraban "0 sesiones". **Solución**: Backend safety net creado (`lib/ensure-profile.ts`), endpoints `/api/profile` y `/api/usage` garantizan creación automática de perfiles usando service role, eliminados 11 archivos SQL innecesarios.
 
 ---
 
-## 📁 Estructura del Proyecto
+## 🔜 Próximas Sesiones
 
-```
-confident/
-├── app/                          # Next.js App Router
-│   ├── page.tsx                  # Landing page
-│   ├── pricing/page.tsx          # Pricing + waitlist
-│   ├── dashboard/page.tsx        # Dashboard con sesiones
-│   ├── profile/page.tsx          # Personalización de perfil (NEW)
-│   ├── auth/                     # Login con Google OAuth
-│   └── api/                      # API Routes
-│       ├── analyze/route.ts      # Claude → sugerencias
-│       ├── sessions/             # CRUD sesiones
-│       ├── usage/route.ts        # Contador freemium
-│       ├── profile/context/      # Contexto de usuario
-│       ├── send-transcript/      # Email transcripciones
-│       └── waitlist/route.ts     # Lista de espera Pro
-│
-├── components/                   # Componentes React
-│   ├── landing/                  # Hero, HowItWorks, UseCases, Footer
-│   └── ui/                       # shadcn/ui components
-│
-├── lib/                          # Utilidades compartidas
-│   ├── claude.ts                 # Prompts + getSystemPrompt(profile)
-│   ├── supabase.ts               # Cliente browser
-│   ├── supabase-server.ts        # Cliente server
-│   ├── analytics.ts              # Posthog eventos
-│   └── constants.ts              # Límites freemium
-│
-├── extension/                    # Chrome Extension (MV3)
-│   ├── manifest.json             # Manifest V3
-│   ├── config.js                 # URLs centralizadas (dev/prod)
-│   ├── logger.js                 # Logging condicional
-│   ├── constants.js              # Constantes compartidas
-│   ├── device-fingerprint.js     # Anti-pirateo
-│   ├── background.js             # Service Worker principal
-│   ├── offscreen.js              # Audio pipeline + Deepgram
-│   ├── content-script.js         # Inyección en Meet
-│   ├── popup/                    # Popup de configuración
-│   │   ├── popup.html
-│   │   ├── popup.js              # Lógica: perfil + inicio sesión
-│   │   └── popup.css             # Apple Style
-│   └── side-panel/               # Panel lateral con sugerencias
-│       ├── panel.html
-│       ├── panel.js              # Renderizado de sugerencias
-│       └── panel.css             # Apple Style + urgencia visual
-│
-├── supabase/
-│   ├── schema.sql                # Schema completo con RLS
-│   └── migrations/               # Migraciones SQL
-│       └── 20260301_fix_security_issues.sql
-│
-├── CLAUDE.md                     # Referencia técnica (⭐ IMPORTANTE)
-├── PROGRESS.md                   # Estado actual + historial de sesiones
-├── TESTING_CHECKLIST.md          # Checklist pre-publicación
-└── README.md                     # Este archivo
-```
+### **Sesión 25** — Claude Multi-idioma (Sugerencias ES/EN) — *EN PROGRESO*
+Detectar idioma del usuario, modificar prompts de Claude para responder en español o inglés según preferencia, testing de sugerencias en ambos idiomas.
+
+### **Sesión 26-27** — Assets Finales + Screenshots
+Generar iconos profesionales (16x16, 48x48, 128x128, promotional tile 440x280), capturar 5 screenshots para Chrome Web Store.
+
+### **Sesión 28** — Testing Multi-plataforma/idioma Completo
+Probar extensión en Google Meet, Teams, Zoom, verificar funcionamiento en ES/EN, cross-testing de flujos completos.
+
+### **Sesión 29** — Publicación Chrome Web Store
+Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con descripción/screenshots/permisos, enviar a revisión.
 
 ---
 
@@ -285,213 +130,45 @@ confident/
 - ✅ **Row Level Security (RLS)** en todas las tablas Supabase
 - ✅ **Sin XSS** — Construcción manual del DOM (sin `innerHTML`)
 - ✅ **Security headers** — CSP, X-Frame-Options, HSTS en Next.js
-- ✅ **Logs solo en desarrollo** — Sistema de logging condicional
 - ✅ **CORS configurado** — Solo dominios autorizados
 
 ---
 
-## 📊 Métricas Clave (MVP)
+## 📈 Estado Actual del Proyecto
 
-| Métrica | Evento Posthog | Objetivo |
-|---------|----------------|----------|
-| **🎯 Principal** | `payment_cta_clicked` | Usuario hace clic en "Unirse a lista de espera Pro" |
-| Instalación | `extension_installed` | Usuario instala la extensión |
-| Primera sesión | `session_started` | Primera vez que inicia sesión |
-| Paywall soft | `paywall_soft_shown` | Usuario llega a sesión 6 (anónimo) |
-| Conversión soft | `paywall_soft_converted` | Usuario crea cuenta después del paywall |
-| Paywall hard | `paywall_hard_shown` | Usuario llega a sesión 16 (plan free) |
+**Versión:** 1.0.0-dev (Pre-lanzamiento)
+**Sesión completada:** 24/29 (83%)
+**Próxima sesión:** 25 — Claude Multi-idioma
+**Objetivo:** Publicación Chrome Web Store en Sesión 29
 
----
+### ✅ Implementado
+- Core funcional (audio, transcripción, análisis IA, panel lateral)
+- Sistema freemium completo (5/15/∞ sesiones)
+- Multi-plataforma (Google Meet, Teams, Zoom)
+- Multi-idioma web y extensión (ES/EN)
+- Dashboard con historial y transcripciones
+- Email automático al finalizar sesión
+- Políticas legales (Privacy, Terms)
+- IA contextual (personalización según perfil de usuario)
 
-## 📝 Historial de Desarrollo
-
-### Sesiones 1-12 — Fundamentos & Arquitectura MVP
-
-**Sesión 1-3** — POC Audio + Pipeline Transcripción:
-- ✅ Captura audio bidireccional (tab + micrófono)
-- ✅ Mezcla de streams con Web Audio API
-- ✅ WebSocket streaming con Deepgram Nova-2
-- ✅ Transcripciones en tiempo real
-
-**Sesión 4-6** — Análisis IA + Panel Lateral:
-- ✅ Integración Claude Sonnet 4.6 con Structured Outputs
-- ✅ 3 prompts especializados (Candidato, Vendedor, Defensor)
-- ✅ Panel lateral funcional con sugerencias
-- ✅ Sistema de feedback (👍/👎)
-
-**Sesión 7-9** — Backend + Base de Datos:
-- ✅ Next.js API Routes (Vercel Serverless)
-- ✅ Supabase PostgreSQL con RLS
-- ✅ Schema completo (profiles, sessions, transcriptions, suggestions)
-- ✅ Google OAuth con Supabase Auth
-
-**Sesión 10-12** — Freemium + Dashboard:
-- ✅ Sistema de límites (5/15/∞ sesiones)
-- ✅ Device fingerprinting para usuarios anónimos
-- ✅ Paywalls suave y duro
-- ✅ Dashboard con historial de sesiones
-- ✅ Email automático con transcripción
-
-### Sesión 13 — Fix Bugs Críticos (Smart Cards + Testing)
-
-**Problemas resueltos:**
-- ✅ Endpoint `/api/usage` verificado funcionando correctamente
-- ✅ Smart cards con lógica de urgencia 1/2/3 implementada
-- ✅ CSS diferenciado por urgencia (verde/amarillo/rojo)
-- ✅ Creado TESTING_CHECKLIST.md con matriz de tests
-
-**Mejoras UX:**
-- ✅ Bordes coloreados según urgencia
-- ✅ Backgrounds sutiles con gradientes
-- ✅ Animación pulse para urgencia crítica (nivel 3)
-- ✅ Badge visual "INFO/IMPORTANTE/CRÍTICO"
-
-### Sesión 14 — Onboarding Personalizado Apple/Wispr Flow Style
-
-**Funcionalidad:**
-- ✅ Modal de onboarding con diseño premium
-- ✅ 3 campos de personalización (Descripción, Preocupaciones, Objetivos)
-- ✅ Endpoint POST/GET `/api/profile/context`
-- ✅ Migración SQL: columna `user_context` en `profiles`
-- ✅ Botones Skip y Submit con animaciones suaves
-
-**Diseño:**
-- ✅ Backdrop con blur (12px)
-- ✅ Header degradado (purple → blue)
-- ✅ Textareas con focus states premium
-- ✅ Responsive design (mobile-friendly)
-
-### Sesión 15 — Fix Errores Extensión + Supabase + UX Mejoras
-
-**Errores críticos resueltos:**
-1. ✅ **"Failed to fetch" en todos los endpoints**
-   - Causa: CORS no configurado en Next.js
-   - Solución: Headers CORS añadidos en `next.config.js`
-   - Servidor reiniciado en `localhost:3000` con CORS funcionando
-
-2. ✅ **Funciones Supabase con "role mutable search_path"**
-   - Causa: Funciones sin `SET search_path`
-   - Solución: Migración `20260301_fix_security_issues.sql` creada
-   - Agregado `SET search_path = public` a `handle_new_user` e `increment_session_count`
-
-3. ✅ **Políticas RLS con re-evaluaciones innecesarias**
-   - Causa: Llamadas repetidas a `auth.uid()` en cada fila
-   - Solución: Función helper `auth.current_user_id()` con cache
-   - Reemplazado en todas las políticas RLS
-
-4. ✅ **Syntax error en popup.js (línea 375)**
-   - Causa: Extra closing brace al añadir logging
-   - Solución: Eliminado brace extra + verificado con `node -c`
-
-**Mejoras UX:**
-1. ✅ **Redirección automática al dashboard con sesión seleccionada**
-   - Panel pasa `session_id` en URL: `?session=UUID`
-   - Dashboard detecta parámetro y auto-selecciona sesión
-   - Loading contextual: "Cargando resumen de tu sesión..."
-
-2. ✅ **Contador de sesiones en panel lateral** (ya funcionaba desde Sesión 14)
-   - Errores CORS impedían que funcionara
-   - Ahora muestra correctamente:
-     - Anónimo: "X sesiones gratuitas. Regístrate para 10 más"
-     - Free (≤3 restantes): "X sesiones restantes. Ver planes Pro"
-     - Pro: No muestra contador (ilimitado)
-
-3. ✅ **Reducción de fricción UX — Onboarding movido al dashboard**
-   - Problema: Modal onboarding en panel lateral creaba fricción ANTES de mostrar valor
-   - Solución:
-     - Onboarding eliminado completamente del panel (HTML, CSS, JS)
-     - Nueva página `/profile` creada con formulario de personalización
-     - Link "Mi Perfil" añadido al header del dashboard
-     - Filosofía: **Primero mostrar valor (sugerencias), después personalizar**
-
-**Archivos modificados:**
-```
-next.config.js                     ← CORS headers
-extension/popup/popup.js           ← Error handling + syntax fix
-extension/side-panel/panel.js      ← Session redirect + onboarding removed
-extension/side-panel/panel.html    ← Onboarding HTML removed (líneas 23-94)
-extension/side-panel/panel.css     ← Onboarding CSS removed (290 líneas)
-app/dashboard/page.tsx             ← Auto-select session + profile link
-app/profile/page.tsx               ← NEW: Página de personalización
-app/api/profile/context/route.ts   ← JWT auth + legacy support
-supabase/migrations/20260301_...   ← Security fixes
-```
-
----
-
-## 🧪 Testing
-
-Ver `TESTING_CHECKLIST.md` para matriz completa de tests.
-
-### Test rápido del flujo freemium
-
-```bash
-# 1. Usuario anónimo (sesiones 1-5)
-# - Abrir popup → seleccionar perfil → iniciar 5 veces
-# - Sesión 6 → debe abrir /auth?reason=limit_soft
-
-# 2. Usuario autenticado (sesiones 6-15)
-# - Login con Google
-# - Iniciar 10 sesiones más
-# - Sesión 16 → debe abrir /pricing
-
-# 3. Plan Pro waitlist
-# - Clic "Unirse a lista de espera"
-# - Llenar formulario → debe enviar email
-```
-
-### Test endpoints
-
-```bash
-# Contador de sesiones
-curl "http://localhost:3000/api/usage?anonymous_id=xxx"
-
-# Análisis Claude
-curl -X POST http://localhost:3000/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Cuéntame sobre un proyecto difícil","profile":"candidato"}'
-
-# Sesiones del usuario
-curl "http://localhost:3000/api/sessions" \
-  -H "Authorization: Bearer <access_token>"
-```
-
----
-
-## 🚢 Deploy a Producción
-
-### Backend (Vercel)
-
-```bash
-vercel --prod
-```
-
-### Extensión Chrome
-
-1. Actualizar `manifest.json` version → `"1.0.0"`
-2. Actualizar `extension/config.js` con URL de producción
-3. Crear ZIP del folder `extension/`
-4. Subir a [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-
----
-
-## 📖 Documentación Adicional
-
-- **CLAUDE.md** — Documento de referencia técnica completa (⭐ CONSULTAR ANTES DE IMPLEMENTAR)
-- **PROGRESS.md** — Estado actual detallado + historial completo de sesiones
-- **TESTING_CHECKLIST.md** — Checklist pre-publicación Chrome Web Store
-- **.env.example** — Plantilla documentada de variables de entorno
+### ⏳ Pendiente
+- Claude multi-idioma (Sesión 25)
+- Assets profesionales finales (Sesión 26-27)
+- Testing exhaustivo multi-plataforma/idioma (Sesión 28)
+- Publicación Chrome Web Store (Sesión 29)
 
 ---
 
 ## 🤝 Contribución
 
-Este es un proyecto privado. Si tienes acceso y quieres contribuir:
+Este es un proyecto privado en desarrollo activo. Si tienes acceso al repositorio y quieres contribuir:
 
 1. Crea un branch desde `main`
-2. Haz tus cambios
-3. Actualiza `PROGRESS.md` al final de la sesión
-4. Crea un Pull Request
+2. Haz tus cambios siguiendo las guías en `CLAUDE.md`
+3. Actualiza `PROGRESS.md` al final de tu sesión
+4. Crea un Pull Request con descripción clara
+
+**Para instalación local y pruebas**, contacta a: **hola@tryconfident.com**
 
 ---
 
@@ -503,17 +180,10 @@ Este es un proyecto privado. Si tienes acceso y quieres contribuir:
 - **Fix futuro**: Migrar a AudioWorkletNode (Sesión futura)
 - **Prioridad**: Baja (funciona hasta Chrome 2027+)
 
-### Migración Supabase pendiente
-- **Descripción**: Migración `20260301_fix_security_issues.sql` debe aplicarse manualmente
-- **Impacto**: Warnings en Supabase Performance Advisor
-- **Acción**: Ejecutar en SQL Editor de Supabase Dashboard
-
----
-
-## 📧 Contacto
-
-- **Email**: hola@tryconfident.com
-- **GitHub**: [@victorodri](https://github.com/victorodri)
+### Testing manual pendiente
+- **Descripción**: Tests E2E en las 3 plataformas (Meet, Teams, Zoom) pendientes de ejecución
+- **Impacto**: Funcionalidad verificada en código, falta validación en producción
+- **Acción**: Ejecutar TESTING_REPORT.md completo antes de Sesión 29
 
 ---
 
@@ -523,4 +193,4 @@ Privado - Todos los derechos reservados © 2026 Confident
 
 ---
 
-**Desarrollado con Claude Code** 🤖 | **Última actualización**: Marzo 1, 2026 (Sesión 15)
+**Última actualización:** Marzo 3, 2026 (Sesión 24 - Fix Creación Automática de Perfiles)

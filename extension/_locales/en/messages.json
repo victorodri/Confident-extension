@@ -1,0 +1,158 @@
+{
+  "appName": {
+    "message": "Confident",
+    "description": "Application name"
+  },
+  "appDesc": {
+    "message": "Your silent confident in video calls. Real-time AI suggestions for interviews, sales and meetings.",
+    "description": "Application description"
+  },
+  "tagline": {
+    "message": "Your confident in every conversation",
+    "description": "Popup tagline"
+  },
+  "sessionActive": {
+    "message": "Active session",
+    "description": "Active session status"
+  },
+  "selectProfile": {
+    "message": "Select your profile",
+    "description": "Profile selector label"
+  },
+  "profileCandidate": {
+    "message": "Candidate",
+    "description": "Candidate profile"
+  },
+  "profileCandidateDesc": {
+    "message": "Job interviews",
+    "description": "Candidate profile description"
+  },
+  "profileSales": {
+    "message": "Salesperson",
+    "description": "Salesperson profile"
+  },
+  "profileSalesDesc": {
+    "message": "Sales calls",
+    "description": "Salesperson profile description"
+  },
+  "profileDefender": {
+    "message": "Defender",
+    "description": "Defender profile"
+  },
+  "profileDefenderDesc": {
+    "message": "Technical meetings",
+    "description": "Defender profile description"
+  },
+  "consentLabel": {
+    "message": "I have informed participants that this conversation will be transcribed and obtained their consent.",
+    "description": "Consent checkbox label"
+  },
+  "participantEmailsLabel": {
+    "message": "Participant emails (optional)",
+    "description": "Emails field label"
+  },
+  "participantEmailsHint": {
+    "message": "Transcript will be sent at the end",
+    "description": "Emails field hint"
+  },
+  "participantEmailsPlaceholder": {
+    "message": "email1@example.com, email2@example.com",
+    "description": "Emails field placeholder"
+  },
+  "requestMicButton": {
+    "message": "🎤 Allow microphone access",
+    "description": "Allow microphone button"
+  },
+  "startButton": {
+    "message": "Start session",
+    "description": "Start session button"
+  },
+  "stopButton": {
+    "message": "Stop session",
+    "description": "Stop session button"
+  },
+  "openPanelButton": {
+    "message": "Open side panel →",
+    "description": "Open panel button"
+  },
+  "notInPlatform": {
+    "message": "Open a video call on:",
+    "description": "Not on supported platform message"
+  },
+  "platformGoogleMeet": {
+    "message": "🎥 Google Meet",
+    "description": "Google Meet"
+  },
+  "platformTeams": {
+    "message": "💼 Microsoft Teams",
+    "description": "Microsoft Teams"
+  },
+  "platformZoom": {
+    "message": "📹 Zoom",
+    "description": "Zoom"
+  },
+  "listening": {
+    "message": "Listening...",
+    "description": "Listening status"
+  },
+  "processing": {
+    "message": "Processing...",
+    "description": "Processing status"
+  },
+  "sessionHistory": {
+    "message": "Session history",
+    "description": "History title"
+  },
+  "noSuggestionsYet": {
+    "message": "No suggestions yet. Speak during the video call to receive assistance.",
+    "description": "No suggestions yet"
+  },
+  "sessionCounter": {
+    "message": "free sessions",
+    "description": "Session counter"
+  },
+  "sessionCounterRegister": {
+    "message": "Sign up for 10 more",
+    "description": "Register link in counter"
+  },
+  "sessionCounterUpgrade": {
+    "message": "View Pro plans",
+    "description": "Upgrade link in counter"
+  },
+  "sessionCounterRemaining": {
+    "message": "sessions remaining",
+    "description": "Sessions remaining"
+  },
+  "sessionCounterLimitReached": {
+    "message": "Limit reached",
+    "description": "Session limit reached"
+  },
+  "errorGeneric": {
+    "message": "Error processing request",
+    "description": "Generic error"
+  },
+  "errorServer": {
+    "message": "Server error. Verify that npm run dev is running.",
+    "description": "Server error"
+  },
+  "errorNoProfile": {
+    "message": "Select a profile before starting",
+    "description": "No profile selected error"
+  },
+  "errorNoConsent": {
+    "message": "You must check the consent checkbox",
+    "description": "No consent error"
+  },
+  "sessionInactive": {
+    "message": "No active session",
+    "description": "Inactive session status"
+  },
+  "statusActive": {
+    "message": "Active",
+    "description": "Active status suffix"
+  },
+  "noSuggestionsPlaceholder": {
+    "message": "No suggestions yet",
+    "description": "Placeholder when no suggestions"
+  }
+}

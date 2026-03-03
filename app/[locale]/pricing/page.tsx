@@ -6,8 +6,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Footer } from '@/components/landing/footer';
 import { analytics } from '@/lib/analytics';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
+import { LanguageSelector } from '@/components/language-selector';
 
 export default function PricingPage() {
+  const t = useTranslations('pricing');
+  const tCommon = useTranslations('common');
+  const params = useParams();
+  const locale = params.locale as string;
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [waitlistData, setWaitlistData] = useState({ name: '', email: '' });
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
@@ -22,7 +29,7 @@ export default function PricingPage() {
       setShowWaitlist(true);
     } else {
       // Plan Free - redirigir a auth para instalar extensión
-      window.location.href = '/auth';
+      window.location.href = `/${locale}/auth`;
     }
   };
 
@@ -55,57 +62,57 @@ export default function PricingPage() {
 
   const plans = [
     {
-      name: 'Anónimo',
-      price: '€0',
-      period: 'sin registro',
-      description: 'Prueba Confident sin crear cuenta',
+      name: t('anonymous.name'),
+      price: t('anonymous.price'),
+      period: t('anonymous.period'),
+      description: t('anonymous.description'),
       features: [
-        '5 sesiones gratuitas',
-        'Sin necesidad de crear cuenta',
-        '3 perfiles disponibles',
-        'Sugerencias en tiempo real',
-        'Transcripciones básicas',
+        t('anonymous.features.0'),
+        t('anonymous.features.1'),
+        t('anonymous.features.2'),
+        t('anonymous.features.3'),
+        t('anonymous.features.4'),
       ],
-      cta: 'Empezar ahora',
+      cta: t('anonymous.cta'),
       highlighted: false,
       plan: 'free' as const,
       badge: null
     },
     {
-      name: 'Gratis',
-      price: '€0',
-      period: 'siempre',
-      description: 'Perfecto para probar Confident',
+      name: t('free.name'),
+      price: t('free.price'),
+      period: t('free.period'),
+      description: t('free.description'),
       features: [
-        '15 sesiones totales',
-        '5 anónimas + 10 con Google',
-        '3 perfiles (Candidato, Vendedor, Defensor)',
-        'Sugerencias en tiempo real',
-        'Transcripciones por email',
-        'Historial de sesiones',
+        t('free.features.0'),
+        t('free.features.1'),
+        t('free.features.2'),
+        t('free.features.3'),
+        t('free.features.4'),
+        t('free.features.5'),
       ],
-      cta: 'Crear cuenta gratis',
+      cta: t('free.cta'),
       highlighted: false,
       plan: 'free' as const,
-      badge: 'Recomendado'
+      badge: t('free.badge')
     },
     {
-      name: 'Pro',
-      price: '€19',
-      period: '/mes',
-      description: 'Para quienes tienen conversaciones críticas frecuentes',
+      name: t('pro.name'),
+      price: t('pro.price'),
+      period: t('pro.period'),
+      description: t('pro.description'),
       features: [
-        'Sesiones ilimitadas',
-        'Todo lo de Gratis, más:',
-        'Analytics de rendimiento',
-        'Modo practice (próximamente)',
-        'Soporte prioritario',
-        'Acceso anticipado a nuevas features',
+        t('pro.features.0'),
+        t('pro.features.1'),
+        t('pro.features.2'),
+        t('pro.features.3'),
+        t('pro.features.4'),
+        t('pro.features.5'),
       ],
-      cta: 'Unirse a lista de espera',
+      cta: t('pro.cta'),
       highlighted: true,
       plan: 'pro' as const,
-      badge: 'Próximamente'
+      badge: t('pro.badge')
     },
   ];
 
@@ -115,9 +122,9 @@ export default function PricingPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50 p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-2xl">Plan Pro — Lista de espera</CardTitle>
+            <CardTitle className="text-2xl">{t('waitlist.title')}</CardTitle>
             <CardDescription>
-              Confident Pro estará disponible pronto. Déjanos tu email y serás de los primeros en saberlo.
+              {t('waitlist.subtitle')}
             </CardDescription>
           </CardHeader>
 
@@ -125,7 +132,7 @@ export default function PricingPage() {
             <form onSubmit={handleWaitlistSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
-                  Nombre
+                  {t('waitlist.nameLabel')}
                 </label>
                 <input
                   id="name"
@@ -134,13 +141,13 @@ export default function PricingPage() {
                   value={waitlistData.name}
                   onChange={(e) => setWaitlistData({ ...waitlistData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="Tu nombre"
+                  placeholder={t('waitlist.namePlaceholder')}
                 />
               </div>
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
-                  Email
+                  {t('waitlist.emailLabel')}
                 </label>
                 <input
                   id="email"
@@ -149,13 +156,13 @@ export default function PricingPage() {
                   value={waitlistData.email}
                   onChange={(e) => setWaitlistData({ ...waitlistData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="tu@email.com"
+                  placeholder={t('waitlist.emailPlaceholder')}
                 />
               </div>
 
               <div className="bg-purple-50 border border-purple-200 rounded-md p-3">
                 <p className="text-sm text-purple-800">
-                  <strong>€19/mes</strong> — Sesiones ilimitadas + analytics + soporte prioritario
+                  {t('waitlist.priceInfo')}
                 </p>
               </div>
 
@@ -167,14 +174,14 @@ export default function PricingPage() {
                   onClick={() => setShowWaitlist(false)}
                   disabled={submitting}
                 >
-                  Cancelar
+                  {t('waitlist.cancelButton')}
                 </Button>
                 <Button
                   type="submit"
                   className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                   disabled={submitting}
                 >
-                  {submitting ? 'Enviando...' : 'Unirme a la lista'}
+                  {submitting ? t('waitlist.submittingButton') : t('waitlist.submitButton')}
                 </Button>
               </div>
             </form>
@@ -195,32 +202,32 @@ export default function PricingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <CardTitle className="text-2xl">¡Estás en la lista! 🎉</CardTitle>
+            <CardTitle className="text-2xl">{t('waitlistSuccess.title')}</CardTitle>
             <CardDescription className="text-base mt-2">
-              Te avisaremos por email cuando Confident Pro esté disponible.
+              {t('waitlistSuccess.subtitle')}
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-purple-800">
-                Mientras tanto, puedes seguir usando el <strong>plan gratuito</strong> (15 sesiones).
+                {t('waitlistSuccess.freePlanInfo')}
               </p>
             </div>
 
             <div className="flex flex-col gap-3">
               <Button
                 className="w-full"
-                onClick={() => window.location.href = '/auth'}
+                onClick={() => window.location.href = `/${locale}/auth`}
               >
-                Crear cuenta gratuita
+                {t('waitlistSuccess.createFreeButton')}
               </Button>
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => window.location.href = '/'}
+                onClick={() => window.location.href = `/${locale}`}
               >
-                Volver al inicio
+                {t('waitlistSuccess.backButton')}
               </Button>
             </div>
           </CardContent>
@@ -234,12 +241,15 @@ export default function PricingPage() {
       {/* Navbar */}
       <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="font-bold text-xl text-slate-900">
-            Confident
+          <Link href={`/${locale}`} className="font-bold text-xl text-slate-900">
+            {tCommon('appName')}
           </Link>
-          <Link href="/" className="text-sm text-slate-600 hover:text-slate-900">
-            ← Volver
-          </Link>
+          <div className="flex items-center gap-4">
+            <LanguageSelector />
+            <Link href={`/${locale}`} className="text-sm text-slate-600 hover:text-slate-900">
+              {t('backLink')}
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -250,10 +260,10 @@ export default function PricingPage() {
             {/* Header */}
             <div className="text-center mb-16">
               <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-                Planes y precios
+                {t('title')}
               </h1>
               <p className="text-lg text-slate-600">
-                Empieza sin registro. Crea cuenta cuando necesites más sesiones.
+                {t('subtitle')}
               </p>
             </div>
 
@@ -326,43 +336,43 @@ export default function PricingPage() {
             {/* FAQ */}
             <div className="border-t pt-16">
               <h2 className="text-2xl font-bold text-slate-900 mb-8 text-center">
-                Preguntas frecuentes
+                {t('faqTitle')}
               </h2>
 
               <div className="space-y-6 max-w-2xl mx-auto">
                 <div>
                   <h3 className="font-semibold text-slate-900 mb-2">
-                    ¿Por qué 15 sesiones y no ilimitadas en el plan gratuito?
+                    {t('faq.q1.question')}
                   </h3>
                   <p className="text-slate-600">
-                    Queremos que pruebes Confident sin compromiso, pero los costos de IA (Claude + Deepgram) son significativos. 15 sesiones son suficientes para validar si te sirve.
+                    {t('faq.q1.answer')}
                   </p>
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-slate-900 mb-2">
-                    ¿Puedo cancelar cuando quiera?
+                    {t('faq.q2.question')}
                   </h3>
                   <p className="text-slate-600">
-                    Sí, sin penalización. Cancela desde tu dashboard en cualquier momento.
+                    {t('faq.q2.answer')}
                   </p>
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-slate-900 mb-2">
-                    ¿Qué pasa con mis datos si cancelo?
+                    {t('faq.q3.question')}
                   </h3>
                   <p className="text-slate-600">
-                    Puedes eliminarlos completamente desde el dashboard o solicitarlo a hola@tryconfident.com. Cumplimos con RGPD (derecho ARCO).
+                    {t('faq.q3.answer')}
                   </p>
                 </div>
 
                 <div>
                   <h3 className="font-semibold text-slate-900 mb-2">
-                    ¿Habrá plan para equipos?
+                    {t('faq.q4.question')}
                   </h3>
                   <p className="text-slate-600">
-                    Sí, estamos trabajando en un plan Teams (€49/mes para 5 usuarios). Si te interesa, escríbenos a hola@tryconfident.com.
+                    {t('faq.q4.answer')}
                   </p>
                 </div>
               </div>
@@ -371,7 +381,7 @@ export default function PricingPage() {
         </section>
       </main>
 
-      <Footer />
+      <Footer locale={locale} />
     </div>
   );
 }

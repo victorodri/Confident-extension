@@ -47,12 +47,18 @@ body {
 
 .header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   background: var(--bg);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .logo {
@@ -60,6 +66,29 @@ body {
   font-weight: 600;
   color: var(--text);
   letter-spacing: -0.5px;
+}
+
+.language-selector {
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text);
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.language-selector:hover {
+  background: var(--bg-hover);
+  border-color: #aeaeb2;
+}
+
+.language-selector:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .session-status {

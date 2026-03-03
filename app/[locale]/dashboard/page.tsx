@@ -70,15 +70,24 @@ export default function DashboardPage() {
 
     setUser(session.user);
 
-    // Obtener perfil
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
+    // Obtener perfil (garantizar que existe)
+    let profileData: any = null;
+    try {
+      const profileResponse = await fetch('/api/profile', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
 
-    if (profileData) {
-      setProfile(profileData);
+      if (profileResponse.ok) {
+        profileData = await profileResponse.json();
+        setProfile(profileData);
+        console.log('[Dashboard] Perfil obtenido/creado:', profileData);
+      } else {
+        console.error('[Dashboard] Error obteniendo perfil:', profileResponse.status);
+      }
+    } catch (error) {
+      console.error('[Dashboard] Error fetching profile:', error);
     }
 
     // Obtener sesiones
@@ -101,11 +110,16 @@ export default function DashboardPage() {
 
     // Obtener contador de sesiones
     try {
-      const { data: { anonymous_id } } = await supabase.auth.getUser();
-      const usageResponse = await fetch(`/api/usage?anonymous_id=${profileData?.anonymous_id || session.user.id}`);
+      const usageResponse = await fetch('/api/usage', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
 
       if (usageResponse.ok) {
         const usageData = await usageResponse.json();
+        console.log('[Dashboard] Usage data:', usageData);
+
         if (usageData.user_type === 'pro') {
           setRemainingSessions(null); // Pro es ilimitado
         } else {

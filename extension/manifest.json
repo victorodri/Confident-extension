@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Confident",
+  "name": "__MSG_appName__",
   "version": "1.0.0",
-  "description": "Tu confidente silencioso durante videollamadas. Sugerencias IA en tiempo real para entrevistas, ventas y reuniones.",
+  "description": "__MSG_appDesc__",
+  "default_locale": "es",
 
   "permissions": [
     "tabCapture",
