@@ -178,12 +178,23 @@ const PROMPTS: Record<UserProfile, string> = {
   defensor: PROMPT_DEFENSOR,
 };
 
-export function getSystemPrompt(profile: UserProfile, userContext?: UserContext | null): string {
+export function getSystemPrompt(
+  profile: UserProfile,
+  userContext?: UserContext | null,
+  language?: 'es' | 'en'
+): string {
   const basePrompt = PROMPTS[profile];
+  const userLanguage = language || 'es'; // Default español
 
-  // Si hay contexto personalizado del usuario, añadirlo antes del COMMON_SUFFIX
+  // Instrucción de idioma según preferencia del usuario
+  const languageInstruction = userLanguage === 'en'
+    ? `\n\n──────────────────────────────────────────────\nLANGUAGE: ENGLISH\n──────────────────────────────────────────────\n\nIMPORTANT: You MUST respond in English for ALL fields:\n- "suggestion" → English\n- "what_is_being_asked" → English\n- "keywords" → English\n\nIf the transcription is in Spanish, analyze it but ALWAYS answer in English.\n`
+    : `\n\n──────────────────────────────────────────────\nIDIOMA: ESPAÑOL\n──────────────────────────────────────────────\n\nIMPORTANTE: Debes responder en ESPAÑOL en TODOS los campos:\n- "suggestion" → Español\n- "what_is_being_asked" → Español\n- "keywords" → Español\n\nSi la transcripción está en inglés, analízala pero SIEMPRE responde en español.\n`;
+
+  // Si hay contexto personalizado del usuario, añadirlo
+  let contextSection = '';
   if (userContext && (userContext.description || userContext.concerns || userContext.goals)) {
-    const contextSection = `
+    contextSection = `
 
 ──────────────────────────────────────────────
 CONTEXTO PERSONALIZADO DEL USUARIO
@@ -195,11 +206,9 @@ y ayúdale a alcanzar sus objetivos concretos. Adapta el lenguaje y las recomend
 nivel de experiencia y situación particular.
 
 `;
-    return basePrompt + contextSection + COMMON_SUFFIX;
   }
 
-  // Sin contexto personalizado, usar prompt estándar
-  return basePrompt + COMMON_SUFFIX;
+  return basePrompt + contextSection + languageInstruction + COMMON_SUFFIX;
 }
 
 // ─────────────────────────────────────────────
@@ -212,8 +221,43 @@ const SESSION_SUMMARY_PROFILES: Record<UserProfile, string> = {
   defensor: 'asesor estratégico experto en argumentación y defensa de posiciones',
 };
 
-export function getSessionSummaryPrompt(profile: UserProfile): string {
+export function getSessionSummaryPrompt(profile: UserProfile, language?: 'es' | 'en'): string {
   const expertRole = SESSION_SUMMARY_PROFILES[profile];
+  const userLanguage = language || 'es';
+
+  if (userLanguage === 'en') {
+    return `
+You are an ${expertRole}. You just listened to a complete conversation from a ${profile}.
+
+Analyze the transcription and generate a structured summary that helps the user improve.
+
+RESPOND IN JSON with this exact structure:
+
+{
+  "executive_summary": "2-3 paragraphs: What happened in this conversation? What was the general tone? How did the user perform? Be honest and constructive.",
+  "key_points": [
+    "The 5-7 most important moments of the conversation",
+    "Critical signals detected",
+    "Decisions made or key information revealed"
+  ],
+  "recommendations": [
+    "What to do differently next time (concrete action)",
+    "Specific areas for improvement with examples",
+    "Tactics to apply in future conversations"
+  ],
+  "learnings": "1-2 paragraphs: Insights about performance. Observed patterns. Strengths to leverage. Maintain a coaching tone: direct, useful, motivating."
+}
+
+RULES:
+- ALWAYS respond in ENGLISH regardless of transcription language
+- Be specific: mention concrete moments from the conversation
+- Be honest but constructive: point out mistakes as improvement opportunities
+- key_points: minimum 5, maximum 7 points
+- recommendations: minimum 3, maximum 5 actions
+- DO NOT invent information not in the transcription
+- If the conversation was brief or without clear signals, say so honestly
+`;
+  }
 
   return `
 Eres un ${expertRole}. Acabas de escuchar una conversación completa de ${profile}.
@@ -238,7 +282,7 @@ RESPONDE EN JSON con esta estructura exacta:
 }
 
 REGLAS:
-- Detecta el idioma de la transcripción y responde en ese mismo idioma
+- Responde SIEMPRE en ESPAÑOL sin importar el idioma de la transcripción
 - Sé específico: menciona momentos concretos de la conversación
 - Sé honesto pero constructivo: señala errores como oportunidades de mejora
 - key_points: mínimo 5, máximo 7 puntos

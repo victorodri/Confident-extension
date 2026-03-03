@@ -1151,17 +1151,80 @@ Cualquier endpoint llama ensureUserProfile() → ✅ Perfil garantizado
 
 ---
 
+## ✅ Sesión 25 completada — Claude Multi-idioma (Sugerencias ES/EN)
+
+### Funcionalidad implementada:
+
+**Claude ahora responde en el idioma preferido del usuario (Español o Inglés)**:
+
+1. **lib/claude.ts modificado**:
+   - `getSystemPrompt()` acepta parámetro opcional `language: 'es' | 'en'`
+   - Instrucciones de idioma explícitas añadidas al system prompt
+   - Si `language='en'` → Claude responde TODO en inglés (suggestion, what_is_being_asked, keywords)
+   - Si `language='es'` → Claude responde TODO en español
+   - Análisis de transcripción independiente del idioma de salida
+
+2. **getSessionSummaryPrompt() modificado**:
+   - Acepta parámetro `language` opcional
+   - Resúmenes de sesión en español o inglés según preferencia
+   - Estructura JSON adaptada a cada idioma
+
+3. **app/api/analyze/route.ts actualizado**:
+   - Acepta parámetro `language` del request body
+   - Default: español ('es')
+   - Pasa idioma a `getSystemPrompt(activeProfile, userContext, userLanguage)`
+   - Logging de idioma detectado
+
+4. **extension/background.js modificado**:
+   - Obtiene `user_language` de `chrome.storage.local`
+   - Default: 'es' si no está configurado
+   - Envía `language` en el body de `/api/analyze`
+   - Sincronizado con selector de idioma del panel/popup
+
+### Flujo completo:
+
+```
+Usuario selecciona idioma en panel/popup → Guardado en chrome.storage.local (user_language: 'es' o 'en')
+↓
+Nueva transcripción → background.js obtiene user_language de storage
+↓
+POST /api/analyze con { text, profile, context, anonymous_id, language: 'es' | 'en' }
+↓
+lib/claude.ts → getSystemPrompt(profile, userContext, language)
+↓
+System prompt incluye instrucción explícita: "ALWAYS respond in ENGLISH" o "Responde SIEMPRE en ESPAÑOL"
+↓
+Claude analiza y responde en el idioma correcto
+↓
+Panel muestra sugerencia en español o inglés según preferencia del usuario
+```
+
+### Archivos modificados:
+
+```
+lib/claude.ts                       ← Añadido soporte multi-idioma en prompts
+app/api/analyze/route.ts            ← Acepta y procesa parámetro language
+extension/background.js             ← Obtiene user_language y lo envía al API
+```
+
+### Testing pendiente:
+
+- ⏳ Cambiar idioma a inglés en panel
+- ⏳ Iniciar sesión y verificar que sugerencias aparecen en inglés
+- ⏳ Cambiar de vuelta a español y verificar sugerencias en español
+- ⏳ Verificar que el resumen de sesión se genera en el idioma correcto
+
+---
+
 ## Próxima sesión
 
-Sesión: 25 — Claude Multi-idioma (Sugerencias ES/EN)
-Objetivo: Claude detecta idioma y responde en ES o EN
-Duración estimada: 1-2 horas
-Primer archivo: lib/claude.ts
+Sesión: 26 — Assets Profesionales Finales (Iconos + Promotional Tile)
+Objetivo: Generar iconos profesionales y promotional tile para Chrome Web Store
+Duración estimada: 1 hora
+Herramientas: Generador IA (DALL-E, Midjourney) o Figma
 
-**IMPORTANTE**: Solo continuar con Sesión 25 DESPUÉS de que se verifique que la creación automática de perfiles funciona correctamente.
-
-**Tareas Sesión 25**:
-1. Detectar idioma del usuario (browser locale o preferencia guardada)
-2. Modificar prompts de Claude para responder en idioma correcto
-3. Añadir instrucción "Responde SIEMPRE en [idioma]" a system prompt
-4. Testing: Verificar sugerencias en español e inglés
+**Tareas Sesión 26**:
+1. Generar icon16.png, icon48.png, icon128.png usando prompts de ICON_DESIGN_SPECS.md
+2. Crear promotional tile 440x280px
+3. Reemplazar placeholders en extension/icons/
+4. Verificar en manifest.json que las rutas son correctas

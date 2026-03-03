@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text, profile, context, session_type, anonymous_id } = body;
+    const { text, profile, context, session_type, anonymous_id, language } = body;
 
     // Validar campos obligatorios
     if (!text || typeof text !== 'string') {
@@ -16,6 +16,10 @@ export async function POST(request: Request) {
       profile === 'candidato' || profile === 'vendedor' || profile === 'defensor'
         ? profile
         : 'candidato';
+
+    // Idioma del usuario (default: español)
+    const userLanguage: 'es' | 'en' = language === 'en' ? 'en' : 'es';
+    console.log('[/api/analyze] User language:', userLanguage);
 
     // Obtener contexto personalizado del usuario (si existe)
     let userContext: UserContext | null = null;
@@ -59,7 +63,7 @@ export async function POST(request: Request) {
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 350,
-      system: getSystemPrompt(activeProfile, userContext),
+      system: getSystemPrompt(activeProfile, userContext, userLanguage),
       output_config: {
         format: {
           type: 'json_schema',

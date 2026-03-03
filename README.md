@@ -103,12 +103,12 @@ Configuración next-intl con locales ES/EN, rutas localizadas `/[locale]/`, trad
 ### **Sesión 24** — Fix Creación Automática de Perfiles (CRÍTICO)
 **Problema**: Trigger Supabase `on_auth_user_created` no funcionaba, usuarios sin perfil mostraban "0 sesiones". **Solución**: Backend safety net creado (`lib/ensure-profile.ts`), endpoints `/api/profile` y `/api/usage` garantizan creación automática de perfiles usando service role, eliminados 11 archivos SQL innecesarios.
 
+### **Sesión 25** — Claude Multi-idioma (Sugerencias ES/EN)
+Claude responde en español o inglés según preferencia del usuario. Modificado `lib/claude.ts` con parámetro `language`, instrucciones explícitas en system prompt, `app/api/analyze` acepta idioma, `background.js` envía `user_language` desde storage. Sugerencias totalmente localizadas (suggestion, what_is_being_asked, keywords).
+
 ---
 
 ## 🔜 Próximas Sesiones
-
-### **Sesión 25** — Claude Multi-idioma (Sugerencias ES/EN) — *EN PROGRESO*
-Detectar idioma del usuario, modificar prompts de Claude para responder en español o inglés según preferencia, testing de sugerencias en ambos idiomas.
 
 ### **Sesión 26-27** — Assets Finales + Screenshots
 Generar iconos profesionales (16x16, 48x48, 128x128, promotional tile 440x280), capturar 5 screenshots para Chrome Web Store.
@@ -137,8 +137,8 @@ Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con
 ## 📈 Estado Actual del Proyecto
 
 **Versión:** 1.0.0-dev (Pre-lanzamiento)
-**Sesión completada:** 24/29 (83%)
-**Próxima sesión:** 25 — Claude Multi-idioma
+**Sesión completada:** 25/29 (86%)
+**Próxima sesión:** 26 — Assets Profesionales Finales
 **Objetivo:** Publicación Chrome Web Store en Sesión 29
 
 ### ✅ Implementado
@@ -146,13 +146,14 @@ Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con
 - Sistema freemium completo (5/15/∞ sesiones)
 - Multi-plataforma (Google Meet, Teams, Zoom)
 - Multi-idioma web y extensión (ES/EN)
+- **Multi-idioma Claude IA (sugerencias ES/EN)** — NUEVO ✨
 - Dashboard con historial y transcripciones
 - Email automático al finalizar sesión
 - Políticas legales (Privacy, Terms)
 - IA contextual (personalización según perfil de usuario)
+- Creación automática de perfiles (backend safety net)
 
 ### ⏳ Pendiente
-- Claude multi-idioma (Sesión 25)
 - Assets profesionales finales (Sesión 26-27)
 - Testing exhaustivo multi-plataforma/idioma (Sesión 28)
 - Publicación Chrome Web Store (Sesión 29)
