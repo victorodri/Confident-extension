@@ -106,12 +106,15 @@ Configuración next-intl con locales ES/EN, rutas localizadas `/[locale]/`, trad
 ### **Sesión 25** — Claude Multi-idioma (Sugerencias ES/EN)
 Claude responde en español o inglés según preferencia del usuario. Modificado `lib/claude.ts` con parámetro `language`, instrucciones explícitas en system prompt, `app/api/analyze` acepta idioma, `background.js` envía `user_language` desde storage. Sugerencias totalmente localizadas (suggestion, what_is_being_asked, keywords).
 
+### **Sesión 26** — Assets Profesionales Chrome Web Store
+Iconos profesionales implementados (16x16, 48x48, 128x128), promotional tile 440x280 creado desde diseños en `/visual/`, `ICON_DESIGN_SPECS.md` documentado con paleta de colores y prompts IA, checklist pre-publicación 56% completado.
+
 ---
 
 ## 🔜 Próximas Sesiones
 
-### **Sesión 26-27** — Assets Finales + Screenshots
-Generar iconos profesionales (16x16, 48x48, 128x128, promotional tile 440x280), capturar 5 screenshots para Chrome Web Store.
+### **Sesión 27** — Screenshots Chrome Web Store
+Capturar 3-5 screenshots profesionales (1280x800) para Chrome Web Store listing.
 
 ### **Sesión 28** — Testing Multi-plataforma/idioma Completo
 Probar extensión en Google Meet, Teams, Zoom, verificar funcionamiento en ES/EN, cross-testing de flujos completos.
@@ -137,8 +140,8 @@ Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con
 ## 📈 Estado Actual del Proyecto
 
 **Versión:** 0.1.0-dev (Desarrollo)
-**Sesión completada:** 25/29 (86%)
-**Próxima sesión:** 26 — Assets Profesionales Finales
+**Sesión completada:** 26/29 (90%)
+**Próxima sesión:** 27 — Screenshots Chrome Web Store
 **Objetivo:** Publicación Chrome Web Store en Sesión 29
 
 ### ✅ Implementado
