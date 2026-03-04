@@ -1454,3 +1454,121 @@ Herramientas: CleanShot X (Mac) o ShareX (Windows) + Excalidraw
 6. Redimensionar a 1280x800px
 7. Anotar con flechas/texto si es necesario
 8. Guardar en CHROME_WEB_STORE_ASSETS/screenshots/
+
+---
+
+## ✅ Sesión 27 preparada — Screenshots Chrome Web Store (Documentación)
+
+### Documentación creada:
+
+**Estructura de screenshots lista para captura**:
+
+1. **Carpeta creada**: `CHROME_WEB_STORE_ASSETS/screenshots/`
+
+2. **README.md completo** con especificaciones:
+   - ✅ Tamaños requeridos (1280x800px)
+   - ✅ 5 screenshots documentados:
+     - `01-panel-lateral-urgencia-critica.png` - Hero shot
+     - `02-dashboard-historial.png` - Funcionalidad completa
+     - `03-multi-plataforma.png` - Meet, Teams, Zoom
+     - `04-perfil-personalizado.png` - Personalización (opcional)
+     - `05-privacidad-consentimiento.png` - Seguridad (opcional)
+   - ✅ Instrucciones paso a paso para cada screenshot
+   - ✅ Herramientas recomendadas (CleanShot X, ShareX)
+   - ✅ Comandos de post-procesamiento (redimensionar, optimizar)
+   - ✅ Checklist de calidad
+   - ✅ Orden sugerido para Chrome Web Store
+
+3. **Guías de captura detalladas**:
+   - Qué mostrar en cada screenshot
+   - Cómo configurar el entorno
+   - Comandos sips para redimensionar
+   - Optimización de peso (<2MB)
+
+### Estado:
+
+- ✅ Documentación completa
+- ⏳ **PENDIENTE**: Usuario debe capturar screenshots reales
+  - Requiere: backend corriendo, extensión cargada, Google Meet abierto
+  - Requiere: mínimo 2-3 sesiones en dashboard
+
+---
+
+## ✅ Sesión 28 preparada — Testing Multi-plataforma/Idioma (Checklist)
+
+### Documentación de testing creada:
+
+**Archivo**: `TESTING_SESSION_28.md`
+
+**Contenido completo**:
+
+1. **Fase 1 - Preparación del entorno**:
+   - Checklist de prerequisites (backend, extensión, APIs, Supabase)
+
+2. **Fase 2 - Testing Multi-plataforma**:
+   - ✅ Test 2.1: Google Meet (captura audio, transcripción, sugerencias)
+   - ✅ Test 2.2: Microsoft Teams (detección, audio, sugerencias Vendedor)
+   - ✅ Test 2.3: Zoom (detección, audio, sugerencias Defensor)
+
+3. **Fase 3 - Testing Multi-idioma**:
+   - ✅ Test 3.1: Interfaz Español (popup, panel, dashboard, Claude ES)
+   - ✅ Test 3.2: Interfaz Inglés (popup, panel, dashboard, Claude EN)
+   - ✅ Test 3.3: Cambio dinámico de idioma
+
+4. **Fase 4 - Testing Funcional Core**:
+   - ✅ Test 4.1: Flujo usuario anónimo
+   - ✅ Test 4.2: Flujo usuario registrado
+   - ✅ Test 4.3: Sistema de urgencia (Smart Cards 1/2/3)
+   - ✅ Test 4.4: Perfiles especializados (Candidato/Vendedor/Defensor)
+
+5. **Fase 5 - Testing Seguridad y Privacidad**:
+   - ✅ Test 5.1: Consentimiento obligatorio
+   - ✅ Test 5.2: Audio no almacenado
+   - ✅ Test 5.3: RLS (Row Level Security)
+
+6. **Fase 6 - Testing Performance**:
+   - ✅ Test 6.1: Latencia <5s
+   - ✅ Test 6.2: Uso memoria <100MB
+
+### Formato del checklist:
+
+- **15 tests totales** organizados en 6 fases
+- Checkboxes interactivos para marcar completado
+- Espacio para notas y bugs encontrados
+- Tabla de resumen con % éxito
+- Criterio de aprobación: ≥90% (14/15 tests)
+
+### Estado:
+
+- ✅ Checklist completo creado
+- ⏳ **PENDIENTE**: Usuario debe ejecutar tests
+  - Duración estimada: 2-3 horas
+  - Requiere: todas las APIs activas, 3 plataformas accesibles
+
+---
+
+## Próxima sesión
+
+Sesión: 29 — Publicación Chrome Web Store
+Objetivo: Empaquetar extensión v1.0.0 y publicar en Chrome Web Store
+Duración estimada: 2 horas
+
+**Pre-requisitos Sesión 29**:
+1. ✅ Assets profesionales (iconos + promotional tile)
+2. ⏳ Screenshots capturados (mínimo 3)
+3. ⏳ Testing completado (≥90% pass rate)
+4. ⏳ Versión cambiada de 0.1.0 → 1.0.0
+
+**Tareas Sesión 29**:
+1. Capturar screenshots pendientes (si no se hizo en S27)
+2. Ejecutar testing completo (si no se hizo en S28)
+3. Cambiar versión manifest.json a 1.0.0
+4. Crear descripción corta (<132 chars)
+5. Crear descripción detallada
+6. Preparar justificación de permisos
+7. Empaquetar extensión como ZIP
+8. Crear cuenta Chrome Web Store Developer ($5)
+9. Subir ZIP con assets y screenshots
+10. Enviar a revisión
+
+**Importante**: No publicar hasta tener screenshots y testing completados.

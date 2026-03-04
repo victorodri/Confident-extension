@@ -109,15 +109,15 @@ Claude responde en español o inglés según preferencia del usuario. Modificado
 ### **Sesión 26** — Assets Profesionales Chrome Web Store
 Iconos profesionales implementados (16x16, 48x48, 128x128), promotional tile 440x280 creado desde diseños en `/visual/`, `ICON_DESIGN_SPECS.md` documentado con paleta de colores y prompts IA, checklist pre-publicación 56% completado.
 
+### **Sesión 27** — Screenshots Chrome Web Store (Documentación)
+Carpeta `screenshots/` creada con README completo, especificaciones técnicas (1280x800px), 5 screenshots documentados con instrucciones paso a paso, herramientas recomendadas y comandos de post-procesamiento. Pendiente: captura real por usuario.
+
+### **Sesión 28** — Testing Multi-plataforma/Idioma (Checklist)
+`TESTING_SESSION_28.md` creado con 15 tests organizados en 6 fases: preparación, multi-plataforma (Meet/Teams/Zoom), multi-idioma (ES/EN), funcional core, seguridad/privacidad, performance. Criterio aprobación: ≥90% tests. Pendiente: ejecución por usuario.
+
 ---
 
-## 🔜 Próximas Sesiones
-
-### **Sesión 27** — Screenshots Chrome Web Store
-Capturar 3-5 screenshots profesionales (1280x800) para Chrome Web Store listing.
-
-### **Sesión 28** — Testing Multi-plataforma/idioma Completo
-Probar extensión en Google Meet, Teams, Zoom, verificar funcionamiento en ES/EN, cross-testing de flujos completos.
+## 🔜 Próxima Sesión
 
 ### **Sesión 29** — Publicación Chrome Web Store
 Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con descripción/screenshots/permisos, enviar a revisión.
@@ -140,9 +140,9 @@ Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con
 ## 📈 Estado Actual del Proyecto
 
 **Versión:** 0.1.0-dev (Desarrollo)
-**Sesión completada:** 26/29 (90%)
-**Próxima sesión:** 27 — Screenshots Chrome Web Store
-**Objetivo:** Publicación Chrome Web Store en Sesión 29
+**Sesión completada:** 28/29 (97%) — Documentación lista
+**Próxima sesión:** 29 — Publicación Chrome Web Store
+**Pendiente antes S29:** Screenshots (captura) + Testing (ejecución)
 
 ### ✅ Implementado
 - Core funcional (audio, transcripción, análisis IA, panel lateral)
