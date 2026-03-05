@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Confident</title>
+  <title>Confident Side Panel</title>
   <link rel="stylesheet" href="panel.css" />
 </head>
 <body>
-
-  <!-- ─── HEADER ─── -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- HEADER (compartido por ambas vistas) -->
+  <!-- ════════════════════════════════════════════════════════════ -->
   <header class="header">
     <div class="header-top">
       <span class="logo">Confident</span>
@@ -23,89 +24,140 @@
     </div>
   </header>
 
-  <!-- ─── MAIN ─── -->
-  <main class="main">
-
-    <!-- Estado inicial: esperando consentimiento -->
-    <div id="consentState" class="consent-state hidden">
-      <div class="consent-icon">⚠️</div>
-      <p class="consent-title">Antes de comenzar</p>
-
-      <!-- Checkbox de consentimiento OBLIGATORIO -->
-      <div class="consent-checkbox-wrapper">
-        <label class="consent-label">
-          <input type="checkbox" id="consentCheckbox" />
-          <span data-i18n="consentLabel"></span>
-        </label>
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- VISTA 1: SELECCIÓN DE PERFIL (inicial, sin sesión) -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div id="profileSelectionView" class="profile-selection-view hidden">
+    <main class="main">
+      <!-- Mensaje si no está en plataforma soportada -->
+      <div id="notInPlatform" class="not-in-platform hidden">
+        <p data-i18n="notInPlatform">⚠️ Abre una videollamada en:</p>
+        <ul>
+          <li data-i18n="platformGoogleMeet">🎥 Google Meet</li>
+          <li data-i18n="platformTeams">💼 Microsoft Teams</li>
+          <li data-i18n="platformZoom">📹 Zoom</li>
+        </ul>
       </div>
 
-      <!-- Campo opcional: emails de participantes -->
-      <div class="participants-section">
-        <label class="input-label">
-          <span data-i18n="participantEmailsLabel"></span>
-          <span class="input-hint" data-i18n="participantEmailsHint"></span>
+      <!-- Selección de perfil -->
+      <section id="profileSection">
+        <p class="section-label" data-i18n="selectProfile">Selecciona tu perfil</p>
+        <div class="profiles">
+          <button class="profile-btn" data-profile="candidato">
+            <span class="profile-icon">🎯</span>
+            <span class="profile-name" data-i18n="profileCandidate">Candidato</span>
+            <span class="profile-desc" data-i18n="profileCandidateDesc">Entrevistas de trabajo</span>
+          </button>
+          <button class="profile-btn" data-profile="vendedor">
+            <span class="profile-icon">💼</span>
+            <span class="profile-name" data-i18n="profileSales">Vendedor</span>
+            <span class="profile-desc" data-i18n="profileSalesDesc">Llamadas comerciales</span>
+          </button>
+          <button class="profile-btn" data-profile="defensor">
+            <span class="profile-icon">🛡️</span>
+            <span class="profile-name" data-i18n="profileDefender">Defensor</span>
+            <span class="profile-desc" data-i18n="profileDefenderDesc">Reuniones técnicas</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Botón de micrófono (solo si no hay permiso) -->
+      <button id="requestMicBtn" class="btn-mic hidden" data-i18n="requestMicButton">🎤 Permitir acceso al micrófono</button>
+
+      <!-- Consentimiento (aparece después de seleccionar perfil) -->
+      <section id="consentSectionInitial" class="consent-section hidden">
+        <label class="consent-label">
+          <input type="checkbox" id="consentCheckboxInitial" />
+          <span class="consent-text" data-i18n="consentLabel">He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.</span>
+        </label>
+      </section>
+
+      <!-- Emails de participantes (opcional) -->
+      <section id="emailsSectionInitial" class="emails-section hidden">
+        <label class="emails-label">
+          <span class="emails-label-text" data-i18n="participantEmailsLabel">Emails de participantes (opcional)</span>
+          <small class="emails-hint" data-i18n="participantEmailsHint">Se enviará transcripción al finalizar</small>
         </label>
         <input
           type="text"
-          id="participantEmails"
+          id="participantEmailsInitial"
+          class="emails-input"
           data-i18n-placeholder="participantEmailsPlaceholder"
-          class="email-input"
+          placeholder="email1@ejemplo.com, email2@ejemplo.com"
         />
+      </section>
+
+      <!-- Botón iniciar sesión -->
+      <div class="action-area">
+        <button id="startBtnInitial" class="btn-start" disabled data-i18n="startButton">Iniciar sesión</button>
       </div>
 
-      <!-- Botón para confirmar y comenzar -->
-      <button id="startSessionBtn" class="btn-start-session" disabled data-i18n="startButton">
-      </button>
-    </div>
+      <!-- Mensaje de error -->
+      <p id="errorMsgInitial" class="error-msg hidden"></p>
+    </main>
 
-    <!-- Estado vacío: no hay sesión activa -->
-    <div id="emptyState" class="empty-state hidden">
-      <div class="empty-icon">🎯</div>
-      <p class="empty-title" data-i18n="emptyTitle">Listo para ayudarte</p>
-      <p class="empty-desc" data-i18n-html="emptyDesc">
-        Abre Google Meet y activa Confident<br>desde el popup de la extensión
-      </p>
-    </div>
-
-    <!-- Estado escuchando: sesión activa, sin sugerencia todavía -->
-    <div id="listeningState" class="listening-state hidden">
-      <div class="listening-animation">
-        <span></span><span></span><span></span>
-      </div>
-      <p class="listening-text" data-i18n="listening"></p>
-      <p id="statusMsg" class="status-msg hidden"></p>
-    </div>
-
-    <!-- Contenedor de tarjetas (máximo 3) -->
-    <div id="suggestionsContainer"></div>
-
-  </main>
-
-  <!-- ─── BOTÓN TERMINAR SESIÓN ─── -->
-  <div class="end-session-wrapper hidden" id="endSessionWrapper">
-    <button class="btn-end-session" id="endSessionBtn">
-      <span>✓</span>
-      <span data-i18n="endSessionButton">He terminado esta reunión</span>
-    </button>
-    <p class="end-session-hint" data-i18n="viewDashboard">Ver resumen y transcripción en Dashboard</p>
+    <!-- Footer con contador de sesiones -->
+    <footer id="sessionCounterFooterInitial" class="session-counter-footer hidden">
+      <p id="counterFooterTextInitial" class="counter-footer-text"></p>
+    </footer>
   </div>
 
-  <!-- ─── HISTORIAL ─── -->
-  <section class="history-section">
-    <button class="history-toggle" id="historyToggle">
-      <span id="historyArrow">▸</span>
-      <span data-i18n="sessionHistory"></span>
-      <span id="historyCount" class="history-count hidden">0</span>
-    </button>
-    <ul class="history-list hidden" id="historyList"></ul>
-  </section>
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- VISTA 2: SESIÓN ACTIVA (contenido actual del panel) -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div id="activeSessionView" class="active-session-view hidden">
+    <main class="main">
+      <!-- Estado: Sin sesión (antes era emptyState) -->
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">💬</div>
+        <h3 class="empty-title" data-i18n="emptyTitle">Listo para ayudarte</h3>
+        <p class="empty-desc" data-i18n-html="emptyDesc">Abre Google Meet y activa Confident<br>desde el popup de la extensión</p>
+      </div>
 
-  <!-- ─── CONTADOR DE SESIONES (discreto) ─── -->
-  <footer class="session-counter-footer hidden" id="sessionCounterFooter">
-    <p class="counter-text" id="counterFooterText"></p>
-  </footer>
+      <!-- Estado: Escuchando -->
+      <div id="listeningState" class="listening-state hidden">
+        <div class="listening-animation">
+          <span></span><span></span><span></span>
+        </div>
+        <p class="listening-text" data-i18n="listening">Escuchando...</p>
+        <p id="statusMsg" class="status-msg hidden"></p>
+      </div>
 
+      <!-- Contenedor de sugerencias (cards) -->
+      <div id="suggestionsContainer" class="suggestions-container"></div>
+    </main>
+
+    <!-- Historial colapsado -->
+    <section class="history-section">
+      <button class="history-toggle" id="historyToggle">
+        <span id="historyArrow">▸</span>
+        <span data-i18n="sessionHistory">Historial de sesión</span>
+        <span id="historyCount" class="history-count hidden">0</span>
+      </button>
+      <ul class="history-list hidden" id="historyList"></ul>
+    </section>
+
+    <!-- Botón de terminar sesión (solo visible si hay sesión activa) -->
+    <div id="endSessionWrapper" class="end-session-wrapper hidden">
+      <button id="endSessionBtn" class="btn-end-session">
+        <span>✓</span>
+        <span data-i18n="endSessionButton">He terminado esta reunión</span>
+      </button>
+      <p class="end-session-hint" data-i18n="viewDashboard">Ver resumen y transcripción en Dashboard</p>
+    </div>
+
+    <!-- Footer con contador de sesiones -->
+    <footer id="sessionCounterFooter" class="session-counter-footer hidden">
+      <p id="counterFooterText" class="counter-footer-text"></p>
+    </footer>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- SCRIPTS -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <script src="../logger.js"></script>
   <script src="../config.js"></script>
+  <script src="../device-fingerprint.js"></script>
   <script src="panel.js"></script>
 </body>
 </html>

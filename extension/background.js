@@ -26,6 +26,19 @@ chrome.runtime.onInstalled.addListener((_details) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// LISTENER: CLICK EN ICONO DE EXTENSIÓN → ABRIR SIDE PANEL
+// ─────────────────────────────────────────────────────────────
+
+chrome.action.onClicked.addListener(async (tab) => {
+  // Abrir el side panel cuando se hace clic en el icono de la extensión
+  try {
+    await chrome.sidePanel.open({ windowId: tab.windowId });
+  } catch (err) {
+    LOG.error('[Confident] Error al abrir side panel:', err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // LISTENER DE MENSAJES DESDE POPUP / PANEL / OFFSCREEN
 // ─────────────────────────────────────────────────────────────
 

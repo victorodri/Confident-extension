@@ -1,6 +1,6 @@
 // panel.js — Side Panel de Confident
-// Recibe sugerencias de background.js y actualiza la UI en tiempo real.
-// La sesión se gestiona desde popup.js — el panel solo muestra el estado.
+// Integra selección de perfil + sugerencias en tiempo real
+// SESIÓN 30: Integración popup → side panel
 
 // ─────────────────────────────────────────────────────────────
 // IDIOMA ACTUAL (por defecto: español)
@@ -11,11 +11,29 @@ let currentLanguage = 'es';
 // Traducciones manuales (español e inglés)
 const translations = {
   es: {
+    tagline: 'Tu confidente en cada conversación',
+    sessionActive: 'Sesión activa',
+    selectProfile: 'Selecciona tu perfil',
+    profileCandidate: 'Candidato',
+    profileCandidateDesc: 'Entrevistas de trabajo',
+    profileSales: 'Vendedor',
+    profileSalesDesc: 'Llamadas comerciales',
+    profileDefender: 'Defensor',
+    profileDefenderDesc: 'Reuniones técnicas',
     consentLabel: 'He informado a los participantes de que esta conversación será transcrita y he obtenido su consentimiento.',
     participantEmailsLabel: 'Emails de participantes (opcional)',
     participantEmailsHint: 'Se enviará transcripción al finalizar',
     participantEmailsPlaceholder: 'email1@ejemplo.com, email2@ejemplo.com',
+    requestMicButton: '🎤 Permitir acceso al micrófono',
     startButton: 'Iniciar sesión',
+    stopButton: 'Detener sesión',
+    notInPlatform: '⚠️ Abre una videollamada en:',
+    platformGoogleMeet: '🎥 Google Meet',
+    platformTeams: '💼 Microsoft Teams',
+    platformZoom: '📹 Zoom',
+    errorNoProfile: 'Selecciona un perfil antes de iniciar',
+    errorGeneric: 'Error al procesar la solicitud',
+    processing: 'Procesando...',
     listening: 'Escuchando...',
     sessionHistory: 'Historial de sesión',
     sessionInactive: 'Sin sesión activa',
@@ -25,21 +43,35 @@ const translations = {
     sessionCounterUpgrade: 'Ver planes Pro',
     sessionCounterRemaining: 'sesiones restantes',
     sessionCounterLimitReached: 'Límite alcanzado',
-    processing: 'Procesando...',
     emptyTitle: 'Listo para ayudarte',
-    emptyDesc: 'Abre Google Meet y activa Confident<br>desde el popup de la extensión',
+    emptyDesc: 'Selecciona tu perfil para comenzar',
     endSessionButton: 'He terminado esta reunión',
-    viewDashboard: 'Ver resumen y transcripción en Dashboard',
-    profileCandidate: 'Candidato',
-    profileSales: 'Vendedor',
-    profileDefender: 'Defensor'
+    viewDashboard: 'Ver resumen y transcripción en Dashboard'
   },
   en: {
+    tagline: 'Your confident in every conversation',
+    sessionActive: 'Active session',
+    selectProfile: 'Select your profile',
+    profileCandidate: 'Candidate',
+    profileCandidateDesc: 'Job interviews',
+    profileSales: 'Salesperson',
+    profileSalesDesc: 'Sales calls',
+    profileDefender: 'Defender',
+    profileDefenderDesc: 'Technical meetings',
     consentLabel: 'I have informed participants that this conversation will be transcribed and obtained their consent.',
     participantEmailsLabel: 'Participant emails (optional)',
     participantEmailsHint: 'Transcript will be sent at the end',
     participantEmailsPlaceholder: 'email1@example.com, email2@example.com',
+    requestMicButton: '🎤 Allow microphone access',
     startButton: 'Start session',
+    stopButton: 'Stop session',
+    notInPlatform: '⚠️ Open a video call on:',
+    platformGoogleMeet: '🎥 Google Meet',
+    platformTeams: '💼 Microsoft Teams',
+    platformZoom: '📹 Zoom',
+    errorNoProfile: 'Select a profile before starting',
+    errorGeneric: 'Error processing request',
+    processing: 'Processing...',
     listening: 'Listening...',
     sessionHistory: 'Session history',
     sessionInactive: 'No active session',
@@ -49,14 +81,10 @@ const translations = {
     sessionCounterUpgrade: 'View Pro plans',
     sessionCounterRemaining: 'sessions remaining',
     sessionCounterLimitReached: 'Limit reached',
-    processing: 'Processing...',
     emptyTitle: 'Ready to help',
-    emptyDesc: 'Open Google Meet and activate Confident<br>from the extension popup',
+    emptyDesc: 'Select your profile to get started',
     endSessionButton: "I've finished this meeting",
-    viewDashboard: 'View summary and transcript in Dashboard',
-    profileCandidate: 'Candidate',
-    profileSales: 'Salesperson',
-    profileDefender: 'Defender'
+    viewDashboard: 'View summary and transcript in Dashboard'
   }
 };
 
@@ -123,26 +151,43 @@ const history = [];
 // Flag para saber si hay una tarjeta de sugerencia actualmente visible
 let hasActiveSuggestion = false;
 
+// Estado de selección de perfil (de popup.js)
+let selectedProfile = null;
+let currentTabId = null;
+let micPermissionGranted = false;
+
 // ─────────────────────────────────────────────────────────────
 // REFERENCIAS A ELEMENTOS DEL DOM
 // ─────────────────────────────────────────────────────────────
 
-const statusDot       = document.getElementById('statusDot');
-const statusText      = document.getElementById('statusText');
-// ELIMINADO: onboardingModal, onboardingForm, skipOnboarding, userDescription, userConcerns, userGoals
-// Onboarding movido a /profile en dashboard
-const consentState    = document.getElementById('consentState');
-const consentCheckbox = document.getElementById('consentCheckbox');
-const participantEmails = document.getElementById('participantEmails');
-const startSessionBtn = document.getElementById('startSessionBtn');
-const emptyState      = document.getElementById('emptyState');
-const listeningState  = document.getElementById('listeningState');
-const statusMsg       = document.getElementById('statusMsg');
+// Header (compartido)
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+
+// Vista 1: Selección de perfil
+const profileSelectionView = document.getElementById('profileSelectionView');
+const profileBtns = document.querySelectorAll('.profile-btn');
+const notInPlatform = document.getElementById('notInPlatform');
+const requestMicBtn = document.getElementById('requestMicBtn');
+const consentSectionInitial = document.getElementById('consentSectionInitial');
+const consentCheckboxInitial = document.getElementById('consentCheckboxInitial');
+const emailsSectionInitial = document.getElementById('emailsSectionInitial');
+const participantEmailsInitial = document.getElementById('participantEmailsInitial');
+const startBtnInitial = document.getElementById('startBtnInitial');
+const errorMsgInitial = document.getElementById('errorMsgInitial');
+const sessionCounterFooterInitial = document.getElementById('sessionCounterFooterInitial');
+const counterFooterTextInitial = document.getElementById('counterFooterTextInitial');
+
+// Vista 2: Sesión activa
+const activeSessionView = document.getElementById('activeSessionView');
+const emptyState = document.getElementById('emptyState');
+const listeningState = document.getElementById('listeningState');
+const statusMsg = document.getElementById('statusMsg');
 const suggestionsContainer = document.getElementById('suggestionsContainer');
-const historyToggle   = document.getElementById('historyToggle');
-const historyArrow    = document.getElementById('historyArrow');
-const historyList     = document.getElementById('historyList');
-const historyCount    = document.getElementById('historyCount');
+const historyToggle = document.getElementById('historyToggle');
+const historyArrow = document.getElementById('historyArrow');
+const historyList = document.getElementById('historyList');
+const historyCount = document.getElementById('historyCount');
 const sessionCounterFooter = document.getElementById('sessionCounterFooter');
 const counterFooterText = document.getElementById('counterFooterText');
 
@@ -167,34 +212,123 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inicializar traducciones
   updateAllTranslations();
 
-  restoreSessionState();
+  await restoreSessionState();
   setupEventListeners();
 });
 
 // Comprueba si hay sesión activa al abrir el panel
 async function restoreSessionState() {
-  // ELIMINADO: Onboarding movido al dashboard
-  // Mostrar valor primero (sugerencias), personalización después
-
-  const data = await chrome.storage.session.get(['sessionActive', 'profile', 'lastSuggestion', 'awaitingConsent']);
+  const data = await chrome.storage.session.get(['sessionActive', 'profile', 'lastSuggestion']);
 
   if (data.sessionActive) {
+    // Hay sesión activa → mostrar vista 2
+    showActiveSessionView();
     setSessionActive(true, data.profile);
+
     // Recuperar la última sugerencia si el panel se abrió después de que llegara
     if (data.lastSuggestion) {
       renderSuggestion(data.lastSuggestion);
     }
-  } else if (data.awaitingConsent) {
-    // Mostrar pantalla de consentimiento si el popup lo solicitó
-    showState('consent');
   } else {
-    setSessionInactive();
+    // No hay sesión → mostrar vista 1 (selección de perfil)
+    await showProfileSelectionView();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// GESTIÓN DE VISTAS
+// ─────────────────────────────────────────────────────────────
+
+async function showProfileSelectionView() {
+  profileSelectionView.classList.remove('hidden');
+  activeSessionView.classList.add('hidden');
+
+  // Generar device fingerprint si no existe
+  const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
+  if (!anonymous_id) {
+    LOG.log('[Panel] Generando device fingerprint...');
+    const fingerprint = await getDeviceFingerprint();
+    await chrome.storage.local.set({ anonymous_id: fingerprint });
+    LOG.log('[Panel] Device fingerprint generado:', fingerprint.substring(0, 20) + '...');
   }
 
-  // Actualizar contador de sesiones si no hay sesión activa
-  if (!data.sessionActive) {
-    await updateSessionCounter();
+  // Restaurar perfil guardado
+  const { savedProfile } = await chrome.storage.local.get('savedProfile');
+  if (savedProfile) {
+    selectProfile(savedProfile);
   }
+
+  // Verificar plataforma soportada
+  await checkIfInPlatform();
+
+  // Verificar permisos de micrófono
+  await checkMicPermission();
+
+  // Actualizar contador de sesiones
+  await updateSessionCounterInitial();
+}
+
+function showActiveSessionView() {
+  profileSelectionView.classList.add('hidden');
+  activeSessionView.classList.remove('hidden');
+
+  // Actualizar contador de sesiones
+  updateSessionCounter();
+}
+
+// ─────────────────────────────────────────────────────────────
+// VERIFICAR PLATAFORMA SOPORTADA
+// ─────────────────────────────────────────────────────────────
+
+async function checkIfInPlatform() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    if (!tab || !tab.url) {
+      showElement(notInPlatform);
+      startBtnInitial.disabled = true;
+      return;
+    }
+
+    const supportedPlatforms = [
+      'meet.google.com',
+      'teams.microsoft.com',
+      'zoom.us'
+    ];
+
+    const isSupported = supportedPlatforms.some(domain => tab.url.includes(domain));
+
+    if (!isSupported) {
+      showElement(notInPlatform);
+      startBtnInitial.disabled = true;
+      return;
+    }
+
+    currentTabId = tab.id;
+    hideElement(notInPlatform);
+  } catch (err) {
+    showError('Error al detectar el tab: ' + err.message);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// VERIFICAR PERMISOS DE MICRÓFONO
+// ─────────────────────────────────────────────────────────────
+
+async function checkMicPermission() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const hasAudioInput = devices.some(device => device.kind === 'audioinput' && device.label !== '');
+
+    if (hasAudioInput) {
+      micPermissionGranted = true;
+      hideElement(requestMicBtn);
+    }
+  } catch (err) {
+    LOG.log('[Panel] No se pudo verificar permiso de micrófono:', err);
+  }
+
+  updateStartButton();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -252,7 +386,7 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-// GESTIÓN DE ESTADOS DE LA UI
+// GESTIÓN DE ESTADOS DE LA UI (Vista 2)
 // ─────────────────────────────────────────────────────────────
 
 function setSessionActive(active, profile) {
@@ -260,7 +394,10 @@ function setSessionActive(active, profile) {
     statusDot.classList.add('active');
     statusText.classList.add('active');
     statusText.textContent = profileLabel(profile) + ' — ' + i18n('statusActive');
-    showState('listening');
+
+    // Mostrar estado listening
+    emptyState.classList.add('hidden');
+    listeningState.classList.remove('hidden');
 
     // Mostrar botón de terminar sesión
     const endSessionWrapper = document.getElementById('endSessionWrapper');
@@ -277,7 +414,10 @@ function setSessionInactive() {
   statusDot.classList.remove('active');
   statusText.classList.remove('active');
   statusText.textContent = i18n('sessionInactive');
-  showState('empty');
+
+  // Mostrar estado vacío
+  emptyState.classList.remove('hidden');
+  listeningState.classList.add('hidden');
 
   // Limpiar todas las cards
   suggestionsContainer.innerHTML = '';
@@ -291,25 +431,9 @@ function setSessionInactive() {
     endSessionWrapper.classList.add('hidden');
   }
 
-  // Actualizar contador de sesiones
-  updateSessionCounter();
-}
-
-// Muestra solo uno de los estados del panel principal
-function showState(state) {
-  // ELIMINADO: onboardingModal (movido a /profile en dashboard)
-  consentState.classList.add('hidden');
-  emptyState.classList.add('hidden');
-  listeningState.classList.add('hidden');
-
-  // Las cards de sugerencias se manejan aparte (pueden estar visibles con listening)
-
-  if (state === 'consent')    consentState.classList.remove('hidden');
-  if (state === 'empty')      emptyState.classList.remove('hidden');
-  if (state === 'listening')  listeningState.classList.remove('hidden');
-  if (state === 'suggestion') {
-    // No hacer nada — las cards ya están en suggestionsContainer
-  }
+  // Limpiar historial
+  history.length = 0;
+  renderHistory();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -491,45 +615,137 @@ function renderHistory() {
 // Funciones de feedback antiguas eliminadas — ahora se maneja en handleCardFeedback
 
 // ─────────────────────────────────────────────────────────────
-// INICIO DE SESIÓN DESDE PANEL
+// INICIO DE SESIÓN (Vista 1 → Vista 2)
 // ─────────────────────────────────────────────────────────────
 
-async function handleStartSession() {
-  if (!consentCheckbox.checked) {
+async function handleStartClick() {
+  hideError();
+
+  if (!selectedProfile) {
+    showError(i18n('errorNoProfile'));
     return;
   }
 
-  // Obtener emails de participantes (opcional)
-  const emailsInput = participantEmails.value.trim();
-  const emails = emailsInput
-    ? emailsInput.split(',').map(e => e.trim()).filter(e => e.length > 0)
-    : [];
+  if (!currentTabId) {
+    showError(i18n('errorGeneric'));
+    return;
+  }
 
-  // Guardar emails y confirmación de consentimiento en storage
-  await chrome.storage.session.set({
-    consentConfirmed: true,
-    participantEmails: emails,
-    awaitingConsent: false
-  });
+  if (!micPermissionGranted) {
+    showError(i18n('requestMicButton'));
+    showElement(requestMicBtn);
+    return;
+  }
 
-  // Obtener perfil seleccionado desde el popup
-  const { savedProfile } = await chrome.storage.local.get('savedProfile');
+  startBtnInitial.disabled = true;
+  startBtnInitial.textContent = i18n('processing');
 
-  // Enviar mensaje al background para iniciar la sesión
-  chrome.runtime.sendMessage({
-    action: 'START_SESSION',
-    profile: savedProfile
-  });
+  try {
+    // Verificar límites antes de iniciar
+    const gateCheck = await checkSessionGate();
 
-  // Cambiar a estado "escuchando"
-  showState('listening');
-  statusDot.classList.add('active');
-  statusText.classList.add('active');
-  statusText.textContent = profileLabel(savedProfile) + ' — ' + i18n('statusActive');
+    if (!gateCheck.allowed) {
+      // Mostrar paywall
+      const url = gateCheck.type === 'soft'
+        ? `${CONFIG.ENDPOINTS.AUTH}?reason=limit_soft`
+        : CONFIG.ENDPOINTS.PRICING;
+      chrome.tabs.create({ url });
+
+      startBtnInitial.disabled = false;
+      startBtnInitial.textContent = i18n('startButton');
+      return;
+    }
+
+    // Guardar consentimiento y emails
+    const emailsInput = participantEmailsInitial.value.trim();
+    const emails = emailsInput
+      ? emailsInput.split(',').map(e => e.trim()).filter(e => e.length > 0)
+      : [];
+
+    await chrome.storage.session.set({
+      consentConfirmed: true,
+      participantEmails: emails
+    });
+
+    LOG.log('[Panel] ✅ Consentimiento confirmado. Emails:', emails.length);
+
+    // Enviar mensaje al background.js con el tabId y el perfil
+    const response = await chrome.runtime.sendMessage({
+      action: 'START_SESSION',
+      tabId: currentTabId,
+      profile: selectedProfile,
+    });
+
+    if (response?.ok) {
+      // Registrar sesión en backend
+      const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
+
+      try {
+        LOG.log('[Panel] Creando sesión en:', `${CONFIG.BASE_URL}/api/sessions`);
+        const sessionResponse = await fetch(`${CONFIG.BASE_URL}/api/sessions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            anonymous_id,
+            profile: selectedProfile,
+            consent_confirmed: true
+          })
+        });
+
+        if (!sessionResponse.ok) {
+          const errorText = await sessionResponse.text();
+          LOG.error('[Panel] ❌ Error al crear sesión:', sessionResponse.status, errorText);
+          throw new Error(`Error al crear sesión: ${sessionResponse.status}`);
+        }
+
+        const sessionData = await sessionResponse.json();
+        LOG.log('[Panel] ✅ Sesión creada:', sessionData);
+
+        // Guardar session_id
+        if (sessionData.session_id) {
+          await chrome.storage.session.set({ sessionId: sessionData.session_id });
+          LOG.log('[Panel] session_id guardado:', sessionData.session_id);
+        }
+
+        // Actualizar contador (llamar endpoint viejo para compatibilidad)
+        try {
+          await fetch(CONFIG.ENDPOINTS.SESSION, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              anonymous_id,
+              profile_type: selectedProfile,
+              session_number: gateCheck.session_count + 1
+            })
+          });
+        } catch (_) {
+          // Ignorar si falla
+        }
+
+        // Esperar a que Supabase procese
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+      } catch (err) {
+        LOG.error('[Panel] Error al crear sesión:', err);
+        // No bloquear el inicio si falla el registro
+      }
+
+      // Cambiar a vista 2 (sesión activa)
+      showActiveSessionView();
+      setSessionActive(true, selectedProfile);
+
+    } else {
+      throw new Error(response?.error || 'Error desconocido en background.js');
+    }
+  } catch (err) {
+    showError('Error al iniciar: ' + err.message);
+    startBtnInitial.disabled = false;
+    startBtnInitial.textContent = i18n('startButton');
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
-// TERMINAR SESIÓN Y VER RESULTADOS
+// TERMINAR SESIÓN (Vista 2 → Vista 1)
 // ─────────────────────────────────────────────────────────────
 
 async function handleEndSession() {
@@ -549,8 +765,132 @@ async function handleEndSession() {
 
   await chrome.tabs.create({ url: dashboardUrl });
 
-  // Cerrar el panel lateral
-  window.close();
+  // Volver a vista de selección de perfil
+  await showProfileSelectionView();
+  setSessionInactive();
+}
+
+// ─────────────────────────────────────────────────────────────
+// SELECCIÓN DE PERFIL
+// ─────────────────────────────────────────────────────────────
+
+function selectProfile(profile) {
+  selectedProfile = profile;
+
+  // Actualizar clases visuales
+  profileBtns.forEach((btn) => {
+    btn.classList.toggle('selected', btn.dataset.profile === profile);
+  });
+
+  // Persistir selección
+  chrome.storage.local.set({ savedProfile: profile });
+
+  // Mostrar secciones de consentimiento y emails
+  showElement(consentSectionInitial);
+  showElement(emailsSectionInitial);
+
+  updateStartButton();
+}
+
+// ─────────────────────────────────────────────────────────────
+// SOLICITUD DE MICRÓFONO
+// ─────────────────────────────────────────────────────────────
+
+async function handleRequestMicClick() {
+  hideError();
+  requestMicBtn.disabled = true;
+  requestMicBtn.textContent = currentLanguage === 'es' ? 'Solicitando permiso...' : 'Requesting permission...';
+
+  try {
+    LOG.log('[Panel] Solicitando permiso de micrófono...');
+    const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    LOG.log('[Panel] ✅ Permiso de micrófono concedido');
+
+    // Detener el stream inmediatamente
+    micStream.getTracks().forEach(track => track.stop());
+
+    micPermissionGranted = true;
+    hideElement(requestMicBtn);
+    updateStartButton();
+
+    // Mensaje de éxito
+    const successMsg = document.createElement('p');
+    successMsg.textContent = '✅ ' + (currentLanguage === 'es' ? 'Micrófono permitido' : 'Microphone allowed');
+    successMsg.style.color = '#10b981';
+    successMsg.style.fontSize = '14px';
+    successMsg.style.marginTop = '8px';
+    requestMicBtn.parentElement.appendChild(successMsg);
+
+    setTimeout(() => successMsg.remove(), 3000);
+  } catch (err) {
+    LOG.error('[Panel] Error al solicitar micrófono:', err);
+    if (err.name === 'NotAllowedError') {
+      showError('Permiso denegado. Ve a chrome://extensions, busca Confident, y permite el micrófono.');
+    } else {
+      showError('Error: ' + err.message);
+    }
+    requestMicBtn.disabled = false;
+    requestMicBtn.textContent = i18n('requestMicButton');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// VERIFICAR LÍMITES FREEMIUM
+// ─────────────────────────────────────────────────────────────
+
+async function checkSessionGate() {
+  try {
+    const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
+
+    if (!anonymous_id) {
+      return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
+    }
+
+    const response = await fetch(`${CONFIG.ENDPOINTS.USAGE}?anonymous_id=${anonymous_id}`);
+
+    if (!response.ok) {
+      return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
+    }
+
+    const data = await response.json();
+
+    const { user_type, session_count, limit, remaining } = data;
+
+    // Paywall suave
+    if (user_type === 'anonymous' && session_count >= limit) {
+      return { allowed: false, type: 'soft', remaining: 0, session_count };
+    }
+
+    // Paywall duro
+    if (user_type === 'free' && session_count >= limit) {
+      return { allowed: false, type: 'hard', remaining: 0, session_count };
+    }
+
+    return { allowed: true, type: user_type, remaining, session_count };
+  } catch (err) {
+    LOG.error('[Panel] Error en checkSessionGate:', err);
+    return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ACTUALIZAR BOTÓN INICIAR
+// ─────────────────────────────────────────────────────────────
+
+function updateStartButton() {
+  const hasProfile = !!selectedProfile;
+  const inPlatform = !!currentTabId;
+  const hasMicPermission = micPermissionGranted;
+  const hasConsent = consentCheckboxInitial.checked;
+
+  if (!hasMicPermission && hasProfile && inPlatform) {
+    showElement(requestMicBtn);
+    startBtnInitial.disabled = true;
+  } else {
+    hideElement(requestMicBtn);
+    startBtnInitial.disabled = !(hasProfile && inPlatform && hasMicPermission && hasConsent);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -558,16 +898,23 @@ async function handleEndSession() {
 // ─────────────────────────────────────────────────────────────
 
 function setupEventListeners() {
-  // ELIMINADO: Event listeners de onboarding movidos al dashboard
-
-  // Checkbox de consentimiento
-  consentCheckbox.addEventListener('change', () => {
-    startSessionBtn.disabled = !consentCheckbox.checked;
+  // Vista 1: Selección de perfil
+  profileBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      selectProfile(btn.dataset.profile);
+    });
   });
 
-  // Botón iniciar sesión desde panel
-  startSessionBtn.addEventListener('click', handleStartSession);
+  // Checkbox de consentimiento
+  consentCheckboxInitial.addEventListener('change', updateStartButton);
 
+  // Botón solicitar micrófono
+  requestMicBtn.addEventListener('click', handleRequestMicClick);
+
+  // Botón iniciar sesión
+  startBtnInitial.addEventListener('click', handleStartClick);
+
+  // Vista 2: Sesión activa
   // Botón terminar sesión
   const endSessionBtn = document.getElementById('endSessionBtn');
   if (endSessionBtn) {
@@ -610,9 +957,115 @@ function showStatusMessage(text, isError = false) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// CONTADOR DE SESIONES (footer discreto)
+// UTILIDADES
 // ─────────────────────────────────────────────────────────────
 
+function showError(msg) {
+  errorMsgInitial.textContent = msg;
+  showElement(errorMsgInitial);
+}
+
+function hideError() {
+  hideElement(errorMsgInitial);
+}
+
+function showElement(el) {
+  if (el) el.classList.remove('hidden');
+}
+
+function hideElement(el) {
+  if (el) el.classList.add('hidden');
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONTADOR DE SESIONES
+// ─────────────────────────────────────────────────────────────
+
+// Contador para vista inicial (profileSelectionView)
+async function updateSessionCounterInitial() {
+  try {
+    const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
+    if (!anonymous_id) {
+      sessionCounterFooterInitial.classList.add('hidden');
+      return;
+    }
+
+    const response = await fetch(`${CONFIG.ENDPOINTS.USAGE}?anonymous_id=${anonymous_id}`);
+    if (!response.ok) {
+      sessionCounterFooterInitial.classList.add('hidden');
+      return;
+    }
+
+    const data = await response.json();
+    const { user_type, remaining } = data;
+
+    let showCounter = false;
+    counterFooterTextInitial.textContent = '';
+
+    if (user_type === 'pro') {
+      showCounter = false;
+    } else if (user_type === 'anonymous') {
+      const sessionsText = remaining === 1
+        ? (currentLanguage === 'es' ? 'sesión gratuita' : 'free session')
+        : i18n('sessionCounter');
+      const text = `${remaining} ${sessionsText}. `;
+      const textNode = document.createTextNode(text);
+
+      const link = document.createElement('a');
+      link.href = `${CONFIG.ENDPOINTS.AUTH}?reason=limit_soft`;
+      link.target = '_blank';
+      link.textContent = i18n('sessionCounterRegister');
+
+      counterFooterTextInitial.appendChild(textNode);
+      counterFooterTextInitial.appendChild(link);
+
+      showCounter = true;
+    } else if (user_type === 'free') {
+      if (remaining <= 3 && remaining > 0) {
+        const sessionsText = remaining === 1
+          ? (currentLanguage === 'es' ? 'sesión restante' : 'session remaining')
+          : i18n('sessionCounterRemaining');
+        const text = `${remaining} ${sessionsText}. `;
+        const textNode = document.createTextNode(text);
+
+        const link = document.createElement('a');
+        link.href = CONFIG.ENDPOINTS.PRICING;
+        link.target = '_blank';
+        link.textContent = i18n('sessionCounterUpgrade');
+
+        counterFooterTextInitial.appendChild(textNode);
+        counterFooterTextInitial.appendChild(link);
+
+        showCounter = true;
+      } else if (remaining === 0) {
+        const text = i18n('sessionCounterLimitReached') + '. ';
+        const textNode = document.createTextNode(text);
+
+        const link = document.createElement('a');
+        link.href = CONFIG.ENDPOINTS.PRICING;
+        link.target = '_blank';
+        link.textContent = i18n('sessionCounterUpgrade');
+
+        counterFooterTextInitial.appendChild(textNode);
+        counterFooterTextInitial.appendChild(link);
+
+        showCounter = true;
+      }
+    }
+
+    if (showCounter) {
+      sessionCounterFooterInitial.classList.remove('hidden');
+    } else {
+      sessionCounterFooterInitial.classList.add('hidden');
+    }
+
+  } catch (err) {
+    console.error('[Panel] Error al actualizar contador inicial:', err);
+    sessionCounterFooterInitial.classList.add('hidden');
+  }
+}
+
+// Contador para vista activa (activeSessionView)
 async function updateSessionCounter() {
   try {
     const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
@@ -621,7 +1074,6 @@ async function updateSessionCounter() {
       return;
     }
 
-    // Llamar a /api/usage
     const response = await fetch(`${CONFIG.ENDPOINTS.USAGE}?anonymous_id=${anonymous_id}`);
     if (!response.ok) {
       sessionCounterFooter.classList.add('hidden');
@@ -632,16 +1084,11 @@ async function updateSessionCounter() {
     const { user_type, remaining } = data;
 
     let showCounter = false;
-
-    // Limpiar contenido previo
     counterFooterText.textContent = '';
 
-    // Solo mostrar si quedan ≤3 sesiones o es anónimo con cualquier número
     if (user_type === 'pro') {
-      // Pro ilimitado - no mostrar contador
       showCounter = false;
     } else if (user_type === 'anonymous') {
-      // Anónimo - siempre mostrar con link a registro
       const sessionsText = remaining === 1
         ? (currentLanguage === 'es' ? 'sesión gratuita' : 'free session')
         : i18n('sessionCounter');
@@ -658,7 +1105,6 @@ async function updateSessionCounter() {
 
       showCounter = true;
     } else if (user_type === 'free') {
-      // Free - solo mostrar si quedan ≤3
       if (remaining <= 3 && remaining > 0) {
         const sessionsText = remaining === 1
           ? (currentLanguage === 'es' ? 'sesión restante' : 'session remaining')
@@ -702,8 +1148,3 @@ async function updateSessionCounter() {
     sessionCounterFooter.classList.add('hidden');
   }
 }
-
-// Actualizar contador al cargar el panel
-document.addEventListener('DOMContentLoaded', () => {
-  updateSessionCounter();
-});
