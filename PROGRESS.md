@@ -1572,3 +1572,76 @@ Duración estimada: 2 horas
 10. Enviar a revisión
 
 **Importante**: No publicar hasta tener screenshots y testing completados.
+
+---
+
+## 🎨 CAMBIO DE PLAN — Redesign antes de Screenshots/Testing/Deployment
+
+**Decisión**: Basándose en research de Refero UX, se decide rediseñar los componentes principales antes de capturar screenshots y hacer testing final.
+
+**Nuevo timeline**:
+```
+✅ Sesiones 1-26: Core funcional + Assets profesionales
+✅ Sesiones 27-28: Documentación de Screenshots + Testing (PREPARADO)
+
+🎨 REDESIGN PHASE (NUEVAS SESIONES 30-33)
+├── Sesión 30: Extension Redesign (Side Panel + Popup)
+├── Sesión 31: Landing Page Redesign (Hero + 3 Profile Cards)
+├── Sesión 32: Dashboard + Pricing Redesign
+└── Sesión 33: Design System Consolidado
+
+📸 FINALIZATION (POSPUESTAS a 34-36)
+├── Sesión 34: Screenshots (captura con nuevo diseño)
+├── Sesión 35: Testing (ejecución completa)
+└── Sesión 36: Deployment Chrome Web Store
+```
+
+**Archivos de research creados**:
+- ✅ `DESIGN_RESEARCH_REFERO.md` — Research completo de 9 productos top
+- ✅ `REDESIGN_PLAN.md` — Plan de 4 sesiones de redesign
+
+**Referencias investigadas por Refero**:
+1. Jace AI — AI sidebar patterns
+2. Missive — Message cards
+3. Column — Table design + badges
+4. Wealthsimple — Compact dialogs
+5. X (Twitter) — Modal patterns
+6. Linear — Bento grid + empty states
+7. SAVEE — Hero layout
+8. Amie — Two-column pricing
+9. Cursor — Plan cards
+
+**Design system identificado**:
+- Colors: Slate (900/800/700/400/300) + Cyan (600/500/400)
+- Typography: xs/sm/base/lg/xl/3xl/4xl
+- Spacing: 4/8/12/16/24/32px scale
+- Contrast: WCAG AA mínimo verificado
+- Dark mode optimizado para videollamadas
+
+---
+
+## Próxima sesión
+
+Sesión: 30 — Rediseño Extension (Side Panel + Popup)
+Objetivo: Rediseñar side panel y popup siguiendo patrones de Jace AI, Missive, Wealthsimple
+Duración estimada: 2-3 horas
+Tokens estimados: 40-50K
+
+**Pre-requisitos Sesión 30**:
+1. ✅ Research compilado (DESIGN_RESEARCH_REFERO.md)
+2. ✅ Plan de sesiones (REDESIGN_PLAN.md)
+3. ⏳ Backend Next.js corriendo
+4. ⏳ Extensión cargada en Chrome
+5. ⏳ Tailwind CSS configurado
+
+**Tareas Sesión 30**:
+1. Rediseñar extension/side-panel/panel.html
+2. Actualizar extension/side-panel/panel.css con Tailwind
+3. Rediseñar extension/popup/popup.html
+4. Actualizar extension/popup/popup.css
+5. Implementar nuevo badge system (Level 1/2/3)
+6. Añadir listening indicator con pulsing dot
+7. Session counter con progress bar
+8. Copy button on hover
+9. Verificar contrast ratios WCAG
+10. Test en Chrome con extensión cargada
