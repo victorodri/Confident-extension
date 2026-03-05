@@ -117,10 +117,34 @@ Carpeta `screenshots/` creada con README completo, especificaciones técnicas (1
 
 ---
 
-## 🔜 Próxima Sesión
+## 🎨 Sesiones de Redesign (30-33)
 
-### **Sesión 29** — Publicación Chrome Web Store
-Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con descripción/screenshots/permisos, enviar a revisión.
+> **CAMBIO DE PLAN**: Basándose en research UX de Refero, se decide rediseñar componentes principales antes de screenshots/testing/deployment final.
+
+### **Sesión 30** — Rediseño Extension (Side Panel + Popup)
+Rediseño completo de side panel y popup siguiendo patrones de Jace AI, Missive, Wealthsimple. Background layering slate-900/800, nuevo badge system (Level 1/2/3), listening indicator pulsante, session counter con progress bar, copy button on hover.
+
+### **Sesión 31** — Rediseño Landing Page
+Hero con typography scale 48-56px, CTA con gradient Linear-style, 3 profile cards en bento grid (cols-3), hover effects, icon containers 40px, responsive mobile.
+
+### **Sesión 32** — Rediseño Dashboard + Pricing
+Dashboard con tabla Column-style, session type badges (cyan/emerald/violet), search/filter bar, empty state Linear-pattern. Pricing two-column Amie-style, feature list con check/x icons, CTA buttons differentiated.
+
+### **Sesión 33** — Design System Consolidado
+Documentación completa de colors (Slate + Cyan), typography scale, spacing system (4/8/12/16/24/32px), component patterns reutilizables, contrast ratios WCAG verificados.
+
+---
+
+## 🔜 Próximas Sesiones
+
+### **Sesión 34** — Screenshots Chrome Web Store (Captura)
+Capturar 3-5 screenshots (1280x800px) con diseño renovado: panel lateral, dashboard, multi-plataforma.
+
+### **Sesión 35** — Testing Completo
+Ejecutar checklist de 15 tests: multi-plataforma, multi-idioma, funcional core, seguridad, performance.
+
+### **Sesión 36** — Publicación Chrome Web Store
+Versión 1.0.0, empaquetar ZIP, crear cuenta Developer, subir assets/screenshots, enviar a revisión.
 
 ---
 
@@ -140,9 +164,9 @@ Crear cuenta Developer ($5), empaquetar ZIP v1.0.0, subir a Chrome Web Store con
 ## 📈 Estado Actual del Proyecto
 
 **Versión:** 0.1.0-dev (Desarrollo)
-**Sesión completada:** 28/29 (97%) — Documentación lista
-**Próxima sesión:** 29 — Publicación Chrome Web Store
-**Pendiente antes S29:** Screenshots (captura) + Testing (ejecución)
+**Sesión completada:** 28/36 (78%)
+**Próxima sesión:** 30 — Rediseño Extension (Side Panel + Popup)
+**Timeline actualizado:** Redesign (S30-33) → Screenshots/Testing/Deploy (S34-36)
 
 ### ✅ Implementado
 - Core funcional (audio, transcripción, análisis IA, panel lateral)
