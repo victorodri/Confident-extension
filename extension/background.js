@@ -7,11 +7,18 @@
 // - Estado de sesión en chrome.storage.session
 // - tabCapture.getMediaStreamId REQUIERE user gesture real desde el popup
 
+// DEBUG: Log directo para verificar que el service worker se carga
+console.log('[BACKGROUND] Service Worker cargándose...');
+
 // Importar configuración centralizada de URLs y logger
 importScripts('config.js');
 importScripts('logger.js');
 
+console.log('[BACKGROUND] Imports cargados correctamente');
+
 const OFFSCREEN_URL = chrome.runtime.getURL('offscreen.html');
+
+console.log('[BACKGROUND] Service Worker LISTO');
 
 // Coordina la carrera entre TRANSCRIPT y VAD_ENDED.
 // No es estado de sesión — es una promesa de coordinación en vuelo.
