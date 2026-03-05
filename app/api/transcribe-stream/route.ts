@@ -1,88 +1,54 @@
-import { NextRequest } from 'next/server';
-import { createClient } from '@deepgram/sdk';
-
-const deepgram = createClient(process.env.DEEPGRAM_API_KEY!);
-
-// Función para crear un WAV header válido para PCM16
-function createWavHeader(audioLength: number, sampleRate = 16000, numChannels = 1): Buffer {
-  const header = Buffer.alloc(44);
-
-  // RIFF header
-  header.write('RIFF', 0);
-  header.writeUInt32LE(36 + audioLength, 4); // file size - 8
-  header.write('WAVE', 8);
-
-  // fmt chunk
-  header.write('fmt ', 12);
-  header.writeUInt32LE(16, 16); // fmt chunk size
-  header.writeUInt16LE(1, 20); // audio format (1 = PCM)
-  header.writeUInt16LE(numChannels, 22); // number of channels
-  header.writeUInt32LE(sampleRate, 24); // sample rate
-  header.writeUInt32LE(sampleRate * numChannels * 2, 28); // byte rate
-  header.writeUInt16LE(numChannels * 2, 32); // block align
-  header.writeUInt16LE(16, 34); // bits per sample
-
-  // data chunk
-  header.write('data', 36);
-  header.writeUInt32LE(audioLength, 40); // data size
-
-  return header;
-}
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // Leer audio del body
-    const audioBuffer = await request.arrayBuffer();
+    const apiKey = process.env.DEEPGRAM_API_KEY;
 
-    if (!audioBuffer || audioBuffer.byteLength === 0) {
-      return Response.json({ error: 'No audio data' }, { status: 400 });
+    if (!apiKey) {
+      console.error('[/api/transcribe-stream] DEEPGRAM_API_KEY no configurada');
+      return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
     }
 
-    console.log('[API] Recibido audio:', audioBuffer.byteLength, 'bytes');
+    // Leer audio PCM16 del body
+    const audioBuffer = await request.arrayBuffer();
 
-    // Crear WAV con header válido
-    const pcmData = Buffer.from(audioBuffer);
-    const wavHeader = createWavHeader(pcmData.length, 16000, 1);
-    const wavFile = Buffer.concat([wavHeader, pcmData]);
+    if (audioBuffer.byteLength === 0) {
+      console.log('[/api/transcribe-stream] Audio vacío, ignorando');
+      return NextResponse.json({ transcript: '', isFinal: false });
+    }
 
-    console.log('[API] WAV creado:', wavFile.length, 'bytes (header:', wavHeader.length, '+ data:', pcmData.length, ')');
-    console.log('[API] Llamando a Deepgram...');
+    console.log('[/api/transcribe-stream] Recibido audio:', audioBuffer.byteLength, 'bytes');
 
-    // Transcribir con Deepgram REST API
-    const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
-      wavFile,
+    // Enviar a Deepgram REST API (prerecorded)
+    const deepgramResponse = await fetch(
+      'https://api.deepgram.com/v1/listen?model=nova-2&language=es&punctuate=true&diarize=false',
       {
-        model: 'nova-2',
-        language: 'es',
-        punctuate: true,
-        smart_format: true,
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${apiKey}`,
+          'Content-Type': 'audio/raw',
+        },
+        body: audioBuffer,
       }
     );
 
-    if (error) {
-      console.error('[API] Deepgram error:', error);
-      return Response.json({ error: 'Transcription failed' }, { status: 500 });
+    if (!deepgramResponse.ok) {
+      const errorText = await deepgramResponse.text();
+      console.error('[/api/transcribe-stream] Deepgram error:', deepgramResponse.status, errorText);
+      return NextResponse.json({ error: 'Deepgram error' }, { status: 500 });
     }
 
-    const transcript = result?.results?.channels?.[0]?.alternatives?.[0]?.transcript?.trim();
+    const deepgramData = await deepgramResponse.json();
+    const transcript = deepgramData.results?.channels?.[0]?.alternatives?.[0]?.transcript || '';
 
-    if (!transcript) {
-      // Sin transcripción = silencio, devolver vacío sin error
-      return Response.json({ transcript: '', confidence: 0 });
-    }
+    console.log('[/api/transcribe-stream] Transcripción:', transcript.substring(0, 100));
 
-    console.log('[API] Deepgram transcripción:', transcript);
-
-    return Response.json({
+    return NextResponse.json({
       transcript,
-      confidence: result?.results?.channels?.[0]?.alternatives?.[0]?.confidence,
+      isFinal: true,
     });
-
-  } catch (err: any) {
-    console.error('[API] Error:', err.message);
-    return Response.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  } catch (error) {
+    console.error('[/api/transcribe-stream] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
-export const runtime = 'nodejs';
-export const maxDuration = 10;
