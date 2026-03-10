@@ -37,7 +37,7 @@ const CONFIG = {
       return `${CONFIG.BASE_URL}/api/send-transcript`;
     },
     get SESSION() {
-      return `${CONFIG.BASE_URL}/api/session`;
+      return `${CONFIG.BASE_URL}/api/sessions`;
     },
     get SESSION_CLOSE() {
       return `${CONFIG.BASE_URL}/api/sessions/close`;

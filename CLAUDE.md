@@ -479,7 +479,52 @@ Contexto importante: [decisiones que Claude Code debe saber]
 
 ---
 
-## 15. CHECKLIST PRE-PUBLICACIÓN
+## 15. MANTENIMIENTO DEL REPOSITORIO
+
+**REGLA CRÍTICA**: Al final de CADA sesión, limpiar archivos temporales y mantener el repositorio organizado.
+
+### Archivos a MANTENER en raíz
+```
+✅ CLAUDE.md          — Documento de referencia absoluta
+✅ PROGRESS.md        — Estado actual del proyecto
+✅ README.md          — Descripción general para developers
+✅ .env.local         — Variables de entorno (NUNCA subir a git)
+✅ .env.example       — Plantilla de variables (SÍ subir)
+✅ package.json       — Dependencias del proyecto
+```
+
+### Archivos a ELIMINAR (temporales)
+```
+❌ DEBUG_*.md                — Archivos de debugging
+❌ TESTING_SESSION_*.md      — Reportes de testing específicos de sesión
+❌ TESTING_*.md             — Checklists temporales de testing
+❌ VISUAL_REFERENCE_*.md    — Referencias visuales temporales
+❌ DESIGN_RESEARCH_*.md     — Research de diseño temporal
+❌ INTEGRATION_*.md         — Guías de integración ya completadas
+❌ RELOAD_*.md              — Guías de reload temporales
+```
+
+### Carpeta `/docs` — Documentación Permanente
+Mover archivos importantes de planificación y especificaciones a `/docs`:
+```
+📁 docs/
+  ├── README.md
+  ├── CHROME_WEB_STORE_PUBLICATION.md
+  ├── ICON_DESIGN_SPECS.md
+  ├── PLANNING_PRE_LAUNCH.md
+  └── REDESIGN_PLAN.md
+```
+
+### Proceso al Final de Cada Sesión
+1. **Actualizar PROGRESS.md** con estado actual
+2. **Eliminar archivos temporales** de testing/debug creados durante la sesión
+3. **Mover archivos importantes** a `/docs` si corresponde
+4. **Actualizar README.md** si hay cambios estructurales
+5. **Commit limpio** con archivos organizados
+
+---
+
+## 16. CHECKLIST PRE-PUBLICACIÓN
 
 ```
 □ Manifest V3 sin warnings
@@ -498,5 +543,5 @@ Contexto importante: [decisiones que Claude Code debe saber]
 
 ---
 
-*Versión: 4.1 — Optimizado para tokens*
-*Última actualización: Febrero 2026*
+*Versión: 4.2 — Mantenimiento Repositorio + Paywall System*
+*Última actualización: Marzo 2026*

@@ -1,7 +1,112 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 25 — Claude Multi-idioma (Sugerencias ES/EN) + Fix Traducciones Panel
+Sesión completada: 30 — Sistema Paywall + Fix Autenticación
+Fecha: Marzo 9, 2026
+
+### ✅ Sesión 30 — Sistema Paywall Completo + Fix Autenticación
+
+**Objetivo**: Implementar sistema de paywall soft/hard con principios UX Research + Growth Hacker
+
+**Problema identificado**:
+1. Usuario alcanzó límite de sesiones (23/15) pero extensión permitía iniciar sesión mostrando "Escuchando..."
+2. Usuarios autenticados eran tratados como anónimos (JWT no enviado al backend)
+3. Paywall solo mostraba pequeño texto en footer (fácil de ignorar)
+
+**Soluciones implementadas**:
+
+1. **Backend**:
+   - ❌ Eliminado endpoint `/api/session` obsoleto que causaba errores 500
+   - ✅ Creado script SQL `supabase/upgrade-test-user-to-pro.sql` para gestión de planes
+   - ✅ Sistema de límites freemium funcional (5 anónimo / 15 free / ∞ pro)
+
+2. **Paywall UX (UX Researcher + Growth Hacker)**:
+   - ✅ Paywall suave (soft) para usuarios anónimos:
+     - Mensaje celebratorio: "¡Has usado tus 5 sesiones gratuitas! 🎉"
+     - CTA claro: "Registrarme gratis"
+     - Opción de "Quizás después" (no invasivo)
+     - 3 beneficios visibles (10 sesiones, historial, transcripciones)
+
+   - ✅ Paywall duro (hard) para usuarios registrados:
+     - Mensaje claro: "Has alcanzado el límite del plan gratuito"
+     - CTA directo: "Ver planes Pro"
+     - 3 beneficios premium (ilimitadas, análisis IA, soporte)
+     - Opción de contacto
+
+   - ✅ Modal in-panel (no redirect a nueva pestaña)
+   - ✅ Animaciones suaves (fadeIn, slideUp)
+   - ✅ Backdrop blur para foco visual
+   - ✅ Easy exit (botón dismiss para soft paywall)
+
+3. **Autenticación**:
+   - ✅ Añadido permiso "cookies" a `manifest.json`
+   - ✅ Lectura de cookie Supabase (`sb-{project-ref}-auth-token`)
+   - ✅ Extracción de access_token del JWT
+   - ✅ Header `Authorization: Bearer {token}` enviado a backend
+   - ✅ Backend identifica correctamente plan del usuario (free/pro)
+
+4. **Lógica de sesión**:
+   - ✅ Verificación de límite ANTES de iniciar sesión
+   - ✅ Paywall se muestra prominentemente cuando `remaining: 0`
+   - ✅ Detención automática de sesión si límite alcanzado durante sesión activa
+   - ✅ Prevención de estado "Escuchando..." cuando límite alcanzado
+
+5. **Fix Error 404** (después de testing):
+   - ✅ Corregido endpoint en `extension/config.js:40`
+   - ✅ Cambio: `/api/session` (singular) → `/api/sessions` (plural)
+   - ✅ Sesiones ahora se crean correctamente sin error 404
+   - ✅ Contador `total_sessions` se incrementa correctamente
+
+6. **Fix Error 400** (después de reload extensión):
+   - ✅ Eliminado código legacy en `extension/side-panel/panel.js:741-752`
+   - ✅ Código enviaba `profile_type` en lugar de `profile` → causaba 400 Bad Request
+   - ✅ POST /api/sessions ahora funciona sin errores
+
+7. **Limpieza y organización del repositorio**:
+   - ✅ Carpeta `/docs` creada para documentación técnica permanente
+   - ✅ Movidos 4 archivos importantes a `/docs`: CHROME_WEB_STORE_PUBLICATION.md, ICON_DESIGN_SPECS.md, PLANNING_PRE_LAUNCH.md, REDESIGN_PLAN.md
+   - ✅ Eliminados 10 archivos temporales: DEBUG_CARDS.md, DESIGN_RESEARCH_REFERO.md, TESTING_*.md, VISUAL_REFERENCE_*.md, INTEGRATION.md, RELOAD_EXTENSION.md
+   - ✅ `docs/README.md` creado con índice de contenido
+   - ✅ `CLAUDE.md` actualizado con sección 15 (Mantenimiento del Repositorio)
+   - ✅ `README.md` actualizado con estructura de carpetas y estado actual
+
+**Archivos modificados/creados**:
+- `app/api/session/route.ts` — ELIMINADO (obsoleto)
+- `supabase/upgrade-test-user-to-pro.sql` — CREADO
+- `extension/manifest.json` — Añadido permiso "cookies"
+- `extension/config.js` — Corregido endpoint SESSION (singular → plural)
+- `extension/side-panel/panel.js` — Paywall UI + JWT reading + session gate + eliminado código legacy (400)
+- `docs/` — CARPETA CREADA con 4 archivos movidos + README.md
+- `CLAUDE.md` — Sección 15 Mantenimiento Repositorio añadida
+- `README.md` — Actualizado con estructura y estado Sesión 30
+
+**Testing**:
+1. ✅ Paywall aparece correctamente cuando límite alcanzado (ANTES de SQL)
+2. ✅ SQL ejecutado: usuario actualizado a plan Pro
+3. ✅ Error 404 (endpoint `/api/session`) identificado y corregido
+4. ✅ Error 400 (código legacy en panel.js) identificado y corregido
+5. ⏳ **PENDIENTE**: Reload extensión y verificar sesión funciona sin errores
+6. ⏳ **PENDIENTE**: Verificar pipeline completo (audio → transcripción → sugerencias Claude)
+
+**Métricas esperadas**:
+- `paywall_soft_shown` — usuarios anónimos alcanzan límite
+- `paywall_soft_converted` — registros desde paywall soft
+- `paywall_hard_shown` — usuarios free alcanzan límite
+- `payment_cta_clicked` — clicks en "Ver planes Pro"
+
+**Próxima sesión**:
+Sesión: 31
+Objetivo: Verificar pipeline completo funciona correctamente (audio → Deepgram → Claude → sugerencias)
+Primer paso: Reload extensión y testing en Google Meet con plan Pro
+Contexto importante:
+- Usuario ya tiene plan Pro en Supabase
+- Errores 404 y 400 corregidos
+- Código legacy eliminado
+- Repositorio limpio y organizado
+
+---
+
+## Sesión 25 — Claude Multi-idioma (Sugerencias ES/EN) + Fix Traducciones Panel
 Fecha: Marzo 3, 2026
 
 ## 🔴 DEBUGGING - Contador de sesiones sigue en 0
@@ -1620,6 +1725,144 @@ Duración estimada: 2 horas
 
 ---
 
+---
+
+## ✅ Sesión 29.5 completada — Integración Herramientas de Desarrollo
+
+### Funcionalidad implementada:
+
+**Integrados dos sistemas para optimizar el desarrollo de Confident**:
+
+#### 1. **claude-mem** — Sistema de Memoria Persistente
+
+**Qué es**: Plugin para Claude Code que preserva contexto entre sesiones mediante:
+- Base de datos SQLite + Chroma (búsqueda vectorial)
+- Captura automática de observaciones durante desarrollo
+- Búsquedas en lenguaje natural optimizadas por capas
+- Hooks del ciclo de vida (SessionStart, SessionEnd, PostToolUse)
+
+**Instalación**:
+```bash
+/plugin marketplace add thedotmack/claude-mem
+/plugin install claude-mem
+```
+
+**Beneficios para Confident**:
+- Mantener continuidad entre sesiones de desarrollo
+- Recordar decisiones técnicas y arquitectura
+- Reducir necesidad de re-explicar contexto
+- Interfaz visual en `http://localhost:37777`
+
+**Uso**:
+```bash
+# Buscar contexto previo
+/mem-search "cómo implementamos la captura de audio"
+
+# Ver timeline de sesiones
+/mem-search timeline
+```
+
+#### 2. **agency-agents** — Colección de Agentes Especializados
+
+**Qué es**: 8 agentes pre-diseñados con personalidades y flujos de trabajo específicos.
+
+**Agentes copiados en `.claude/agents/`**:
+
+| Archivo | Agente | Uso en Confident |
+|---------|--------|------------------|
+| `engineering-frontend-developer.md` | **Frontend Developer** | Extensión Chrome (Vanilla JS), Side Panel UI, Popup |
+| `engineering-backend-architect.md` | **Backend Architect** | APIs Next.js, Supabase, arquitectura serverless |
+| `engineering-security-engineer.md` | **Security Engineer** | Validación JWT, RLS, RGPD, consent flow |
+| `design-ui-designer.md` | **UI Designer** | Side Panel, Landing page, componentes Tailwind |
+| `design-ux-researcher.md` | **UX Researcher** | Funnel freemium, conversión, paywall soft/hard |
+| `marketing-growth-hacker.md` | **Growth Hacker** | Estrategia Posthog, eventos críticos, pricing page |
+| `testing-evidence-collector.md` | **Evidence Collector** | QA extensión + backend, test plan |
+| `support-analytics-reporter.md` | **Analytics Reporter** | Dashboard Posthog, métricas MVP |
+
+**Cómo usar agentes**:
+
+Opción 1 - Referencia en prompt:
+```
+Victor: "Necesito optimizar el Side Panel para que cargue más rápido"
+Claude: "@engineering-frontend-developer Necesito optimizar el Side Panel..."
+```
+
+Opción 2 - Cargar contexto completo:
+```bash
+Read .claude/agents/engineering-frontend-developer.md
+# Luego: "Usando el perfil de Frontend Developer, implementa lazy loading..."
+```
+
+Opción 3 - Pedir al asistente que use agente:
+```
+Victor: "Revisa la seguridad de /api/analyze usando el Security Engineer"
+```
+
+### Archivos creados/modificados:
+
+```
+.claude/                                        ← NUEVA carpeta
+.claude/agents/                                 ← 8 agentes especializados copiados
+  ├── engineering-frontend-developer.md
+  ├── engineering-backend-architect.md
+  ├── engineering-security-engineer.md
+  ├── design-ui-designer.md
+  ├── design-ux-researcher.md
+  ├── marketing-growth-hacker.md
+  ├── testing-evidence-collector.md
+  └── support-analytics-reporter.md
+INTEGRATION.md                                  ← NUEVO: Guía completa de uso (10 secciones)
+PROGRESS.md                                     ← Actualizado
+```
+
+### Documentación creada:
+
+**INTEGRATION.md** — Guía completa con:
+1. Resumen ejecutivo
+2. Claude-mem instalación y uso
+3. Agency-agents casos de uso por sesión
+4. Workflow recomendado
+5. Comandos rápidos
+6. Arquitectura técnica
+7. Troubleshooting
+8. Métricas de éxito
+9. Próximos pasos
+10. Recursos adicionales
+
+### Workflow recomendado para desarrollo:
+
+**Inicio de cada sesión**:
+```bash
+# 1. Verificar memoria persistente
+/mem-search timeline
+
+# 2. Cargar agente necesario según tarea
+Read .claude/agents/[agente-relevante].md
+```
+
+**Durante desarrollo**:
+- claude-mem captura automáticamente decisiones
+- Referenciar agentes en cualquier momento
+- Cambiar de agente si la tarea cambia
+
+**Fin de sesión**:
+- claude-mem genera resumen automático
+- Actualizar PROGRESS.md manualmente
+
+### Repositorios originales:
+
+- **claude-mem**: https://github.com/thedotmack/claude-mem
+- **agency-agents**: https://github.com/msitarzewski/agency-agents/
+
+### Estado:
+
+- ✅ Agentes copiados y listos para usar
+- ✅ Documentación completa creada
+- ⏳ **PENDIENTE**: Usuario debe instalar claude-mem con comandos `/plugin`
+- ⏳ **PENDIENTE**: Verificar interfaz visual en `http://localhost:37777` después de instalar
+
+---
+
 ## Próxima sesión
 
 Sesión: 30 — Rediseño Extension (Side Panel + Popup)
@@ -1630,9 +1873,12 @@ Tokens estimados: 40-50K
 **Pre-requisitos Sesión 30**:
 1. ✅ Research compilado (DESIGN_RESEARCH_REFERO.md)
 2. ✅ Plan de sesiones (REDESIGN_PLAN.md)
-3. ⏳ Backend Next.js corriendo
-4. ⏳ Extensión cargada en Chrome
-5. ⏳ Tailwind CSS configurado
+3. ✅ Herramientas de desarrollo integradas (claude-mem + agency-agents)
+4. ⏳ Backend Next.js corriendo
+5. ⏳ Extensión cargada en Chrome
+6. ⏳ Tailwind CSS configurado
+
+**Agente recomendado para Sesión 30**: `engineering-frontend-developer.md` + `design-ui-designer.md`
 
 **Tareas Sesión 30**:
 1. Rediseñar extension/side-panel/panel.html

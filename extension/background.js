@@ -80,6 +80,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
+  // Offscreen document está listo para recibir mensajes
+  if (message.action === 'OFFSCREEN_READY') {
+    LOG.log('[DEBUG] ✅ OFFSCREEN_READY recibido de offscreen document');
+    chrome.storage.session.set({ offscreenReady: true });
+    return false;
+  }
+
   if (message.action === 'VAD_STARTED') {
     return false;
   }
@@ -293,33 +300,104 @@ async function callAnalyzeAPI() {
 // ─────────────────────────────────────────────────────────────
 
 async function handleStartSession(tabId, profile) {
-  // 1. Obtener streamId (funciona desde Service Worker en MV3)
-  const streamId = await getTabStreamId(tabId);
+  LOG.log('[DEBUG] ========== handleStartSession INICIO ==========');
+  LOG.log('[DEBUG] tabId:', tabId);
+  LOG.log('[DEBUG] profile:', profile);
 
-  // 2. Crear (o reutilizar) el offscreen document
-  await createOffscreenDocument();
+  try {
+    // 0. GUARDIA: Verificar si ya hay una sesión activa
+    LOG.log('[DEBUG] Verificando si hay sesión activa...');
+    const sessionState = await chrome.storage.session.get('sessionActive');
+    LOG.log('[DEBUG] sessionActive:', sessionState.sessionActive);
 
-  // 3. Guardar estado de sesión (y resetear buffers de contexto)
-  await chrome.storage.session.set({
-    sessionActive: true,
-    profile,
-    sessionStartTime: Date.now(), // Sesión 6
-    pendingText: '',
-    contextBuffer: [],
-    lastProfile: profile,
-    suggestionsCount: 0, // Sesión 6
-    sessionTranscript: '', // Sesión 6
-  });
+    if (sessionState.sessionActive) {
+      LOG.warn('[Confident] ⚠️ Ya hay una sesión activa. Deteniendo primero...');
+      try {
+        await handleStopSession();
+        // Esperar 500ms para asegurar que los streams se liberaron
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (err) {
+        LOG.error('[Confident] Error al detener sesión previa:', err);
+      }
+    }
 
-  // 4. Enviar streamId + config al offscreen document para que inicie el pipeline
-  await chrome.runtime.sendMessage({
-    action: 'START_AUDIO',
-    streamId,
-    profile,
-  });
+    // 1. Obtener streamId (funciona desde Service Worker en MV3)
+    LOG.log('[DEBUG] Obteniendo streamId...');
+    const streamId = await getTabStreamId(tabId);
+    LOG.log('[DEBUG] streamId obtenido:', streamId);
 
-  // Notificar al side panel que la sesión ha comenzado
-  chrome.runtime.sendMessage({ action: 'SESSION_STARTED', profile }).catch(() => {});
+    // 2. Crear (o reutilizar) el offscreen document
+    LOG.log('[DEBUG] Creando offscreen document...');
+    await createOffscreenDocument();
+    LOG.log('[DEBUG] Offscreen document creado/reutilizado');
+
+    // 2.5. ESPERAR a que el offscreen document esté listo
+    LOG.log('[DEBUG] Esperando a que offscreen esté listo...');
+    const maxWaitTime = 5000; // 5 segundos máximo
+    const startWaitTime = Date.now();
+
+    while (true) {
+      const { offscreenReady } = await chrome.storage.session.get('offscreenReady');
+      if (offscreenReady) {
+        LOG.log('[DEBUG] ✅ Offscreen está listo');
+        break;
+      }
+
+      if (Date.now() - startWaitTime > maxWaitTime) {
+        LOG.error('[DEBUG] ⏱️ Timeout esperando offscreen ready');
+        throw new Error('Timeout: offscreen document no respondió en 5 segundos');
+      }
+
+      // Esperar 100ms antes de verificar de nuevo
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // 3. Guardar estado de sesión (y resetear buffers de contexto)
+    LOG.log('[DEBUG] Guardando estado de sesión...');
+    await chrome.storage.session.set({
+      sessionActive: true,
+      profile,
+      sessionStartTime: Date.now(), // Sesión 6
+      pendingText: '',
+      contextBuffer: [],
+      lastProfile: profile,
+      suggestionsCount: 0, // Sesión 6
+      sessionTranscript: '', // Sesión 6
+    });
+    LOG.log('[DEBUG] Estado guardado');
+
+    // 4. Verificar que el offscreen document sigue activo
+    LOG.log('[DEBUG] Verificando contextos de offscreen antes de enviar START_AUDIO...');
+    const contextsBeforeSend = await chrome.runtime.getContexts({
+      contextTypes: ['OFFSCREEN_DOCUMENT'],
+      documentUrls: [OFFSCREEN_URL],
+    });
+    LOG.log('[DEBUG] Contextos offscreen activos:', contextsBeforeSend.length);
+    if (contextsBeforeSend.length === 0) {
+      throw new Error('CRITICAL: Offscreen document cerrado antes de enviar START_AUDIO');
+    }
+
+    // 5. Enviar streamId + config al offscreen document para que inicie el pipeline
+    LOG.log('[DEBUG] Enviando START_AUDIO al offscreen...');
+    const response = await chrome.runtime.sendMessage({
+      action: 'START_AUDIO',
+      streamId,
+      profile,
+    });
+    LOG.log('[DEBUG] START_AUDIO enviado, response:', response);
+
+    // Notificar al side panel que la sesión ha comenzado
+    LOG.log('[DEBUG] Notificando SESSION_STARTED al panel...');
+    chrome.runtime.sendMessage({ action: 'SESSION_STARTED', profile }).catch(() => {});
+    LOG.log('[DEBUG] ========== handleStartSession FIN ==========');
+
+  } catch (err) {
+    LOG.error('[DEBUG] ========== handleStartSession ERROR ==========');
+    LOG.error('[DEBUG] Error name:', err.name);
+    LOG.error('[DEBUG] Error message:', err.message);
+    LOG.error('[DEBUG] Error stack:', err.stack);
+    throw err;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -354,14 +432,21 @@ async function createOffscreenDocument() {
   });
 
   if (existingContexts.length > 0) {
+    LOG.log('[DEBUG] Offscreen document ya existe, reutilizando');
     return;
   }
+
+  // Si vamos a crear un nuevo offscreen, resetear el flag de ready
+  LOG.log('[DEBUG] Creando nuevo offscreen document, reseteando flag ready...');
+  await chrome.storage.session.set({ offscreenReady: false });
 
   await chrome.offscreen.createDocument({
     url: 'offscreen.html',
     reasons: ['USER_MEDIA'],
     justification: 'Capturar y procesar audio del tab para transcripción en tiempo real',
   });
+
+  LOG.log('[DEBUG] Offscreen document creado, esperando mensaje OFFSCREEN_READY...');
 }
 
 // ─────────────────────────────────────────────────────────────

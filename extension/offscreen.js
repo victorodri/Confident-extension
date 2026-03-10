@@ -30,27 +30,62 @@ let audioChunks = [];
 let lastSendTime = Date.now();
 
 // ─────────────────────────────────────────────────────────────
+// LOG DE INICIALIZACIÓN
+// ─────────────────────────────────────────────────────────────
+console.log('[DEBUG OFFSCREEN] ========== OFFSCREEN DOCUMENT CARGADO ==========');
+console.log('[DEBUG OFFSCREEN] CONFIG:', typeof CONFIG !== 'undefined' ? CONFIG : 'NO DEFINIDO');
+console.log('[DEBUG OFFSCREEN] CONFIG.BASE_URL:', typeof CONFIG !== 'undefined' ? CONFIG.BASE_URL : 'NO DEFINIDO');
+console.log('[DEBUG OFFSCREEN] LOG:', typeof LOG !== 'undefined' ? 'Disponible' : 'NO DEFINIDO');
+
+// ─────────────────────────────────────────────────────────────
 // LISTENER DE MENSAJES DESDE BACKGROUND
 // ─────────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'START_AUDIO') {
-    startAudioPipeline(message.streamId, message.profile)
-      .then(() => sendResponse({ ok: true }))
-      .catch((err) => {
-        LOG.error('[Offscreen] ❌ Error al iniciar pipeline de audio:', err.name, '-', err.message);
-        LOG.error('[Offscreen] ❌ Stack:', err.stack);
-        sendResponse({ ok: false, error: err.message || err.name });
-      });
-    return true; // mantener canal abierto para respuesta asíncrona
-  }
+  try {
+    console.log('[DEBUG OFFSCREEN] ========== MENSAJE RECIBIDO ==========');
+    console.log('[DEBUG OFFSCREEN] message:', message);
+    console.log('[DEBUG OFFSCREEN] sender:', sender);
+    console.log('[DEBUG OFFSCREEN] action:', message?.action);
 
-  if (message.action === 'STOP_AUDIO') {
-    stopAudioPipeline();
-    sendResponse({ ok: true });
+    if (message.action === 'START_AUDIO') {
+      LOG.log('[DEBUG OFFSCREEN] ✅ START_AUDIO recibido');
+      LOG.log('[DEBUG OFFSCREEN] streamId:', message.streamId);
+      LOG.log('[DEBUG OFFSCREEN] profile:', message.profile);
+
+      startAudioPipeline(message.streamId, message.profile)
+        .then(() => {
+          LOG.log('[DEBUG OFFSCREEN] startAudioPipeline completado correctamente');
+          sendResponse({ ok: true });
+        })
+        .catch((err) => {
+          LOG.error('[Offscreen] ❌ Error al iniciar pipeline de audio:', err.name, '-', err.message);
+          LOG.error('[Offscreen] ❌ Stack:', err.stack);
+          sendResponse({ ok: false, error: err.message || err.name });
+        });
+      return true; // mantener canal abierto para respuesta asíncrona
+    }
+
+    if (message.action === 'STOP_AUDIO') {
+      LOG.log('[DEBUG OFFSCREEN] STOP_AUDIO recibido');
+      stopAudioPipeline();
+      sendResponse({ ok: true });
+      return false;
+    }
+
+    console.log('[DEBUG OFFSCREEN] Acción no reconocida:', message.action);
+    return false;
+
+  } catch (err) {
+    console.error('[DEBUG OFFSCREEN] ❌❌❌ ERROR EN LISTENER:', err);
+    console.error('[DEBUG OFFSCREEN] Error name:', err.name);
+    console.error('[DEBUG OFFSCREEN] Error message:', err.message);
+    console.error('[DEBUG OFFSCREEN] Error stack:', err.stack);
     return false;
   }
 });
+
+console.log('[DEBUG OFFSCREEN] ✅ Listener de mensajes registrado');
 
 // ─────────────────────────────────────────────────────────────
 // PIPELINE DE AUDIO
@@ -166,7 +201,10 @@ async function startAudioPipeline(streamId, profile) {
 }
 
 async function sendAudioToBackend() {
-  if (audioChunks.length === 0) return;
+  if (audioChunks.length === 0) {
+    LOG.log('[DEBUG] audioChunks vacío, saltando envío');
+    return;
+  }
 
   // Combinar todos los chunks
   const totalLength = audioChunks.reduce((sum, chunk) => sum + chunk.length, 0);
@@ -181,9 +219,16 @@ async function sendAudioToBackend() {
   audioChunks = [];
 
   try {
-    LOG.log('[Offscreen] Enviando', combined.length, 'muestras al backend (', (combined.length * 2), 'bytes )');
+    // DEBUG: Verificar CONFIG
+    LOG.log('[DEBUG] CONFIG object:', CONFIG);
+    LOG.log('[DEBUG] CONFIG.BASE_URL:', CONFIG.BASE_URL);
 
-    const response = await fetch(`${CONFIG.BASE_URL}/api/transcribe-stream`, {
+    const fullUrl = `${CONFIG.BASE_URL}/api/transcribe-stream`;
+    LOG.log('[DEBUG] Full URL:', fullUrl);
+    LOG.log('[DEBUG] Audio bytes:', combined.length * 2);
+
+    LOG.log('[DEBUG] Iniciando fetch...');
+    const response = await fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'audio/raw',
@@ -191,12 +236,18 @@ async function sendAudioToBackend() {
       body: combined.buffer,
     });
 
+    LOG.log('[DEBUG] Fetch completado');
+    LOG.log('[DEBUG] Response status:', response.status);
+    LOG.log('[DEBUG] Response ok:', response.ok);
+
     if (!response.ok) {
-      LOG.error('[Offscreen] Backend error:', response.status);
+      const errorText = await response.text();
+      LOG.error('[Offscreen] Backend error:', response.status, errorText);
       return;
     }
 
     const data = await response.json();
+    LOG.log('[DEBUG] Response JSON:', data);
 
     if (data.transcript && data.transcript.trim()) {
       LOG.log('[Offscreen] Transcripción recibida:', data.transcript);
@@ -208,10 +259,15 @@ async function sendAudioToBackend() {
         speaker: null,
         profile: currentProfile,
       });
+    } else {
+      LOG.log('[DEBUG] No transcript en respuesta o vacío');
     }
 
   } catch (err) {
-    LOG.error('[Offscreen] Error enviando audio:', err);
+    LOG.error('[DEBUG] Fetch FAILED - Error name:', err.name);
+    LOG.error('[DEBUG] Fetch FAILED - Error message:', err.message);
+    LOG.error('[DEBUG] Fetch FAILED - Full error:', err);
+    LOG.error('[DEBUG] Fetch FAILED - Stack:', err.stack);
   }
 }
 
@@ -282,3 +338,13 @@ function float32ToInt16(float32Array) {
   }
   return int16Array;
 }
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICAR A BACKGROUND QUE ESTAMOS LISTOS
+// ─────────────────────────────────────────────────────────────
+// IMPORTANTE: Esto se ejecuta al FINAL del archivo, después de que
+// todos los listeners estén registrados, para evitar race conditions
+console.log('[DEBUG OFFSCREEN] Todos los listeners registrados, enviando OFFSCREEN_READY...');
+chrome.runtime.sendMessage({ action: 'OFFSCREEN_READY' })
+  .then(() => console.log('[DEBUG OFFSCREEN] ✅ OFFSCREEN_READY enviado'))
+  .catch(err => console.error('[DEBUG OFFSCREEN] ❌ Error enviando OFFSCREEN_READY:', err));

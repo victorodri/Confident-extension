@@ -11,7 +11,8 @@
     "storage",
     "sidePanel",
     "scripting",
-    "offscreen"
+    "offscreen",
+    "cookies"
   ],
 
   "host_permissions": [

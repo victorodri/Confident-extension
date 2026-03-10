@@ -46,7 +46,23 @@ const translations = {
     emptyTitle: 'Listo para ayudarte',
     emptyDesc: 'Selecciona tu perfil para comenzar',
     endSessionButton: 'He terminado esta reunión',
-    viewDashboard: 'Ver resumen y transcripción en Dashboard'
+    viewDashboard: 'Ver resumen y transcripción en Dashboard',
+    // Paywall suave (UX Research + Growth Hacker)
+    paywallSoftTitle: '¡Has usado tus 5 sesiones gratuitas! 🎉',
+    paywallSoftDesc: 'Confident te ha ayudado en tus conversaciones. Regístrate gratis y obtén 10 sesiones más.',
+    paywallSoftBenefit1: '✓ 10 sesiones adicionales gratis',
+    paywallSoftBenefit2: '✓ Historial de sesiones guardado',
+    paywallSoftBenefit3: '✓ Transcripciones por email',
+    paywallSoftCta: 'Registrarme gratis',
+    paywallSoftDismiss: 'Quizás después',
+    // Paywall duro (usuario registrado, límite alcanzado)
+    paywallHardTitle: 'Has alcanzado el límite del plan gratuito',
+    paywallHardDesc: 'Para seguir usando Confident en tus conversaciones, actualiza a un plan Pro.',
+    paywallHardBenefit1: '✓ Sesiones ilimitadas',
+    paywallHardBenefit2: '✓ Análisis avanzado con IA',
+    paywallHardBenefit3: '✓ Soporte prioritario',
+    paywallHardCta: 'Ver planes Pro',
+    paywallHardContact: 'Contactar soporte'
   },
   en: {
     tagline: 'Your confident in every conversation',
@@ -84,7 +100,23 @@ const translations = {
     emptyTitle: 'Ready to help',
     emptyDesc: 'Select your profile to get started',
     endSessionButton: "I've finished this meeting",
-    viewDashboard: 'View summary and transcript in Dashboard'
+    viewDashboard: 'View summary and transcript in Dashboard',
+    // Soft paywall (UX Research + Growth Hacker)
+    paywallSoftTitle: 'You\'ve used your 5 free sessions! 🎉',
+    paywallSoftDesc: 'Confident has helped you in your conversations. Sign up for free and get 10 more sessions.',
+    paywallSoftBenefit1: '✓ 10 additional free sessions',
+    paywallSoftBenefit2: '✓ Saved session history',
+    paywallSoftBenefit3: '✓ Transcripts via email',
+    paywallSoftCta: 'Sign up for free',
+    paywallSoftDismiss: 'Maybe later',
+    // Hard paywall (registered user, limit reached)
+    paywallHardTitle: 'You\'ve reached the free plan limit',
+    paywallHardDesc: 'To continue using Confident in your conversations, upgrade to a Pro plan.',
+    paywallHardBenefit1: '✓ Unlimited sessions',
+    paywallHardBenefit2: '✓ Advanced AI analysis',
+    paywallHardBenefit3: '✓ Priority support',
+    paywallHardCta: 'View Pro plans',
+    paywallHardContact: 'Contact support'
   }
 };
 
@@ -645,11 +677,8 @@ async function handleStartClick() {
     const gateCheck = await checkSessionGate();
 
     if (!gateCheck.allowed) {
-      // Mostrar paywall
-      const url = gateCheck.type === 'soft'
-        ? `${CONFIG.ENDPOINTS.AUTH}?reason=limit_soft`
-        : CONFIG.ENDPOINTS.PRICING;
-      chrome.tabs.create({ url });
+      // Mostrar paywall dentro del panel (UX Research + Growth Hacker)
+      showPaywall(gateCheck.type);
 
       startBtnInitial.disabled = false;
       startBtnInitial.textContent = i18n('startButton');
@@ -707,22 +736,7 @@ async function handleStartClick() {
           LOG.log('[Panel] session_id guardado:', sessionData.session_id);
         }
 
-        // Actualizar contador (llamar endpoint viejo para compatibilidad)
-        try {
-          await fetch(CONFIG.ENDPOINTS.SESSION, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              anonymous_id,
-              profile_type: selectedProfile,
-              session_number: gateCheck.session_count + 1
-            })
-          });
-        } catch (_) {
-          // Ignorar si falla
-        }
-
-        // Esperar a que Supabase procese
+        // Esperar a que Supabase procese el trigger increment_session_count
         await new Promise(resolve => setTimeout(resolve, 500));
 
       } catch (err) {
@@ -843,17 +857,57 @@ async function checkSessionGate() {
   try {
     const { anonymous_id } = await chrome.storage.local.get('anonymous_id');
 
-    if (!anonymous_id) {
+    // Obtener el access token de Supabase si el usuario está autenticado
+    let accessToken = null;
+    try {
+      // Leer cookie de Supabase (sb-{project-ref}-auth-token)
+      // Formato: {"access_token": "...", "refresh_token": "..."}
+      const cookies = await chrome.cookies.getAll({
+        url: 'http://localhost:3000'
+      });
+
+      const authCookie = cookies.find(c => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
+
+      if (authCookie) {
+        try {
+          const authData = JSON.parse(decodeURIComponent(authCookie.value));
+          accessToken = authData.access_token;
+          LOG.log('[Panel] ✅ Access token encontrado en cookies de Supabase');
+        } catch (parseErr) {
+          LOG.error('[Panel] Error parseando cookie de auth:', parseErr);
+        }
+      } else {
+        LOG.log('[Panel] No hay sesión autenticada (cookie no encontrada)');
+      }
+    } catch (err) {
+      LOG.warn('[Panel] Error leyendo cookies:', err);
+    }
+
+    // Preparar headers con JWT si existe
+    const headers = {};
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      LOG.log('[Panel] Enviando request con Authorization header');
+    }
+
+    // Si no hay token ni anonymous_id, crear anonymous_id
+    if (!accessToken && !anonymous_id) {
       return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
     }
 
-    const response = await fetch(`${CONFIG.ENDPOINTS.USAGE}?anonymous_id=${anonymous_id}`);
+    const url = anonymous_id
+      ? `${CONFIG.ENDPOINTS.USAGE}?anonymous_id=${anonymous_id}`
+      : CONFIG.ENDPOINTS.USAGE;
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
+      LOG.error('[Panel] Error en /api/usage:', response.status);
       return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
     }
 
     const data = await response.json();
+    LOG.log('[Panel] Respuesta de /api/usage:', data);
 
     const { user_type, session_count, limit, remaining } = data;
 
@@ -871,6 +925,142 @@ async function checkSessionGate() {
   } catch (err) {
     LOG.error('[Panel] Error en checkSessionGate:', err);
     return { allowed: true, type: 'anonymous', remaining: 5, session_count: 0 };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// MOSTRAR PAYWALL (UX Research + Growth Hacker)
+// ─────────────────────────────────────────────────────────────
+
+function showPaywall(type) {
+  // Crear overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'paywall-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    animation: fadeIn 0.3s ease-out;
+  `;
+
+  // Crear card del paywall
+  const card = document.createElement('div');
+  card.style.cssText = `
+    background: var(--bg-elevated);
+    border-radius: var(--radius-2);
+    padding: var(--space-8);
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  `;
+
+  const isSoft = type === 'soft';
+
+  card.innerHTML = `
+    <div style="text-align: center; margin-bottom: var(--space-6);">
+      <div style="font-size: 48px; margin-bottom: var(--space-4);">
+        ${isSoft ? '🎉' : '🚀'}
+      </div>
+      <h2 style="color: var(--text-primary); font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--space-3);">
+        ${i18n(isSoft ? 'paywallSoftTitle' : 'paywallHardTitle')}
+      </h2>
+      <p style="color: var(--text-secondary); font-size: var(--text-base); line-height: 1.6;">
+        ${i18n(isSoft ? 'paywallSoftDesc' : 'paywallHardDesc')}
+      </p>
+    </div>
+
+    <div style="margin-bottom: var(--space-6);">
+      <div style="color: var(--text-primary); font-size: var(--text-sm); margin-bottom: var(--space-2); padding: var(--space-3); background: var(--bg-subtle); border-radius: var(--radius-1);">
+        ${i18n(isSoft ? 'paywallSoftBenefit1' : 'paywallHardBenefit1')}
+      </div>
+      <div style="color: var(--text-primary); font-size: var(--text-sm); margin-bottom: var(--space-2); padding: var(--space-3); background: var(--bg-subtle); border-radius: var(--radius-1);">
+        ${i18n(isSoft ? 'paywallSoftBenefit2' : 'paywallHardBenefit2')}
+      </div>
+      <div style="color: var(--text-primary); font-size: var(--text-sm); padding: var(--space-3); background: var(--bg-subtle); border-radius: var(--radius-1);">
+        ${i18n(isSoft ? 'paywallSoftBenefit3' : 'paywallHardBenefit3')}
+      </div>
+    </div>
+
+    <button id="paywall-cta" class="btn-primary" style="width: 100%; margin-bottom: var(--space-3); background: var(--accent-primary); color: white; font-weight: 600; padding: var(--space-3) var(--space-4); border-radius: var(--radius-1); border: none; cursor: pointer; font-size: var(--text-base); transition: all 0.2s;">
+      ${i18n(isSoft ? 'paywallSoftCta' : 'paywallHardCta')}
+    </button>
+
+    ${isSoft ? `
+      <button id="paywall-dismiss" style="width: 100%; background: transparent; color: var(--text-secondary); font-weight: 500; padding: var(--space-2); border: none; cursor: pointer; font-size: var(--text-sm); transition: color 0.2s;">
+        ${i18n('paywallSoftDismiss')}
+      </button>
+    ` : `
+      <button id="paywall-contact" style="width: 100%; background: transparent; color: var(--text-secondary); font-weight: 500; padding: var(--space-2); border: none; cursor: pointer; font-size: var(--text-sm); transition: color 0.2s;">
+        ${i18n('paywallHardContact')}
+      </button>
+    `}
+  `;
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // Animaciones CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    #paywall-cta:hover {
+      background: var(--accent-hover) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+    #paywall-dismiss:hover, #paywall-contact:hover {
+      color: var(--text-primary) !important;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Event listeners
+  const ctaBtn = document.getElementById('paywall-cta');
+  const dismissBtn = document.getElementById('paywall-dismiss');
+  const contactBtn = document.getElementById('paywall-contact');
+
+  ctaBtn.addEventListener('click', () => {
+    const url = isSoft
+      ? `${CONFIG.ENDPOINTS.AUTH}?reason=limit_soft`
+      : CONFIG.ENDPOINTS.PRICING;
+    chrome.tabs.create({ url });
+    overlay.remove();
+  });
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      overlay.remove();
+    });
+  }
+
+  if (contactBtn) {
+    contactBtn.addEventListener('click', () => {
+      chrome.tabs.create({ url: 'mailto:hola@tryconfident.com?subject=Consulta sobre planes Pro' });
+      overlay.remove();
+    });
   }
 }
 
@@ -1038,6 +1228,10 @@ async function updateSessionCounterInitial() {
 
         showCounter = true;
       } else if (remaining === 0) {
+        // Mostrar paywall modal prominente (Growth Hacker + UX Research)
+        const paywallType = user_type === 'anonymous' ? 'soft' : 'hard';
+        showPaywall(paywallType);
+
         const text = i18n('sessionCounterLimitReached') + '. ';
         const textNode = document.createTextNode(text);
 
@@ -1122,6 +1316,21 @@ async function updateSessionCounter() {
 
         showCounter = true;
       } else if (remaining === 0) {
+        // CRÍTICO: El usuario alcanzó el límite durante una sesión activa
+        // Mostrar paywall modal prominente (Growth Hacker + UX Research)
+        LOG.warn('[Panel] ⚠️ Límite alcanzado durante sesión activa, mostrando paywall');
+
+        const paywallType = user_type === 'anonymous' ? 'soft' : 'hard';
+        showPaywall(paywallType);
+
+        // Detener la sesión actual automáticamente
+        try {
+          await handleStopSession();
+          LOG.log('[Panel] Sesión detenida automáticamente por límite alcanzado');
+        } catch (err) {
+          LOG.error('[Panel] Error al detener sesión:', err);
+        }
+
         const text = i18n('sessionCounterLimitReached') + '. ';
         const textNode = document.createTextNode(text);
 

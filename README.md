@@ -117,21 +117,26 @@ Carpeta `screenshots/` creada con README completo, especificaciones técnicas (1
 
 ---
 
-## 🎨 Sesiones de Redesign (30-33)
+## 🎨 Sesión 30 — Sistema Paywall Completo
 
-> **CAMBIO DE PLAN**: Basándose en research UX de Refero, se decide rediseñar componentes principales antes de screenshots/testing/deployment final.
+> **OBJETIVO**: Implementar sistema freemium funcional con paywalls UX Research + Growth Hacker compliant
 
-### **Sesión 30** — Rediseño Extension (Side Panel + Popup)
-Rediseño completo de side panel y popup siguiendo patrones de Jace AI, Missive, Wealthsimple. Background layering slate-900/800, nuevo badge system (Level 1/2/3), listening indicator pulsante, session counter con progress bar, copy button on hover.
+### **Implementado**
+- ✅ Sistema de autenticación JWT (lectura de cookies Supabase)
+- ✅ Paywall soft (usuarios anónimos 5/5 sesiones) — Modal celebratorio con CTA "Registrarme gratis"
+- ✅ Paywall hard (usuarios free 15/15 sesiones) — Modal claro con CTA "Ver planes Pro"
+- ✅ Verificación de límites ANTES de iniciar sesión (prevención estado "Escuchando..." cuando límite alcanzado)
+- ✅ Detección automática de sesión activa + detención si límite alcanzado mid-session
+- ✅ SQL script para upgrade a plan Pro (`supabase/upgrade-test-user-to-pro.sql`)
+- ✅ Eliminado endpoint `/api/session` obsoleto que causaba errores 500
+- ✅ Corregido endpoint en extensión (singular → plural)
+- ✅ Eliminado código legacy que causaba error 400 en POST /api/sessions
 
-### **Sesión 31** — Rediseño Landing Page
-Hero con typography scale 48-56px, CTA con gradient Linear-style, 3 profile cards en bento grid (cols-3), hover effects, icon containers 40px, responsive mobile.
-
-### **Sesión 32** — Rediseño Dashboard + Pricing
-Dashboard con tabla Column-style, session type badges (cyan/emerald/violet), search/filter bar, empty state Linear-pattern. Pricing two-column Amie-style, feature list con check/x icons, CTA buttons differentiated.
-
-### **Sesión 33** — Design System Consolidado
-Documentación completa de colors (Slate + Cyan), typography scale, spacing system (4/8/12/16/24/32px), component patterns reutilizables, contrast ratios WCAG verificados.
+### **Limpieza de repositorio** (Sesión 30)
+- ✅ Carpeta `/docs` creada para documentación técnica
+- ✅ Archivos temporales eliminados (testing, debug, design research)
+- ✅ Archivos importantes movidos a `/docs` (planning, specs, chrome store)
+- ✅ Repositorio organizado y limpio para desarrollo continuo
 
 ---
 
@@ -164,26 +169,29 @@ Versión 1.0.0, empaquetar ZIP, crear cuenta Developer, subir assets/screenshots
 ## 📈 Estado Actual del Proyecto
 
 **Versión:** 0.1.0-dev (Desarrollo)
-**Sesión completada:** 28/36 (78%)
-**Próxima sesión:** 30 — Rediseño Extension (Side Panel + Popup)
-**Timeline actualizado:** Redesign (S30-33) → Screenshots/Testing/Deploy (S34-36)
+**Sesión completada:** 30
+**Última actualización:** Marzo 9, 2026
 
 ### ✅ Implementado
-- Core funcional (audio, transcripción, análisis IA, panel lateral)
-- Sistema freemium completo (5/15/∞ sesiones)
-- Multi-plataforma (Google Meet, Teams, Zoom)
-- Multi-idioma web y extensión (ES/EN)
-- **Multi-idioma Claude IA (sugerencias ES/EN)** — NUEVO ✨
-- Dashboard con historial y transcripciones
-- Email automático al finalizar sesión
-- Políticas legales (Privacy, Terms)
-- IA contextual (personalización según perfil de usuario)
-- Creación automática de perfiles (backend safety net)
+- ✅ Core funcional (audio, transcripción, análisis IA, panel lateral)
+- ✅ Sistema freemium COMPLETO con paywalls soft/hard (UX Research + Growth Hacker)
+- ✅ Multi-plataforma (Google Meet, Teams, Zoom)
+- ✅ Multi-idioma web y extensión (ES/EN)
+- ✅ Multi-idioma Claude IA (sugerencias ES/EN)
+- ✅ Dashboard con historial y transcripciones
+- ✅ Email automático al finalizar sesión
+- ✅ Políticas legales (Privacy, Terms)
+- ✅ IA contextual (personalización según perfil de usuario)
+- ✅ Creación automática de perfiles (backend safety net)
+- ✅ Autenticación JWT (cookies Supabase)
+- ✅ Gestión de planes Pro (script SQL)
+- ✅ Repositorio limpio y organizado
 
 ### ⏳ Pendiente
-- Assets profesionales finales (Sesión 26-27)
-- Testing exhaustivo multi-plataforma/idioma (Sesión 28)
-- Publicación Chrome Web Store (Sesión 29)
+- ⏳ Verificación pipeline completo (audio → transcripción → sugerencias Claude)
+- ⏳ Testing exhaustivo multi-plataforma/idioma
+- ⏳ Screenshots Chrome Web Store (1280x800px)
+- ⏳ Publicación Chrome Web Store v1.0.0
 
 ---
 
@@ -197,6 +205,55 @@ Este es un proyecto privado en desarrollo activo. Si tienes acceso al repositori
 4. Crea un Pull Request con descripción clara
 
 **Para instalación local y pruebas**, contacta a: **hola@tryconfident.com**
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+confident/
+├── CLAUDE.md                    # ⭐ Documento de referencia absoluta
+├── PROGRESS.md                  # ⭐ Estado actual del proyecto
+├── README.md                    # Este archivo
+│
+├── docs/                        # Documentación técnica y planificación
+│   ├── README.md
+│   ├── CHROME_WEB_STORE_PUBLICATION.md
+│   ├── ICON_DESIGN_SPECS.md
+│   ├── PLANNING_PRE_LAUNCH.md
+│   └── REDESIGN_PLAN.md
+│
+├── app/                         # Next.js App Router
+│   ├── [locale]/                # Rutas localizadas (ES/EN)
+│   ├── api/                     # API Routes
+│   └── layout.tsx
+│
+├── extension/                   # Chrome Extension MV3
+│   ├── manifest.json
+│   ├── background.js            # Service Worker
+│   ├── content-script.js
+│   ├── offscreen.js             # Audio pipeline
+│   ├── config.js
+│   ├── side-panel/
+│   └── popup/
+│
+├── lib/                         # Utilidades compartidas
+│   ├── supabase.ts
+│   ├── supabase-server.ts
+│   ├── claude.ts                # Prompts IA + getSystemPrompt()
+│   └── constants.ts             # Límites freemium
+│
+├── supabase/                    # Base de datos
+│   ├── schema.sql
+│   ├── migrations/
+│   └── upgrade-test-user-to-pro.sql
+│
+└── messages/                    # Traducciones (next-intl)
+    ├── es.json
+    └── en.json
+```
+
+**Nota**: Archivos temporales (testing, debug, design) se eliminan al final de cada sesión para mantener el repositorio limpio.
 
 ---
 
