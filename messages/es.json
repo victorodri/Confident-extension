@@ -65,90 +65,72 @@
   "pricing": {
     "title": "Precios",
     "subtitle": "Elige el plan que mejor se adapte a ti",
-    "anonymous": {
-      "name": "Anónimo",
-      "price": "€0",
-      "period": "sin registro",
-      "description": "Prueba Confident sin crear cuenta",
-      "cta": "Empezar ahora",
-      "badge": null,
-      "features": [
-        "5 sesiones gratuitas",
-        "Sin necesidad de crear cuenta",
-        "3 perfiles disponibles",
-        "Sugerencias en tiempo real",
-        "Transcripciones básicas"
-      ]
-    },
     "free": {
-      "name": "Gratis",
+      "name": "Explorador",
       "price": "€0",
       "period": "siempre",
-      "description": "Perfecto para probar Confident",
-      "cta": "Crear cuenta gratis",
-      "badge": "Recomendado",
+      "description": "Ideal para probar Confident",
+      "cta": "Empezar gratis",
+      "badge": "Popular",
       "features": [
-        "15 sesiones totales",
-        "5 anónimas + 10 con Google",
+        "15 sesiones gratuitas",
+        "Requiere registro con Google",
         "3 perfiles (Candidato, Vendedor, Defensor)",
-        "Sugerencias en tiempo real",
+        "Sugerencias IA en tiempo real",
         "Transcripciones por email",
         "Historial de sesiones"
       ]
     },
     "pro": {
       "name": "Pro",
-      "price": "€19",
+      "price": "€5",
       "period": "/mes",
-      "description": "Para quienes tienen conversaciones críticas frecuentes",
-      "cta": "Unirse a lista de espera",
-      "badge": "Próximamente",
+      "description": "Para usuarios frecuentes",
+      "cta": "Suscribirme",
+      "badge": "Más elegido",
       "features": [
-        "Sesiones ilimitadas",
-        "Todo lo de Gratis, más:",
-        "Analytics de rendimiento",
-        "Modo practice (próximamente)",
+        "50 sesiones al mes",
+        "Todo lo de Explorador",
+        "Análisis IA avanzado",
         "Soporte prioritario",
-        "Acceso anticipado a nuevas features"
+        "Exportar transcripciones",
+        "Sin compromiso, cancela cuando quieras"
       ]
     },
-    "waitlist": {
-      "title": "Plan Pro — Lista de espera",
-      "subtitle": "Confident Pro estará disponible pronto. Déjanos tu email y serás de los primeros en saberlo.",
-      "nameLabel": "Nombre",
-      "namePlaceholder": "Tu nombre",
-      "emailLabel": "Email",
-      "emailPlaceholder": "tu@email.com",
-      "priceInfo": "€19/mes — Sesiones ilimitadas + analytics + soporte prioritario",
-      "cancelButton": "Cancelar",
-      "submitButton": "Unirme a la lista",
-      "submittingButton": "Enviando..."
-    },
-    "waitlistSuccess": {
-      "title": "¡Estás en la lista! 🎉",
-      "subtitle": "Te avisaremos por email cuando Confident Pro esté disponible.",
-      "freePlanInfo": "Mientras tanto, puedes seguir usando el plan gratuito (15 sesiones).",
-      "createFreeButton": "Crear cuenta gratuita",
-      "backButton": "Volver al inicio"
+    "diamond": {
+      "name": "Diamond",
+      "price": "€15",
+      "period": "/mes",
+      "description": "Para profesionales sin límites",
+      "cta": "Suscribirme Premium",
+      "badge": "Sin límites",
+      "features": [
+        "Sesiones ilimitadas",
+        "Todo lo de Pro",
+        "API access (próximamente)",
+        "Integraciones personalizadas",
+        "Soporte 24/7",
+        "Cancela cuando quieras"
+      ]
     },
     "backLink": "← Volver",
     "faqTitle": "Preguntas frecuentes",
     "faq": {
       "q1": {
-        "question": "¿Por qué 15 sesiones y no ilimitadas en el plan gratuito?",
-        "answer": "Queremos que pruebes Confident sin compromiso, pero los costos de IA (Claude + Deepgram) son significativos. 15 sesiones son suficientes para validar si te sirve."
+        "question": "¿Qué pasa cuando se acaban las 50 sesiones del plan Pro?",
+        "answer": "El límite se renueva automáticamente cada mes. Si necesitas más, puedes actualizar a Diamond (ilimitado) en cualquier momento."
       },
       "q2": {
-        "question": "¿Puedo cancelar cuando quiera?",
-        "answer": "Sí, sin penalización. Cancela desde tu dashboard en cualquier momento."
+        "question": "¿Puedo cambiar de plan cuando quiera?",
+        "answer": "Sí, puedes actualizar de Pro a Diamond inmediatamente. Si cancelas tu suscripción, seguirás teniendo acceso hasta el final del período pagado."
       },
       "q3": {
-        "question": "¿Qué pasa con mis datos si cancelo?",
-        "answer": "Puedes eliminarlos completamente desde el dashboard o solicitarlo a hola@tryconfident.com. Cumplimos con RGPD (derecho ARCO)."
+        "question": "¿Qué forma de pago aceptan?",
+        "answer": "Aceptamos todas las tarjetas de crédito y débito principales (Visa, Mastercard, Amex) a través de Stripe, nuestro procesador de pagos seguro."
       },
       "q4": {
-        "question": "¿Habrá plan para equipos?",
-        "answer": "Sí, estamos trabajando en un plan Teams (€49/mes para 5 usuarios). Si te interesa, escríbenos a hola@tryconfident.com."
+        "question": "¿Qué pasa con mis datos si cancelo mi suscripción?",
+        "answer": "Puedes eliminarlos completamente desde el dashboard o solicitarlo a hola@tryconfident.com. Cumplimos con RGPD (derecho ARCO)."
       }
     }
   },
