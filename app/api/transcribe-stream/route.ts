@@ -20,8 +20,9 @@ export async function POST(request: NextRequest) {
     console.log('[/api/transcribe-stream] Recibido audio:', audioBuffer.byteLength, 'bytes');
 
     // Enviar a Deepgram REST API (prerecorded)
+    // IMPORTANTE: Especificar formato de audio raw PCM16
     const deepgramResponse = await fetch(
-      'https://api.deepgram.com/v1/listen?model=nova-2&language=es&punctuate=true&diarize=false',
+      'https://api.deepgram.com/v1/listen?model=nova-2&language=es&punctuate=true&diarize=false&encoding=linear16&sample_rate=16000&channels=1',
       {
         method: 'POST',
         headers: {

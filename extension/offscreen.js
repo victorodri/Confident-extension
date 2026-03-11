@@ -88,6 +88,54 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 console.log('[DEBUG OFFSCREEN] ✅ Listener de mensajes registrado');
 
 // ─────────────────────────────────────────────────────────────
+// PORT API LISTENER (Para comunicación con background en MV3)
+// ─────────────────────────────────────────────────────────────
+
+chrome.runtime.onConnect.addListener((port) => {
+  console.log('[DEBUG OFFSCREEN] ========== PORT CONECTADO ==========');
+  console.log('[DEBUG OFFSCREEN] port.name:', port.name);
+
+  if (port.name === 'offscreen-audio') {
+    port.onMessage.addListener(async (message) => {
+      try {
+        console.log('[DEBUG OFFSCREEN] Mensaje recibido via Port:', message);
+
+        if (message.action === 'START_AUDIO') {
+          LOG.log('[DEBUG OFFSCREEN] ✅ START_AUDIO recibido via Port');
+          LOG.log('[DEBUG OFFSCREEN] streamId:', message.streamId);
+          LOG.log('[DEBUG OFFSCREEN] profile:', message.profile);
+
+          try {
+            await startAudioPipeline(message.streamId, message.profile);
+            LOG.log('[DEBUG OFFSCREEN] startAudioPipeline completado correctamente');
+            port.postMessage({ ok: true });
+          } catch (err) {
+            LOG.error('[Offscreen] ❌ Error al iniciar pipeline de audio:', err.name, '-', err.message);
+            LOG.error('[Offscreen] ❌ Stack:', err.stack);
+            port.postMessage({ ok: false, error: err.message || err.name });
+          }
+        } else if (message.action === 'STOP_AUDIO') {
+          LOG.log('[DEBUG OFFSCREEN] STOP_AUDIO recibido via Port');
+          stopAudioPipeline();
+          port.postMessage({ ok: true });
+        } else {
+          console.log('[DEBUG OFFSCREEN] Acción no reconocida:', message.action);
+        }
+      } catch (err) {
+        console.error('[DEBUG OFFSCREEN] ❌❌❌ ERROR EN PORT LISTENER:', err);
+        port.postMessage({ ok: false, error: err.message });
+      }
+    });
+
+    port.onDisconnect.addListener(() => {
+      console.log('[DEBUG OFFSCREEN] Port desconectado');
+    });
+  }
+});
+
+console.log('[DEBUG OFFSCREEN] ✅ Port listener registrado');
+
+// ─────────────────────────────────────────────────────────────
 // PIPELINE DE AUDIO
 // ─────────────────────────────────────────────────────────────
 
@@ -176,10 +224,19 @@ async function startAudioPipeline(streamId, profile) {
     tabSource.connect(processor);
   }
 
-  // NO conectar processor a destination - ya tenemos el audio directo del tab
+  // IMPORTANTE: Conectar processor al destination con gain 0
+  // Esto hace que processor.onaudioprocess se ejecute, pero sin duplicar el audio
+  const silentGain = audioCtx.createGain();
+  silentGain.gain.value = 0; // Silenciar para evitar duplicar audio
+  processor.connect(silentGain);
+  silentGain.connect(audioCtx.destination);
+
+  LOG.log('[DEBUG OFFSCREEN] Processor conectado al destination con gain 0');
 
   // 7. Procesar audio: acumular y enviar cada N segundos
   processor.onaudioprocess = (e) => {
+    LOG.log('[DEBUG OFFSCREEN] 🎤 onaudioprocess ejecutado');
+
     const inputData = e.inputBuffer.getChannelData(0);
     const pcm16 = float32ToInt16(inputData);
 
@@ -187,6 +244,7 @@ async function startAudioPipeline(streamId, profile) {
 
     const now = Date.now();
     if (now - lastSendTime >= SEND_INTERVAL_MS) {
+      LOG.log('[DEBUG OFFSCREEN] ⏰ Intervalo alcanzado, llamando sendAudioToBackend()');
       sendAudioToBackend();
       lastSendTime = now;
     }

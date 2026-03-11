@@ -377,14 +377,44 @@ async function handleStartSession(tabId, profile) {
       throw new Error('CRITICAL: Offscreen document cerrado antes de enviar START_AUDIO');
     }
 
-    // 5. Enviar streamId + config al offscreen document para que inicie el pipeline
-    LOG.log('[DEBUG] Enviando START_AUDIO al offscreen...');
-    const response = await chrome.runtime.sendMessage({
-      action: 'START_AUDIO',
-      streamId,
-      profile,
+    // 5. Enviar streamId + config al offscreen document usando Port API
+    LOG.log('[DEBUG] Enviando START_AUDIO al offscreen via Port API...');
+
+    // Crear promesa para esperar respuesta del offscreen
+    const startAudioPromise = new Promise((resolve, reject) => {
+      const port = chrome.runtime.connect({ name: 'offscreen-audio' });
+
+      port.onMessage.addListener((response) => {
+        LOG.log('[DEBUG] Respuesta del offscreen:', response);
+        if (response.ok) {
+          resolve(response);
+        } else {
+          reject(new Error(response.error || 'Error desconocido en offscreen'));
+        }
+        port.disconnect();
+      });
+
+      port.onDisconnect.addListener(() => {
+        LOG.warn('[DEBUG] Port desconectado antes de recibir respuesta');
+        reject(new Error('Port desconectado'));
+      });
+
+      // Enviar mensaje START_AUDIO
+      port.postMessage({
+        action: 'START_AUDIO',
+        streamId,
+        profile,
+      });
+
+      // Timeout de 10 segundos
+      setTimeout(() => {
+        reject(new Error('Timeout: offscreen no respondió START_AUDIO en 10s'));
+        port.disconnect();
+      }, 10000);
     });
-    LOG.log('[DEBUG] START_AUDIO enviado, response:', response);
+
+    await startAudioPromise;
+    LOG.log('[DEBUG] START_AUDIO completado exitosamente');
 
     // Notificar al side panel que la sesión ha comenzado
     LOG.log('[DEBUG] Notificando SESSION_STARTED al panel...');
@@ -456,7 +486,18 @@ async function createOffscreenDocument() {
 async function handleStopSession() {
   // Notificar al offscreen document para que cierre el WebSocket y libere recursos
   try {
-    await chrome.runtime.sendMessage({ action: 'STOP_AUDIO' });
+    const port = chrome.runtime.connect({ name: 'offscreen-audio' });
+    port.postMessage({ action: 'STOP_AUDIO' });
+    // Esperar confirmación o timeout de 2s
+    await Promise.race([
+      new Promise((resolve) => {
+        port.onMessage.addListener((response) => {
+          resolve(response);
+          port.disconnect();
+        });
+      }),
+      new Promise((resolve) => setTimeout(resolve, 2000))
+    ]);
   } catch (err) {
     // El offscreen document puede no estar activo si ya fue cerrado
     LOG.warn('[Confident] No se pudo notificar STOP_AUDIO al offscreen:', err.message);
