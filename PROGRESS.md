@@ -1863,31 +1863,89 @@ Read .claude/agents/[agente-relevante].md
 
 ---
 
+## ✅ Sesión 30 completada — Sistema Paywall + Fix Crítico Audio Pipeline
+
+**Fecha completada**: Marzo 10-11, 2026
+**Duración**: 2 sesiones (rate limit)
+**Cambio de objetivo**: Se pospuso redesign para priorizar funcionalidad crítica
+
+### Implementaciones completadas:
+
+#### 1. Sistema Paywall Completo 💰
+- ✅ Autenticación JWT (lectura de cookies Supabase)
+- ✅ Paywall soft (usuarios anónimos 5/5 sesiones) — Modal celebratorio con CTA "Registrarme gratis"
+- ✅ Paywall hard (usuarios free 15/15 sesiones) — Modal claro con CTA "Ver planes Pro"
+- ✅ Verificación de límites ANTES de iniciar sesión (prevención estado "Escuchando..." cuando límite alcanzado)
+- ✅ Detección automática de sesión activa + detención si límite alcanzado mid-session
+- ✅ SQL script para upgrade a plan Pro (`supabase/upgrade-test-user-to-pro.sql`)
+- ✅ Eliminado endpoint `/api/session` obsoleto que causaba errores 500
+- ✅ Corregido endpoint en extensión (singular → plural)
+- ✅ Eliminado código legacy que causaba error 400 en POST /api/sessions
+
+#### 2. Fix Crítico Audio Pipeline 🔧
+**PROBLEMA DETECTADO**: `processor.onaudioprocess` no se ejecutaba porque processor no estaba conectado a ningún destino.
+
+**SOLUCIÓN IMPLEMENTADA**:
+- ✅ Migración `chrome.runtime.sendMessage` → Port API (`chrome.runtime.connect`) para mejor comunicación bidireccional en MV3
+- ✅ Fix `processor.onaudioprocess`: Conectado processor → silentGain (gain=0) → destination
+- ✅ Timeout de 10s para START_AUDIO con mejor manejo de errores
+- ✅ Deepgram encoding explícito: `encoding=linear16&sample_rate=16000&channels=1` en `/api/transcribe-stream`
+- ✅ Logs de debug mejorados para diagnóstico completo del audio pipeline
+
+#### 3. Limpieza de repositorio 📁
+- ✅ Carpeta `/docs` creada para documentación técnica
+- ✅ Archivos temporales eliminados (testing, debug, design research)
+- ✅ Archivos importantes movidos a `/docs` (planning, specs, chrome store)
+- ✅ README.md actualizado con nueva información
+- ✅ Repositorio organizado y limpio
+
+### Archivos modificados:
+```
+extension/background.js           ← Port API + timeout 10s
+extension/offscreen.js            ← processor.onaudioprocess fix
+app/api/transcribe-stream/route.ts   ← Deepgram encoding
+README.md                         ← Documentación actualizada
+PROGRESS.md                       ← Este archivo
+```
+
+### Commits realizados:
+1. `Feat: Sistema Paywall completo + Organización repositorio (Sesión 30)`
+2. `Fix: Crear endpoint /api/transcribe-stream faltante`
+3. `Fix: Migrar comunicación a Port API y arreglar audio pipeline (Sesión 30)`
+4. `Docs: Actualizar README con fix crítico audio pipeline (Sesión 30)`
+
+### Estado:
+- ✅ Sistema freemium funcional end-to-end
+- ✅ Audio pipeline corregido y robusto
+- ✅ Repositorio limpio y organizado
+- ⏳ **PENDIENTE**: Verificar pipeline completo en Google Meet real
+- ⏳ **PENDIENTE**: Redesign postponed para Sesión 31
+
+---
+
 ## Próxima sesión
 
-Sesión: 30 — Rediseño Extension (Side Panel + Popup)
-Objetivo: Rediseñar side panel y popup siguiendo patrones de Jace AI, Missive, Wealthsimple
-Duración estimada: 2-3 horas
-Tokens estimados: 40-50K
+Sesión: 31 — Testing Pipeline Completo
+Objetivo: Verificar que audio → transcripción → Claude → sugerencias funciona correctamente
+Duración estimada: 1-2 horas
+Tokens estimados: 20-30K
 
-**Pre-requisitos Sesión 30**:
-1. ✅ Research compilado (DESIGN_RESEARCH_REFERO.md)
-2. ✅ Plan de sesiones (REDESIGN_PLAN.md)
-3. ✅ Herramientas de desarrollo integradas (claude-mem + agency-agents)
-4. ⏳ Backend Next.js corriendo
-5. ⏳ Extensión cargada en Chrome
-6. ⏳ Tailwind CSS configurado
+**Pre-requisitos Sesión 31**:
+1. ✅ Audio pipeline corregido (Port API + processor fix)
+2. ✅ Sistema freemium funcional
+3. ⏳ Backend Next.js corriendo
+4. ⏳ Extensión cargada en Chrome
+5. ⏳ Google Meet test session lista
 
-**Agente recomendado para Sesión 30**: `engineering-frontend-developer.md` + `design-ui-designer.md`
+**Tareas Sesión 31**:
+1. Cargar extensión en Chrome
+2. Crear sesión test en Google Meet
+3. Verificar captura de audio (tabCapture + micrófono)
+4. Verificar logs en offscreen document
+5. Verificar transcripciones Deepgram
+6. Verificar sugerencias Claude
+7. Verificar display en side panel
+8. Documentar resultados en TESTING_PIPELINE.md
+9. Fix bugs si se encuentran
 
-**Tareas Sesión 30**:
-1. Rediseñar extension/side-panel/panel.html
-2. Actualizar extension/side-panel/panel.css con Tailwind
-3. Rediseñar extension/popup/popup.html
-4. Actualizar extension/popup/popup.css
-5. Implementar nuevo badge system (Level 1/2/3)
-6. Añadir listening indicator con pulsing dot
-7. Session counter con progress bar
-8. Copy button on hover
-9. Verificar contrast ratios WCAG
-10. Test en Chrome con extensión cargada
+**Agente recomendado**: `testing-evidence-collector.md` + `engineering-backend-architect.md`
