@@ -117,11 +117,11 @@ Carpeta `screenshots/` creada con README completo, especificaciones técnicas (1
 
 ---
 
-## 🎨 Sesión 30 — Sistema Paywall Completo
+## 🎨 Sesión 30 — Sistema Paywall + Fix Crítico Audio Pipeline
 
-> **OBJETIVO**: Implementar sistema freemium funcional con paywalls UX Research + Growth Hacker compliant
+> **OBJETIVO**: Implementar sistema freemium funcional + Resolver problemas críticos de captura de audio
 
-### **Implementado**
+### **Sistema Paywall Completo**
 - ✅ Sistema de autenticación JWT (lectura de cookies Supabase)
 - ✅ Paywall soft (usuarios anónimos 5/5 sesiones) — Modal celebratorio con CTA "Registrarme gratis"
 - ✅ Paywall hard (usuarios free 15/15 sesiones) — Modal claro con CTA "Ver planes Pro"
@@ -132,7 +132,14 @@ Carpeta `screenshots/` creada con README completo, especificaciones técnicas (1
 - ✅ Corregido endpoint en extensión (singular → plural)
 - ✅ Eliminado código legacy que causaba error 400 en POST /api/sessions
 
-### **Limpieza de repositorio** (Sesión 30)
+### **Fix Crítico Audio Pipeline** 🔧
+- ✅ **Migración a Port API** — `chrome.runtime.sendMessage` → `chrome.runtime.connect` para mejor comunicación bidireccional en MV3
+- ✅ **Fix `processor.onaudioprocess` no se ejecutaba** — Conectado processor → silentGain (gain=0) → destination
+- ✅ **Timeout de 10s para START_AUDIO** — Mejor manejo de errores y desconexiones
+- ✅ **Deepgram encoding explícito** — Añadido `encoding=linear16&sample_rate=16000&channels=1` en `/api/transcribe-stream`
+- ✅ **Logs de debug mejorados** — Diagnóstico completo del audio pipeline
+
+### **Limpieza de repositorio**
 - ✅ Carpeta `/docs` creada para documentación técnica
 - ✅ Archivos temporales eliminados (testing, debug, design research)
 - ✅ Archivos importantes movidos a `/docs` (planning, specs, chrome store)
@@ -170,10 +177,11 @@ Versión 1.0.0, empaquetar ZIP, crear cuenta Developer, subir assets/screenshots
 
 **Versión:** 0.1.0-dev (Desarrollo)
 **Sesión completada:** 30
-**Última actualización:** Marzo 9, 2026
+**Última actualización:** Marzo 11, 2026
 
 ### ✅ Implementado
 - ✅ Core funcional (audio, transcripción, análisis IA, panel lateral)
+- ✅ **Audio pipeline robusto** (Port API para MV3, processor.onaudioprocess fix, Deepgram encoding)
 - ✅ Sistema freemium COMPLETO con paywalls soft/hard (UX Research + Growth Hacker)
 - ✅ Multi-plataforma (Google Meet, Teams, Zoom)
 - ✅ Multi-idioma web y extensión (ES/EN)
