@@ -1,7 +1,102 @@
 # PROGRESS.md — Confident
 
 ## Estado actual
-Sesión completada: 30 — Sistema Paywall + Fix Autenticación
+Sesión en progreso: 31 — Integración Stripe + 3 Planes de Pricing
+Fecha: Marzo 11, 2026
+Progreso: 95%
+
+### ✅ Sesión 31 — Integración Stripe + Sistema de 3 Planes (95%)
+
+**Objetivo**: Implementar sistema completo de pricing con 3 planes + integración Stripe para pagos
+
+**Contexto**:
+- Sistema freemium actual: Anónimo (5) / Free (15) / Pro (∞)
+- Requerimiento: Añadir plan Diamond + limitar Pro a 50 sesiones/mes
+- Implementar flujo de pago completo con Stripe
+
+**Cambios implementados**:
+
+1. **Nueva estructura de planes**:
+   - Free: 15 sesiones con registro (€0)
+   - Pro: 50 sesiones/mes (€5/mes)
+   - Diamond: Sesiones ilimitadas (€15/mes)
+
+2. **Backend Stripe (100%)**:
+   - ✅ `lib/stripe.ts` → Cliente Stripe + funciones helper
+   - ✅ `/api/stripe/create-checkout-session` → Crear sesión de pago
+   - ✅ `/api/stripe/webhook` → Procesar eventos de Stripe
+   - ✅ `lib/constants.ts` → Límites y precios actualizados
+   - ✅ `.env.example` → Variables Stripe documentadas
+
+3. **Base de datos (100%)**:
+   - ✅ `supabase/migrations/add_stripe_integration.sql`:
+     - Constraint actualizado para incluir 'diamond'
+     - Columnas Stripe en profiles: customer_id, subscription_status, period_end
+     - Tabla stripe_customers
+     - Tabla stripe_subscriptions
+     - RLS policies configuradas
+     - Triggers automáticos para sync subscriptions → profiles
+     - Function handle_subscription_canceled() para downgrade
+
+4. **UI Web (100%)**:
+   - ✅ Pricing page actualizada con 3 cards
+   - ✅ Integración con Stripe Checkout
+   - ✅ Traducciones ES/EN para los 3 planes
+   - ✅ FAQ actualizado con nuevo modelo de precios
+   - ✅ Manejo de loading states y errores
+
+5. **Dashboard (100%)**:
+   - ✅ Badge visual del plan actual (Free/Pro/Diamond)
+   - ✅ Botón "Actualizar a Pro" para usuarios Free
+   - ✅ Botón "Gestionar suscripción" para Pro/Diamond
+   - ✅ Gradientes distintivos por plan (púrpura-rosa)
+   - ✅ Contador de sesiones actualizado para 3 planes
+   - ✅ `/api/usage` actualizado con lógica para Diamond
+
+6. **Extensión (100%)**:
+   - ✅ Paywalls actualizados con nuevos límites
+   - ✅ Soft paywall: 5 anónimo → 15 con registro
+   - ✅ Hard paywall: 15 free → Pro/Diamond upgrade
+   - ✅ CTAs con precios (€5 Pro / €15 Diamond)
+   - ✅ Mensajes bilingües (ES/EN)
+
+**Archivos creados**:
+```
+lib/stripe.ts
+app/api/stripe/create-checkout-session/route.ts
+app/api/stripe/webhook/route.ts
+supabase/migrations/add_stripe_integration.sql
+SESION_31_STRIPE_INTEGRATION.md
+```
+
+**Archivos modificados**:
+```
+lib/constants.ts
+.env.example
+app/[locale]/pricing/page.tsx
+app/[locale]/dashboard/page.tsx
+app/api/usage/route.ts
+messages/es.json
+messages/en.json
+extension/side-panel/panel.js
+```
+
+**Pendiente (manual)**:
+- [ ] Configurar productos en Stripe Dashboard (Pro €5, Diamond €15)
+- [ ] Configurar webhook en Stripe Dashboard
+- [ ] Ejecutar migración SQL en Supabase
+- [ ] Testing end-to-end del flujo de pago
+
+**Commits**:
+- `52d578c` - Backend Stripe completo (schema, cliente, endpoints)
+- `a8f9e2d` - Pricing page + traducciones para 3 planes
+- `becd413` - Dashboard upgrade button + /api/usage para 3 planes
+
+---
+
+## Sesiones anteriores
+
+### ✅ Sesión 30 — Sistema Paywall Completo + Fix Autenticación
 Fecha: Marzo 9, 2026
 
 ### ✅ Sesión 30 — Sistema Paywall Completo + Fix Autenticación

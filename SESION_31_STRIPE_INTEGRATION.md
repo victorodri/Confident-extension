@@ -1,7 +1,7 @@
 # Sesión 31 — Integración Stripe + 3 Planes de Pricing
 
 **Fecha**: Marzo 11, 2026
-**Estado**: EN PROGRESO (70% completado)
+**Estado**: EN PROGRESO (95% completado)
 **Objetivo**: Implementar sistema completo de pricing con 3 planes + integración Stripe
 
 ---
@@ -66,120 +66,51 @@
   - `customer.subscription.deleted` → Downgrade a free
   - `invoice.payment_failed` → Marcar como past_due
 
+### 6. Pricing Page Actualizada
+- ✅ **app/[locale]/pricing/page.tsx** actualizado:
+  - 3 cards de planes (Free/Pro/Diamond)
+  - Integración con `/api/stripe/create-checkout-session`
+  - Manejo de estados de loading y errores
+  - Redirección a Stripe Checkout
+  - Redirección a auth para plan Free
+
+### 7. Traducciones Actualizadas
+- ✅ **messages/es.json** actualizado:
+  - Traducciones completas para 3 planes
+  - Badges, características, CTAs
+  - FAQ actualizado con nuevo modelo de precios
+
+- ✅ **messages/en.json** actualizado:
+  - Traducciones en inglés para 3 planes
+  - Estructura idéntica a versión española
+
+### 8. Paywalls de Extensión Actualizados
+- ✅ **extension/side-panel/panel.js** actualizado:
+  - Soft paywall: 5 sesiones anónimas → 15 con registro
+  - Hard paywall: 15 sesiones free → Pro (€5) o Diamond (€15)
+  - CTAs actualizados con nuevos precios
+  - Mensajes en ES/EN
+
+### 9. Dashboard con Upgrade
+- ✅ **app/[locale]/dashboard/page.tsx** actualizado:
+  - Badge visual del plan actual (Free/Pro/Diamond)
+  - Botón "Actualizar a Pro" para usuarios Free
+  - Botón "Gestionar suscripción" para Pro/Diamond
+  - Gradientes distintivos por plan
+  - Contador de sesiones con lógica para 3 planes
+
+- ✅ **app/api/usage/route.ts** actualizado:
+  - Importa LIMITS desde lib/constants.ts
+  - Maneja correctamente los 3 planes
+  - Diamond = ilimitado (remaining: null)
+  - Pro = 50 sesiones/mes
+  - Free = 15 sesiones
+
 ---
 
 ## ⏳ PENDIENTE
 
-### 1. Actualizar Pricing Page (app/[locale]/pricing/page.tsx)
-**Cambios necesarios**:
-- Actualizar estructura de planes a:
-  1. **Free** → "Explorador" (15 sesiones con registro, gratis)
-  2. **Pro** → 50 sesiones/mes por 5€/mes
-  3. **Diamond** → Sesiones ilimitadas por 15€/mes
-
-- Modificar `handlePlanClick` para:
-  ```typescript
-  const handlePlanClick = async (plan: 'free' | 'pro' | 'diamond') => {
-    if (plan === 'free') {
-      window.location.href = `/${locale}/auth`;
-    } else {
-      // Crear checkout session en Stripe
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan })
-      });
-
-      const { url } = await response.json();
-      window.location.href = url;
-    }
-  };
-  ```
-
-### 2. Actualizar Traducciones (messages/es.json y messages/en.json)
-**Añadir en la sección `pricing`**:
-```json
-{
-  "pricing": {
-    "free": {
-      "name": "Explorador",
-      "price": "0€",
-      "period": "/mes",
-      "description": "Ideal para probar Confident",
-      "features": [
-        "15 sesiones gratis",
-        "Requiere registro",
-        "Sugerencias en tiempo real",
-        "3 perfiles (Candidato/Vendedor/Defensor)",
-        "Historial de sesiones",
-        "Transcripciones por email"
-      ],
-      "cta": "Empezar gratis",
-      "badge": "Popular"
-    },
-    "pro": {
-      "name": "Pro",
-      "price": "5€",
-      "period": "/mes",
-      "description": "Para usuarios frecuentes",
-      "features": [
-        "50 sesiones al mes",
-        "Todo lo de Explorador",
-        "Análisis IA avanzado",
-        "Soporte prioritario",
-        "Exportar transcripciones",
-        "Sin compromiso, cancela cuando quieras"
-      ],
-      "cta": "Suscribirme",
-      "badge": "Más elegido"
-    },
-    "diamond": {
-      "name": "Diamond",
-      "price": "15€",
-      "period": "/mes",
-      "description": "Para profesionales sin límites",
-      "features": [
-        "Sesiones ilimitadas",
-        "Todo lo de Pro",
-        "API access (próximamente)",
-        "Integraciones personalizadas",
-        "Soporte 24/7",
-        "Cancela cuando quieras"
-      ],
-      "cta": "Suscribirme Premium",
-      "badge": "Sin límites"
-    }
-  }
-}
-```
-
-### 3. Actualizar Paywalls en Extensión
-**Archivos a modificar**:
-- `extension/side-panel/panel.js`
-- `extension/side-panel/panel.html`
-
-**Cambios**:
-- Actualizar límites:
-  - Anónimo: 5 sesiones
-  - Free: 15 sesiones
-  - Pro: 50 sesiones/mes
-  - Diamond: ilimitado
-
-- Actualizar CTAs del paywall:
-  - Soft paywall (5/5 anónimo) → "Crear cuenta gratis (15 sesiones)"
-  - Hard paywall (15/15 free) → "Actualizar a Pro (50 sesiones/mes por 5€)"
-
-- Añadir enlace a `/pricing` en modales
-
-### 4. Dashboard: Mostrar Plan Actual + Upgrade Button
-**Archivo**: `app/[locale]/dashboard/page.tsx`
-
-**Añadir**:
-- Badge con plan actual (Free/Pro/Diamond)
-- Botón "Upgrade" si es Free
-- Botón "Gestionar suscripción" si es Pro/Diamond → Portal de Stripe
-
-### 5. Configurar Stripe Dashboard
+### 1. Configurar Stripe Dashboard
 **Pasos manuales** (hacer en dashboard.stripe.com):
 1. Crear producto "Confident Pro"
    - Precio: 5€/mes recurrente
@@ -199,7 +130,7 @@
      - `invoice.payment_failed`
    - Copiar signing secret → `STRIPE_WEBHOOK_SECRET`
 
-### 6. Ejecutar Migración SQL
+### 2. Ejecutar Migración SQL
 **Comando**:
 ```bash
 # En Supabase Dashboard → SQL Editor
@@ -207,7 +138,7 @@
 # Ejecutar
 ```
 
-### 7. Testing End-to-End
+### 3. Testing End-to-End
 **Checklist**:
 - [ ] Crear cuenta nueva → debe tener plan 'free'
 - [ ] Click en "Upgrade to Pro" → redirige a Stripe Checkout
@@ -233,17 +164,14 @@ SESION_31_STRIPE_INTEGRATION.md                   ← Este archivo
 
 ### Modificados:
 ```
-lib/constants.ts                  ← Límites 3 planes + precios
-.env.example                     ← Variables Stripe
-```
-
-### Pendientes de modificar:
-```
-app/[locale]/pricing/page.tsx    ← UI 3 planes + Stripe checkout
-messages/es.json                 ← Traducciones 3 planes
-messages/en.json                 ← Traducciones 3 planes (EN)
-extension/side-panel/panel.js    ← Límites + CTAs
-app/[locale]/dashboard/page.tsx  ← Badge plan + botón upgrade
+lib/constants.ts                   ← Límites 3 planes + precios
+.env.example                      ← Variables Stripe
+app/[locale]/pricing/page.tsx     ← UI 3 planes + Stripe checkout
+messages/es.json                  ← Traducciones 3 planes
+messages/en.json                  ← Traducciones 3 planes (EN)
+extension/side-panel/panel.js     ← Límites + CTAs
+app/[locale]/dashboard/page.tsx   ← Badge plan + botón upgrade
+app/api/usage/route.ts            ← Lógica para 3 planes
 ```
 
 ---
@@ -251,16 +179,23 @@ app/[locale]/dashboard/page.tsx  ← Badge plan + botón upgrade
 ## 🎯 Próximos Pasos (Sesión 32)
 
 1. **Configurar Stripe Dashboard** (manual, 15 min)
-2. **Ejecutar migración SQL** en Supabase (1 min)
-3. **Actualizar pricing page** con 3 cards + Stripe integration (30 min)
-4. **Actualizar traducciones** ES/EN (15 min)
-5. **Actualizar paywalls extensión** (30 min)
-6. **Añadir badge + upgrade button en dashboard** (20 min)
-7. **Testing end-to-end** (1 hora)
-8. **Documentar en PROGRESS.md**
+   - Crear productos Pro y Diamond
+   - Configurar precios recurrentes
+   - Configurar webhook endpoint
 
-**Tiempo estimado**: 3-4 horas
-**Tokens estimados**: 40-50K
+2. **Ejecutar migración SQL** en Supabase (1 min)
+   - Copiar y ejecutar add_stripe_integration.sql
+
+3. **Testing end-to-end** (1 hora)
+   - Flujo completo Free → Pro
+   - Flujo Pro → Diamond
+   - Cancelación de suscripción
+   - Webhook processing
+
+4. **Documentar en PROGRESS.md**
+
+**Tiempo estimado**: 1.5 horas
+**Tokens estimados**: 10-15K
 
 ---
 
@@ -270,13 +205,15 @@ app/[locale]/dashboard/page.tsx  ← Badge plan + botón upgrade
 ✅ Backend Stripe: 100% completado
 ✅ Base de datos: 100% completado
 ✅ API endpoints: 100% completado
-⏳ UI Pricing: 0% completado
-⏳ Traducciones: 0% completado
-⏳ Paywalls extensión: 0% completado
-⏳ Dashboard upgrade: 0% completado
+✅ UI Pricing: 100% completado
+✅ Traducciones: 100% completado
+✅ Paywalls extensión: 100% completado
+✅ Dashboard upgrade: 100% completado
+⏳ Configuración Stripe: 0% (manual)
+⏳ Migración SQL: 0% (manual)
 ⏳ Testing: 0% completado
 
-PROGRESO TOTAL: 70%
+PROGRESO TOTAL: 95%
 ```
 
 ---
@@ -314,5 +251,5 @@ AND column_name IN ('stripe_customer_id', 'subscription_status', 'current_period
 
 ---
 
-**Última actualización**: Marzo 11, 2026 - 11:30 AM
-**Siguiente sesión**: Completar UI + Testing
+**Última actualización**: Marzo 11, 2026 - 10:22 AM
+**Siguiente sesión**: Configuración manual + Testing
