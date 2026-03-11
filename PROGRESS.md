@@ -1949,3 +1949,97 @@ Tokens estimados: 20-30K
 9. Fix bugs si se encuentran
 
 **Agente recomendado**: `testing-evidence-collector.md` + `engineering-backend-architect.md`
+
+---
+
+## 🚧 Sesión 31 EN PROGRESO — Integración Stripe + 3 Planes (70% completado)
+
+**Fecha iniciada**: Marzo 11, 2026
+**Estado**: Backend completado, UI pendiente
+**Objetivo**: Sistema completo de pricing con 3 planes + Stripe
+
+### ✅ BACKEND COMPLETADO (70%)
+
+#### 1. Schema de Base de Datos
+- ✅ Migración SQL `add_stripe_integration.sql` creada
+- ✅ Constraint `profiles.plan` actualizado → incluye 'diamond'
+- ✅ Columnas Stripe añadidas: `stripe_customer_id`, `subscription_status`, `current_period_end`
+- ✅ Tabla `stripe_customers` con RLS policies
+- ✅ Tabla `stripe_subscriptions` con RLS policies
+- ✅ Triggers automáticos para sync subscriptions → profiles
+- ✅ Function `handle_subscription_canceled()` para downgrade automático
+
+#### 2. Constantes y Configuración
+- ✅ `lib/constants.ts` actualizado:
+  - ANONYMOUS: 5 sesiones
+  - FREE: 15 sesiones
+  - PRO: 50 sesiones/mes por 5€
+  - DIAMOND: ilimitado por 15€
+- ✅ Variables Stripe en `.env.example`
+
+#### 3. Cliente Stripe (lib/stripe.ts)
+- ✅ `getOrCreateStripeCustomer()` → Gestión customers
+- ✅ `createCheckoutSession()` → Crear sesión de pago
+- ✅ `getUserSubscription()` → Obtener suscripción activa
+- ✅ `cancelSubscription()` → Cancelar al final del período
+- ✅ `reactivateSubscription()` → Reactivar suscripción
+
+#### 4. API Endpoints
+- ✅ `/api/stripe/create-checkout-session` → POST crea checkout sessions
+- ✅ `/api/stripe/webhook` → Procesa eventos Stripe:
+  - `checkout.session.completed` → Crear suscripción
+  - `customer.subscription.updated` → Actualizar suscripción
+  - `customer.subscription.deleted` → Downgrade a free
+  - `invoice.payment_failed` → Marcar como past_due
+
+### ⏳ PENDIENTE (30%)
+
+1. ⏳ Actualizar pricing page con 3 cards + Stripe checkout
+2. ⏳ Traducciones ES/EN para 3 planes
+3. ⏳ Actualizar paywalls en extensión (límites + CTAs)
+4. ⏳ Dashboard: badge plan + botón upgrade
+5. ⏳ Configurar Stripe Dashboard (manual)
+6. ⏳ Ejecutar migración SQL
+7. ⏳ Testing end-to-end
+
+### Archivos creados:
+```
+lib/stripe.ts                                      ← Cliente Stripe
+app/api/stripe/create-checkout-session/route.ts   ← Endpoint checkout
+app/api/stripe/webhook/route.ts                   ← Webhook handler
+supabase/migrations/add_stripe_integration.sql    ← Migración SQL
+SESION_31_STRIPE_INTEGRATION.md                   ← Guía completa
+```
+
+### Archivos modificados:
+```
+lib/constants.ts    ← Límites 3 planes
+.env.example       ← Variables Stripe
+```
+
+### Documentación:
+- 📄 `SESION_31_STRIPE_INTEGRATION.md` — Guía completa con checklist de pendientes
+
+---
+
+## Próxima sesión
+
+Sesión: 32 — Completar Integración Stripe (UI + Testing)
+Objetivo: Finalizar pricing page, paywalls, dashboard y testing completo
+Duración estimada: 3-4 horas
+Tokens estimados: 40-50K
+
+**Pre-requisitos Sesión 32**:
+1. ✅ Backend Stripe completado
+2. ⏳ Stripe Dashboard configurado (products + webhook)
+3. ⏳ Migración SQL ejecutada en Supabase
+4. ⏳ Variables Stripe en .env.local
+
+**Tareas Sesión 32**:
+1. Actualizar pricing page con 3 cards
+2. Añadir traducciones ES/EN
+3. Actualizar paywalls extensión
+4. Dashboard: plan badge + upgrade button
+5. Testing: Free → Pro → Diamond
+6. Verificar webhooks funcionan
+7. Documentar en PROGRESS.md
