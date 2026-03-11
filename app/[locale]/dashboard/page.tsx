@@ -120,8 +120,8 @@ export default function DashboardPage() {
         const usageData = await usageResponse.json();
         console.log('[Dashboard] Usage data:', usageData);
 
-        if (usageData.user_type === 'pro') {
-          setRemainingSessions(null); // Pro es ilimitado
+        if (usageData.user_type === 'diamond') {
+          setRemainingSessions(null); // Diamond es ilimitado
         } else {
           setRemainingSessions(usageData.remaining);
         }
@@ -239,7 +239,11 @@ export default function DashboardPage() {
               href="/pricing"
               className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
             >
-              {profile?.plan === 'free' ? 'Actualizar a Pro' : 'Ver planes'}
+              {profile?.plan === 'free'
+                ? 'Actualizar plan'
+                : profile?.plan === 'pro'
+                ? 'Actualizar a Diamond'
+                : 'Ver planes'}
             </Link>
             <button
               onClick={handleSignOut}
@@ -263,17 +267,57 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div>
-                <p className="text-lg font-semibold text-slate-900">{user?.email}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-lg font-semibold text-slate-900">{user?.email}</p>
+                  {/* Plan Badge */}
+                  {profile?.plan === 'diamond' ? (
+                    <span className="px-3 py-1 text-xs font-bold text-white bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-full shadow-md">
+                      💎 DIAMOND
+                    </span>
+                  ) : profile?.plan === 'pro' ? (
+                    <span className="px-3 py-1 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-md">
+                      ⭐ PRO
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 text-xs font-semibold text-slate-700 bg-slate-100 rounded-full">
+                      FREE
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-slate-500">
-                  Plan {profile?.plan === 'free' ? 'Gratuito' : 'Pro'} • {profile?.total_sessions || 0} sesiones completadas
+                  {profile?.total_sessions || 0} sesiones completadas
                 </p>
                 {remainingSessions !== null && (
-                  <p className="text-sm font-medium text-purple-600 mt-1">
+                  <p className={`text-sm font-medium mt-1 ${
+                    remainingSessions <= 2 ? 'text-orange-600' : 'text-purple-600'
+                  }`}>
                     {remainingSessions} {remainingSessions === 1 ? 'sesión restante' : 'sesiones restantes'}
                   </p>
                 )}
               </div>
             </div>
+
+            {/* Upgrade Button (only for Free users) */}
+            {profile?.plan === 'free' && (
+              <Link
+                href="/pricing"
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200 flex items-center gap-2"
+              >
+                <span>⬆️</span>
+                <span>Actualizar a Pro</span>
+              </Link>
+            )}
+
+            {/* Manage Subscription (for Pro/Diamond users) */}
+            {(profile?.plan === 'pro' || profile?.plan === 'diamond') && (
+              <Link
+                href="/pricing"
+                className="px-6 py-3 border-2 border-purple-600 text-purple-600 font-semibold rounded-xl hover:bg-purple-50 transition-all duration-200 flex items-center gap-2"
+              >
+                <span>⚙️</span>
+                <span>Gestionar suscripción</span>
+              </Link>
+            )}
           </div>
         </div>
 

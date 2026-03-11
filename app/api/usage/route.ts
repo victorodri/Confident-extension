@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { ensureUserProfileWithServiceRole } from '@/lib/ensure-profile';
-
-const LIMITS = {
-  ANONYMOUS_SESSIONS: 5,
-  FREE_SESSIONS: 15,
-  PRO_SESSIONS: Infinity
-};
+import { LIMITS } from '@/lib/constants';
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,8 +23,21 @@ export async function GET(request: NextRequest) {
 
         const plan = profile.plan || 'free';
         const total = profile.total_sessions || 0;
-        const limit = plan === 'pro' ? LIMITS.PRO_SESSIONS : LIMITS.FREE_SESSIONS;
-        const remaining = plan === 'pro' ? Infinity : Math.max(0, limit - total);
+
+        // Determinar límite según plan
+        let limit: number;
+        let remaining: number | null;
+
+        if (plan === 'diamond') {
+          limit = LIMITS.DIAMOND_SESSIONS;
+          remaining = null; // Ilimitado
+        } else if (plan === 'pro') {
+          limit = LIMITS.PRO_SESSIONS;
+          remaining = Math.max(0, limit - total);
+        } else {
+          limit = LIMITS.FREE_SESSIONS;
+          remaining = Math.max(0, limit - total);
+        }
 
         console.log('[/api/usage] Respuesta:', { plan, total, remaining, limit });
 
