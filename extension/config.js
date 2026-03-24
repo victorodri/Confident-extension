@@ -65,6 +65,9 @@ const CONFIG = {
     },
     get DASHBOARD() {
       return `${CONFIG.BASE_URL}/dashboard`;
+    },
+    get HEALTH() {
+      return `${CONFIG.BASE_URL}/api/health`;
     }
   }
 };

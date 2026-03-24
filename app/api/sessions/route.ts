@@ -1,20 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
+import { createSessionSchema, validateSchema, createValidationErrorResponse } from '@/lib/validation';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 /**
  * POST /api/sessions
  * Crea una nueva sesión
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { anonymous_id, profile, consent_confirmed, participants_emails } = body;
 
-    if (!profile || !['candidato', 'vendedor', 'defensor'].includes(profile)) {
+    // SECURITY: Validar input con Zod
+    const validation = validateSchema(createSessionSchema, body);
+
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Se requiere un perfil válido (candidato, vendedor, defensor)' },
+        createValidationErrorResponse(validation.errors!),
         { status: 400 }
       );
+    }
+
+    const { anonymous_id, profile, consent_confirmed, participants_emails } = validation.data;
+
+    // SECURITY: Rate limiting (VULN-005)
+    const rateLimitResult = await rateLimit(request, RATE_LIMITS.SESSIONS, anonymous_id);
+    if (rateLimitResult) {
+      return rateLimitResult; // 429 Too Many Requests
     }
 
     const supabase = await createClient();
@@ -65,8 +77,14 @@ export async function POST(request: Request) {
  * GET /api/sessions
  * Obtiene todas las sesiones del usuario autenticado
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    // SECURITY: Rate limiting (VULN-005) - sin anonymous_id para autenticados
+    const rateLimitResult = await rateLimit(request, RATE_LIMITS.SESSIONS);
+    if (rateLimitResult) {
+      return rateLimitResult; // 429 Too Many Requests
+    }
+
     const supabase = await createClient();
 
     // Verificar autenticación

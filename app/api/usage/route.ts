@@ -2,11 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase-server';
 import { ensureUserProfileWithServiceRole } from '@/lib/ensure-profile';
 import { LIMITS } from '@/lib/constants';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const anonymous_id = searchParams.get('anonymous_id');
+
+    // SECURITY: Rate limiting (VULN-005)
+    const rateLimitResult = await rateLimit(
+      request,
+      RATE_LIMITS.USAGE,
+      anonymous_id || undefined
+    );
+    if (rateLimitResult) {
+      return rateLimitResult; // 429 Too Many Requests
+    }
 
     const supabase = await createClient();
 

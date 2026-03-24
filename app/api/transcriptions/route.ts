@@ -3,11 +3,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createTranscriptionSchema, validateSchema, createValidationErrorResponse } from '@/lib/validation';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
-// Usar service role key para insertar sin autenticación (la extensión puede ser anónima)
+// Cliente con ANON key (respeta RLS)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
     auth: {
       autoRefreshToken: false,
@@ -19,31 +21,51 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { session_id, speaker, text, timestamp_ms, language } = body;
 
-    if (!session_id || !text) {
+    // SECURITY: Validar input con Zod
+    const validation = validateSchema(createTranscriptionSchema, body);
+
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Se requieren los campos "session_id" y "text"' },
+        createValidationErrorResponse(validation.errors!),
         { status: 400 }
       );
     }
 
-    // Verificar que la sesión existe
+    const { session_id, speaker, text, timestamp_ms, language, anonymous_id } = validation.data;
+
+    // SECURITY: Rate limiting (VULN-005)
+    const rateLimitResult = await rateLimit(request, RATE_LIMITS.TRANSCRIPTIONS, anonymous_id);
+    if (rateLimitResult) {
+      return rateLimitResult; // 429 Too Many Requests
+    }
+
+    // SECURITY: Verificar que la sesión existe Y pertenece al anonymous_id proporcionado
+    // Esto previene que un atacante envíe transcripciones a sesiones de otros usuarios
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
-      .select('id')
+      .select('id, anonymous_id, user_id')
       .eq('id', session_id)
       .single();
 
     if (sessionError || !session) {
-      console.error('[POST /api/transcriptions] Sesión no encontrada:', sessionError);
       return NextResponse.json(
         { error: 'Sesión no encontrada' },
         { status: 404 }
       );
     }
 
-    // Insertar transcripción
+    // SECURITY: Validar ownership de la sesión
+    // Para sesiones anónimas, el anonymous_id debe coincidir
+    // Para sesiones autenticadas, se valida por JWT (futuro)
+    if (session.anonymous_id && session.anonymous_id !== anonymous_id) {
+      return NextResponse.json(
+        { error: 'No autorizado para acceder a esta sesión' },
+        { status: 403 }
+      );
+    }
+
+    // Insertar transcripción (RLS valida automáticamente el acceso)
     const { data: transcription, error } = await supabase
       .from('transcriptions')
       .insert({

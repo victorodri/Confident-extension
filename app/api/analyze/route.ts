@@ -1,24 +1,36 @@
 import { anthropic, getSystemPrompt, SUGGESTION_SCHEMA, type UserProfile, type UserContext } from '@/lib/claude';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@/lib/supabase-server';
+import { analyzeTextSchema, validateSchema, createValidationErrorResponse } from '@/lib/validation';
+import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { text, profile, context, session_type, anonymous_id, language } = body;
 
-    // Validar campos obligatorios
-    if (!text || typeof text !== 'string') {
-      return Response.json({ error: 'Campo "text" obligatorio' }, { status: 400 });
+    // SECURITY: Validar input con Zod
+    const validation = validateSchema(analyzeTextSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(validation.errors!),
+        { status: 400 }
+      );
     }
 
-    const activeProfile: UserProfile =
-      profile === 'candidato' || profile === 'vendedor' || profile === 'defensor'
-        ? profile
-        : 'candidato';
+    const { text, profile, context, anonymous_id, user_language, session_type } = validation.data;
+
+    // SECURITY: Rate limiting (VULN-005)
+    const rateLimitResult = await rateLimit(request, RATE_LIMITS.ANALYZE, anonymous_id);
+    if (rateLimitResult) {
+      return rateLimitResult; // 429 Too Many Requests
+    }
+
+    const activeProfile: UserProfile = profile;
 
     // Idioma del usuario (default: español)
-    const userLanguage: 'es' | 'en' = language === 'en' ? 'en' : 'es';
+    const userLanguage: 'es' | 'en' = user_language || 'es';
     console.log('[/api/analyze] User language:', userLanguage);
 
     // Obtener contexto personalizado del usuario (si existe)
@@ -98,7 +110,7 @@ Fragmento actual a analizar:
     if (err instanceof SyntaxError) {
       // Error de parsing JSON (no debería ocurrir con structured outputs)
       console.error('[/api/analyze] JSON inválido recibido:', err.message);
-      return Response.json(
+      return NextResponse.json(
         { error: 'Respuesta inválida de la IA' },
         { status: 500 }
       );
@@ -111,7 +123,7 @@ Fragmento actual a analizar:
         message: err.message
       });
 
-      return Response.json(
+      return NextResponse.json(
         { error: `Error de API: ${err.message}` },
         { status: err.status ?? 500 }
       );

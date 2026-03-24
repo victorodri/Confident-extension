@@ -169,6 +169,9 @@ async function accumulateFinalTranscript(transcript, profile) {
     const timestampMs = Date.now() - startTime;
 
     try {
+      // Obtener anonymous_id para validación de seguridad
+      const { anonymous_id } = await chrome.storage.local.get(['anonymous_id']);
+
       const response = await fetch(CONFIG.ENDPOINTS.TRANSCRIPTIONS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -177,7 +180,8 @@ async function accumulateFinalTranscript(transcript, profile) {
           speaker: 'unknown', // TODO: Implementar detección de speaker en futuras versiones
           text: transcript,
           timestamp_ms: timestampMs,
-          language: 'es' // TODO: Detectar idioma automáticamente
+          language: 'es', // TODO: Detectar idioma automáticamente
+          anonymous_id: anonymous_id // SECURITY: Validar ownership en backend
         })
       });
 
@@ -260,6 +264,9 @@ async function callAnalyzeAPI() {
       // Guardar sugerencia en Supabase si hay sessionId (Sesión 12)
       if (sessionId) {
         try {
+          // Obtener anonymous_id para validación de seguridad
+          const { anonymous_id } = await chrome.storage.local.get(['anonymous_id']);
+
           const suggestionResponse = await fetch(CONFIG.ENDPOINTS.SUGGESTIONS, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -269,7 +276,8 @@ async function callAnalyzeAPI() {
               suggestion_text: result.suggestion || '',
               context_text: result.what_is_being_asked || null,
               keywords: result.keywords || [],
-              urgency_level: result.urgency || 1
+              urgency_level: result.urgency || 1,
+              anonymous_id: anonymous_id // SECURITY: Validar ownership en backend
             })
           });
 

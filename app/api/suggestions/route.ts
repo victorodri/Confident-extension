@@ -3,11 +3,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createSuggestionSchema, validateSchema, createValidationErrorResponse } from '@/lib/validation';
+import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
-// Usar service role key para insertar sin autenticación (la extensión puede ser anónima)
+// Cliente con ANON key (respeta RLS)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
     auth: {
       autoRefreshToken: false,
@@ -19,6 +21,17 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // SECURITY: Validar input con Zod
+    const validation = validateSchema(createSuggestionSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        createValidationErrorResponse(validation.errors!),
+        { status: 400 }
+      );
+    }
+
     const {
       session_id,
       transcription_id,
@@ -26,32 +39,39 @@ export async function POST(request: NextRequest) {
       suggestion_text,
       context_text,
       keywords,
-      urgency_level
-    } = body;
+      urgency_level,
+      anonymous_id
+    } = validation.data;
 
-    if (!session_id || !suggestion_text) {
-      return NextResponse.json(
-        { error: 'Se requieren los campos "session_id" y "suggestion_text"' },
-        { status: 400 }
-      );
+    // SECURITY: Rate limiting (VULN-005)
+    const rateLimitResult = await rateLimit(request, RATE_LIMITS.SUGGESTIONS, anonymous_id);
+    if (rateLimitResult) {
+      return rateLimitResult; // 429 Too Many Requests
     }
 
-    // Verificar que la sesión existe
+    // SECURITY: Verificar que la sesión existe Y pertenece al anonymous_id proporcionado
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
-      .select('id, suggestions_count')
+      .select('id, suggestions_count, anonymous_id, user_id')
       .eq('id', session_id)
       .single();
 
     if (sessionError || !session) {
-      console.error('[POST /api/suggestions] Sesión no encontrada:', sessionError);
       return NextResponse.json(
         { error: 'Sesión no encontrada' },
         { status: 404 }
       );
     }
 
-    // Insertar sugerencia
+    // SECURITY: Validar ownership de la sesión
+    if (session.anonymous_id && session.anonymous_id !== anonymous_id) {
+      return NextResponse.json(
+        { error: 'No autorizado para acceder a esta sesión' },
+        { status: 403 }
+      );
+    }
+
+    // Insertar sugerencia (RLS valida automáticamente el acceso)
     const { data: suggestion, error } = await supabase
       .from('suggestions')
       .insert({
